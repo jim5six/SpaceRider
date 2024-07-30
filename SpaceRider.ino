@@ -245,7 +245,7 @@ unsigned long PlayfieldMultiplierExpiration;
 unsigned long BonusChanged;
 unsigned long BonusXAnimationStart;
 
-DropTargetBank DropTargets(3, 1, DROP_TARGET_TYPE_BLY_1, 50);
+DropTargetBank DropTargets(4, 1, DROP_TARGET_TYPE_BLY_1, 50);
 
 
 /******************************************************
@@ -413,6 +413,7 @@ void setup() {
   DropTargets.DefineSwitch(0, SW_DROP_1);
   DropTargets.DefineSwitch(1, SW_DROP_2);
   DropTargets.DefineSwitch(2, SW_DROP_3);
+  DropTargets.DefineSwitch(3, SW_DROP_4);
   DropTargets.DefineResetSolenoid(0, SOL_DROP_TARGET_RESET);
 
   Audio.SetMusicDuckingGain(12);
@@ -2428,6 +2429,7 @@ void HandleGamePlaySwitches(byte switchHit) {
     case SW_DROP_1:
     case SW_DROP_2:
     case SW_DROP_3:
+    case SW_DROP_4:
       HandleDropTarget(switchHit);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
