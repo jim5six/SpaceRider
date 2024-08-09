@@ -5,7 +5,7 @@
 
 #if (RPU_MPU_ARCHITECTURE<10)
 
-// Lamp definitions for Space Rider
+// Space Rider Lamp definitions
 #define LAMP_BONUS_10                       0
 #define LAMP_BONUS_20                       1
 #define LAMP_BONUS_30                       2
@@ -19,42 +19,33 @@
 #define LAMP_BONUS_200                      53
 #define LAMP_BONUS_300                      54
 #define LAMP_BONUS_400                      55
-
 #define LAMP_L_OUTLANE                      30
 #define LAMP_R_OUTLANE                      18
-
 #define LAMP_SHOOT_AGAIN                    42
-
 #define LAMP_BONUS_2X                       44
 #define LAMP_BONUS_3X                       45
 #define LAMP_BONUS_5X                       46
 #define LAMP_BONUS_SPECIAL                  47
-
 #define LAMP_LOWER_S                        56
 #define LAMP_LOWER_P                        57
 #define LAMP_LOWER_A                        58
 #define LAMP_LOWER_C                        59
-#define LAMP_LOWER_E                        60
-
+#define LAMP_LOWER_E                        40
 #define LAMP_EXTRABALL                      39
 #define LAMP_OPENGATE                       17
 #define LAMP_5000                           9
 #define LAMP_TARGET_SPECIAL                 29
-
 #define LAMP_DROP_TARGET                    19
 #define LAMP_DROP_SPECIAL                   31
-
 #define LAMP_TARGET_5                       32
 #define LAMP_TARGET_4                       33
 #define LAMP_TARGET_3                       34
 #define LAMP_TARGET_2                       35
 #define LAMP_TARGET_1                       36
-
 #define LAMP_L_SPINNER_100                  20
 #define LAMP_L_SPINNER_200                  21
 #define LAMP_L_SPINNER_1000                 22
 #define LAMP_L_SPINNER_2000                 23
-
 #define LAMP_C_SPINNER_1                    12
 #define LAMP_C_SPINNER_2                    13
 #define LAMP_C_SPINNER_3                    14
@@ -62,40 +53,85 @@
 #define LAMP_C_SPINNER_5                    16
 #define LAMP_CL_WHENLIT                     11
 #define LAMP_CR_WHENLIT                     10
-
 #define LAMP_C_POP                          37
 #define LAMP_LR_POP                         38
-
 #define LAMP_TOP_S                          24
 #define LAMP_TOP_P                          25
 #define LAMP_TOP_A                          26
 #define LAMP_TOP_C                          27
 #define LAMP_TOP_E                          28
-
-#define LAMP_HEAD_SAME_PLAYER_SHOOTS_AGAIN  40
+#define LAMP_HEAD_SAME_PLAYER_SHOOTS_AGAIN  42
 #define LAMP_HEAD_MATCH                     41
 #define LAMP_APRON_CREDIT                   43
 #define LAMP_HEAD_BIP                       48
 #define LAMP_HEAD_HIGH_SCORE                49
 #define LAMP_HEAD_TILT                      50
 #define LAMP_HEAD_GAME_OVER                 51
-//#define LAMP_HEAD_1_PLAYER                  52
-//#define LAMP_HEAD_2_PLAYER                  53
-//#define LAMP_HEAD_3_PLAYER                  54
-//#define LAMP_HEAD_4_PLAYER                  65
-//#define LAMP_HEAD_PLAYER_1_UP               56
-//#define LAMP_HEAD_PLAYER_2_UP               57
-//#define LAMP_HEAD_PLAYER_3_UP               58
-//#define LAMP_HEAD_PLAYER_4_UP               59
 #endif
 
+/*
+//
+// Bottom to Top sweep, 51 lamps, 16 frames
+//
+
+struct AttractLampsDown SweepUp[] = {
+  {LAMP_BONUS_10,         1},
+  {LAMP_BONUS_20,         2},
+  {LAMP_BONUS_30,         2},
+  {LAMP_BONUS_40,         3},
+  {LAMP_BONUS_50,         3},
+  {LAMP_BONUS_60,         3},
+  {LAMP_BONUS_70,         4},
+  {LAMP_BONUS_80,         4},
+  {LAMP_BONUS_90,         4},
+  {LAMP_BONUS_100,        4},
+  {LAMP_BONUS_200,        5},
+  {LAMP_BONUS_300,        5},
+  {LAMP_BONUS_400,        5},
+  {LAMP_BONUS_2X,         5},
+  {LAMP_BONUS_3X,         5},
+  {LAMP_BONUS_5X,         5},
+  {LAMP_BONUS_SPECIAL,    5},
+  {LAMP_LOWER_S,          6},
+  {LAMP_LOWER_P,          6},
+  {LAMP_LOWER_A,          6},
+  {LAMP_LOWER_C,          6},
+  {LAMP_LOWER_E,          6},
+  {LAMP_TARGET_5,         6},
+  {LAMP_5000,             6},
+  {LAMP_TARGET_4,         7},
+  {LAMP_OPENGATE,         7},
+  {LAMP_C_SPINNER_1,      7},
+  {LAMP_EXTRABALL,        7},
+  {LAMP_TARGET_3,         8},
+  {LAMP_TARGET_SPECIAL,   8},
+  {LAMP_C_SPINNER_2,      8},
+  {LAMP_TARGET_2,         9},
+  {LAMP_C_SPINNER_3,      9},
+  {LAMP_DROP_TARGET,      9},
+  {LAMP_C_SPINNER_4,     10},
+  {LAMP_TARGET_1,        10},
+  {LAMP_CL_WHENLIT,      10},
+  {LAMP_CR_WHENLIT,      10},
+  {LAMP_DROP_SPECIAL,    10},
+  {LAMP_C_SPINNER_5,     11},
+  {LAMP_L_SPINNER_100,   11},
+  {LAMP_L_SPINNER_200,   12},
+  {LAMP_L_SPINNER_1000,  13},
+  {LAMP_L_SPINNER_2000,  14},
+  {LAMP_C_POP,           15},
+  {LAMP_LR_POP,          15},
+  {LAMP_TOP_S,           16},
+  {LAMP_TOP_P,           16},
+  {LAMP_TOP_A,           16},
+  {LAMP_TOP_C,           16},
+  {LAMP_TOP_E,           16},
+  };
+*/
 
 
+// Space Rider Switches
 
-// Delete all these switch definitions when implementing a particular
-// machine. There's a conditional based on architecture here --
-// that should be deleted too. It's just here to provide base
-// functionality.
 #if (RPU_MPU_ARCHITECTURE<10)
 #define SW_DROP_4                   0
 #define SW_DROP_3                   1
@@ -135,10 +171,11 @@
 #define SW_R_POP_BUMPER             38
 #endif
 
-// Solinoids
+// Space Rider Solinoids
 
-#define SOL_KNOCKER                 1
-#define SOLCONT_COIN_LOCKOUT        2
+#define SOL_KNOCKER                 1 //?
+#define SOL_COIN_LOCKOUT            2 //?
+#define SOL_CLOSE_GATE              4 //?
 #define SOL_OUTHOLE                 6
 #define SOL_R_POP_BUMPER            7
 #define SOL_L_POP_BUMPER            8

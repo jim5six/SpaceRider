@@ -83,14 +83,22 @@ boolean MachineStateChanged = true;
 #define EEPROM_SPECIAL_SCORE_UL         144
 
 
-#define SOUND_EFFECT_NONE                     0
-#define SOUND_EFFECT_BONUS_COUNT              1
-#define SOUND_EFFECT_BALL_OVER                19
-#define SOUND_EFFECT_GAME_OVER                20
-#define SOUND_EFFECT_TILT_WARNING             28
-#define SOUND_EFFECT_MATCH_SPIN               30
-#define SOUND_EFFECT_TILT                     61
-#define SOUND_EFFECT_SCORE_TICK               67
+#define SOUND_EFFECT_NONE               0
+#define SOUND_EFFECT_BONUS_COUNT        1
+#define SOUND_EFFECT_INLANE             3
+#define SOUND_EFFECT_OUTLANE            4
+#define SOUND_EFFECT_POPBUMPER          7
+#define SOUND_EFFECT_DROPTARGET         9
+#define SOUND_EFFECT_BALL_OVER          19
+#define SOUND_EFFECT_GAME_OVER          20
+#define SOUND_EFFECT_TILT_WARNING       28
+#define SOUND_EFFECT_MATCH_SPIN         30
+#define SOUND_EFFECT_TILT               61
+#define SOUND_EFFECT_SCORE_TICK         67
+#define SOUND_EFFECT_SPINNER            74
+#define SOUND_EFFECT_SLING_SHOT         34
+#define SOUND_EFFECT_ROLLOVER           35
+#define SOUND_EFFECT_TENPOINT           36
 
 #define SOUND_EFFECT_COIN_DROP_1        100
 #define SOUND_EFFECT_COIN_DROP_2        101
@@ -117,7 +125,7 @@ unsigned short SelfTestStateToCalloutMap[34] = {  134, 135, 133, 136, 137, 138, 
 #define SOUND_EFFECT_SELF_TEST_CPC_START              180
 #define SOUND_EFFECT_SELF_TEST_AUDIO_OPTIONS_START    190
 
-#define SOUND_EFFECT_BACKGROUND_SONG_1    500
+#define SOUND_EFFECT_BACKGROUND_SONG_1    37
 #define NUM_BACKGROUND_SONGS              10
 #define SOUND_EFFECT_BATTLE_SONG_1        525
 #define NUM_BATTLE_SONGS                  3
@@ -410,10 +418,10 @@ void setup() {
   CurrentAchievements[3] = 0;
 
   // Initialize any drop target variables here
-  DropTargets.DefineSwitch(0, SW_DROP_1);
-  DropTargets.DefineSwitch(1, SW_DROP_2);
-  DropTargets.DefineSwitch(2, SW_DROP_3);
-  DropTargets.DefineSwitch(3, SW_DROP_4);
+  DropTargets.DefineSwitch(3, SW_DROP_1);
+  DropTargets.DefineSwitch(2, SW_DROP_2);
+  DropTargets.DefineSwitch(1, SW_DROP_3);
+  DropTargets.DefineSwitch(0, SW_DROP_4);
   DropTargets.DefineResetSolenoid(0, SOL_DROP_TARGET_RESET);
 
   Audio.SetMusicDuckingGain(12);
@@ -467,16 +475,53 @@ void ShowBonusLamps() {
 void ShowBonusXLamps() {
 }
 
-
+/*
 void ShowStandupLamps() {
 
+  RPU_SetLampState(LAMP_TARGET_1, 1, 0, 500);
+  RPU_SetLampState(LAMP_TARGET_2, 1, 0, 500);
+  RPU_SetLampState(LAMP_TARGET_3, 1, 0, 500);
+  RPU_SetLampState(LAMP_TARGET_4, 1, 0, 500);
+  RPU_SetLampState(LAMP_TARGET_5, 1, 0, 500);
+
+}
+*/
+void ShowPopBumpersLamps() {
+
+  RPU_SetLampState(LAMP_LR_POP, 1, 0, 500);
+  RPU_SetLampState(LAMP_C_POP, 1, 0, 500);
+
 }
 
-void ShowDropTargetLamps() {
+void ShowTopSpaceLamps() {
 
+  RPU_SetLampState(LAMP_TOP_S, 1, 0, 500);
+  RPU_SetLampState(LAMP_TOP_P, 1, 0, 500);
+  RPU_SetLampState(LAMP_TOP_A, 1, 0, 500);
+  RPU_SetLampState(LAMP_TOP_C, 1, 0, 500);
+  RPU_SetLampState(LAMP_TOP_E, 1, 0, 500);
 
 }
 
+void ShowLowerSpaceLamps() {
+
+  RPU_SetLampState(LAMP_LOWER_S, 1, 0, 500);
+  RPU_SetLampState(LAMP_LOWER_P, 1, 0, 500);
+  RPU_SetLampState(LAMP_LOWER_A, 1, 0, 500);
+  RPU_SetLampState(LAMP_LOWER_C, 1, 0, 500);
+  RPU_SetLampState(LAMP_LOWER_E, 1, 0, 500);
+
+}
+
+void ShowCenterSpinnerLamps() {
+
+  RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 0);
+  RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 0);
+  RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 0);
+  RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 0);
+  RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 0);
+
+}
 
 void ShowShootAgainLamps() {
 
@@ -1990,10 +2035,14 @@ int ManageGameMode() {
   }
 
   if ( !specialAnimationRunning && NumTiltWarnings <= MaxTiltWarnings ) {
-    ShowDropTargetLamps();
+    ShowTopSpaceLamps();
+    ShowLowerSpaceLamps();
     ShowBonusXLamps();
-    ShowStandupLamps();
+//    ShowStandupLamps();
     ShowShootAgainLamps();
+    ShowPopBumpersLamps();
+    ShowCenterSpinnerLamps();
+   
   }
 
 
@@ -2413,9 +2462,9 @@ void HandleDropTarget(byte switchHit) {
   boolean cleared = DropTargets.CheckIfBankCleared();
   if (cleared) {
 //    DropTargets.ResetDropTargets(CurrentTime + 500, true);
-//    PlaySoundEffect(SOUND_EFFECT_DROP_TARGET_COMPLETE);
+    PlaySoundEffect(SOUND_EFFECT_VP_FOUR);
   } else {
-//    PlaySoundEffect(SOUND_EFFECT_DROP_TARGET_HIT);    
+    PlaySoundEffect(SOUND_EFFECT_VP_ONE);    
   }
   
 }
@@ -2429,10 +2478,19 @@ void HandleGamePlaySwitches(byte switchHit) {
     case SW_LEFT_SLING:
     case SW_RIGHT_SLING:
       CurrentScores[CurrentPlayer] += PlayfieldMultiplier * 10;
-//      PlaySoundEffect(SOUND_EFFECT_SLING_SHOT);
+      PlaySoundEffect(SOUND_EFFECT_SLING_SHOT);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
+
+    case SW_L_POP_BUMPER:
+    case SW_C_POP_BUMPER:
+    case SW_R_POP_BUMPER:
+      CurrentScores[CurrentPlayer] += PlayfieldMultiplier * 100;
+      PlaySoundEffect(SOUND_EFFECT_POPBUMPER);
+      LastSwitchHitTime = CurrentTime;
+      if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
+      break;  
 
     case SW_DROP_1:
     case SW_DROP_2:
@@ -2440,27 +2498,28 @@ void HandleGamePlaySwitches(byte switchHit) {
     case SW_DROP_4:
       HandleDropTarget(switchHit);
       LastSwitchHitTime = CurrentTime;
-      CurrentScores[CurrentPlayer] += 100 * PlayfieldMultiplier;
+//      CurrentScores[CurrentPlayer] += 100 * PlayfieldMultiplier;
+      PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
 
     case SW_L_SPINNER:
       CurrentScores[CurrentPlayer] += 100 * PlayfieldMultiplier;
-//      PlaySoundEffect(SOUND_EFFECT_SPINNER);
+      PlaySoundEffect(SOUND_EFFECT_SPINNER);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
 
     case SW_CL_SPINNER:
       CurrentScores[CurrentPlayer] += 100 * PlayfieldMultiplier;
-//      PlaySoundEffect(SOUND_EFFECT_SPINNER);
+      PlaySoundEffect(SOUND_EFFECT_SPINNER);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
 
     case SW_CR_SPINNER:
       CurrentScores[CurrentPlayer] += 100 * PlayfieldMultiplier;
-//      PlaySoundEffect(SOUND_EFFECT_SPINNER);
+      PlaySoundEffect(SOUND_EFFECT_SPINNER);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
@@ -2484,46 +2543,75 @@ void HandleGamePlaySwitches(byte switchHit) {
 
     case SW_R_TARGET:
       CurrentScores[CurrentPlayer] += PlayfieldMultiplier * 100;
-//      PlaySoundEffect(SOUND_EFFECT_SAUCER);
+      PlaySoundEffect(SOUND_EFFECT_ROLLOVER);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;  
 
     case SW_TARGET1:
+      CurrentScores[CurrentPlayer] += PlayfieldMultiplier * 100;
+      PlaySoundEffect(SOUND_EFFECT_ROLLOVER);
+      RPU_SetLampState(LAMP_TARGET_1, 1, 0, 0);
+      LastSwitchHitTime = CurrentTime;
+      if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
+      break;
+
     case SW_TARGET2:
+      CurrentScores[CurrentPlayer] += PlayfieldMultiplier * 100;
+      PlaySoundEffect(SOUND_EFFECT_ROLLOVER);
+      RPU_SetLampState(LAMP_TARGET_2, 1, 0, 0);
+      LastSwitchHitTime = CurrentTime;
+      if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
+      break;
+
     case SW_TARGET3:
+      CurrentScores[CurrentPlayer] += PlayfieldMultiplier * 100;
+      PlaySoundEffect(SOUND_EFFECT_ROLLOVER);
+      RPU_SetLampState(LAMP_TARGET_3, 1, 0, 0);
+      LastSwitchHitTime = CurrentTime;
+      if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
+      break;
+
     case SW_TARGET4:
+      CurrentScores[CurrentPlayer] += PlayfieldMultiplier * 100;
+      PlaySoundEffect(SOUND_EFFECT_ROLLOVER);
+      RPU_SetLampState(LAMP_TARGET_4, 1, 0, 0);
+      LastSwitchHitTime = CurrentTime;
+      if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
+      break;
+
     case SW_TARGET5:
       CurrentScores[CurrentPlayer] += PlayfieldMultiplier * 100;
-//      PlaySoundEffect(SOUND_EFFECT_SAUCER);
+      PlaySoundEffect(SOUND_EFFECT_ROLLOVER);
+      RPU_SetLampState(LAMP_TARGET_5, 1, 0, 0);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
 
     case SW_R_INLANE:
       CurrentScores[CurrentPlayer] += PlayfieldMultiplier * 100;
-//      PlaySoundEffect(SOUND_EFFECT_SAUCER);
+      PlaySoundEffect(SOUND_EFFECT_INLANE);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
 
     case SW_R_OUTLANE:
       CurrentScores[CurrentPlayer] += PlayfieldMultiplier * 100;
-//      PlaySoundEffect(SOUND_EFFECT_SAUCER);
+      PlaySoundEffect(SOUND_EFFECT_OUTLANE);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
 
     case SW_L_OUTLANE:
       CurrentScores[CurrentPlayer] += PlayfieldMultiplier * 100;
-//      PlaySoundEffect(SOUND_EFFECT_SAUCER);
+      PlaySoundEffect(SOUND_EFFECT_OUTLANE);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
 
     case SW_RUBBER:
       CurrentScores[CurrentPlayer] += PlayfieldMultiplier * 10;
-//      PlaySoundEffect(SOUND_EFFECT_SAUCER);
+      PlaySoundEffect(SOUND_EFFECT_TENPOINT);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
