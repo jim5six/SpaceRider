@@ -189,6 +189,7 @@ byte TotalBallsLoaded = 1;
 byte TimeRequiredToResetGame = 1;
 byte NumberOfBallsInPlay = 0;
 byte NumberOfBallsLocked = 0;
+byte NumberOfSpins[4];
 byte LampType = 0;
 boolean FreePlayMode = true;
 boolean HighScoreReplay = true;
@@ -201,6 +202,7 @@ unsigned long CurrentTime = 0;
 unsigned long HighScore = 0;
 unsigned long AwardScores[3];
 unsigned long CreditResetPressStarted = 0;
+unsigned long LastTimeSpinnerHit = 0;
 
 AudioHandler Audio;
 
@@ -2502,12 +2504,43 @@ void HandleGamePlaySwitches(byte switchHit) {
       PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
-
+/*
     case SW_L_SPINNER:
       CurrentScores[CurrentPlayer] += 100 * PlayfieldMultiplier;
       PlaySoundEffect(SOUND_EFFECT_SPINNER);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
+      break;
+*/
+    case SW_L_SPINNER:
+//      for (int count=0; count<6; count++) {
+//      if (currentSwitches&(1<<count)) {
+//      scoreAddition += SCORE_SPINNER_VAL_ADD_200;
+//      if (count==0 || count==5) scoreAddition += SCORE_SPINNER_VAL_ADD_600;
+//      }
+//      }
+//      if (SuperSpinnerEndTime) {
+//      CurrentScoreOfCurrentPlayer += (SCORE_SPINNER_SUPER_SPIN + SCORE_SPINNER_SUPER_SPIN_MULTIPLIER*scoreAddition);
+//      GoalsCompletedFlags[CurrentPlayer] |= GOAL_SUPER_SPINNER_ACHIEVED;
+//      }
+//      else CurrentScoreOfCurrentPlayer += (SCORE_SPINNER_SPIN + scoreAddition);
+      CurrentScores[CurrentPlayer] += 100 * PlayfieldMultiplier;
+      PlaySoundEffect(SOUND_EFFECT_SPINNER);
+//      SpinnerHitPhase = (SpinnerHitPhase+1)%12;
+      LastTimeSpinnerHit = CurrentTime;
+//      shiftLamps = true;
+      if (GameMode==GAME_MODE_UNSTRUCTURED_PLAY) {
+      NumberOfSpins[CurrentPlayer] += 1;
+      if (NumberOfSpins[CurrentPlayer]>99) {
+      NumberOfSpins[CurrentPlayer] = 0;
+//      SuperSpinnerEndTime = CurrentTime + SUPER_SPINNER_DURATION;
+//      PlaySoundEffect(SOUND_EFFECT_SUPER_SPINNER);
+      RPU_SetDisplayCredits(Credits);
+      }
+      else{
+        RPU_SetDisplayCredits(99-NumberOfSpins[CurrentPlayer]);
+        }
+    }  
       break;
 
     case SW_CL_SPINNER:
