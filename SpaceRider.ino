@@ -1679,7 +1679,7 @@ int RunAttractMode(int curState, boolean curStateChanged) {
     AttractLastLadderTime = CurrentTime;
   }
 
-  ShowLampAnimation(0, 80, CurrentTime, 0, false, false);
+  ShowLampAnimation(0, 20, CurrentTime, 0, 0, false, false);
 
   byte switchHit;
   while ( (switchHit = RPU_PullFirstFromSwitchStack()) != SWITCH_STACK_EMPTY ) {
