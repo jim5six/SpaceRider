@@ -1679,7 +1679,7 @@ int RunAttractMode(int curState, boolean curStateChanged) {
     AttractLastLadderTime = CurrentTime;
   }
 
-  ShowLampAnimation(0, 40, CurrentTime, 14, false, false);
+  ShowLampAnimation(0, 80, CurrentTime, 0, false, false);
 
   byte switchHit;
   while ( (switchHit = RPU_PullFirstFromSwitchStack()) != SWITCH_STACK_EMPTY ) {
@@ -2624,6 +2624,7 @@ void HandleGamePlaySwitches(byte switchHit) {
     case SW_R_INLANE:
       CurrentScores[CurrentPlayer] += PlayfieldMultiplier * 100;
       PlaySoundEffect(SOUND_EFFECT_INLANE);
+      RPU_PushToTimedSolenoidStack(SOL_CLOSE_GATE, 16, CurrentTime, true);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
