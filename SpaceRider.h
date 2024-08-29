@@ -188,6 +188,10 @@ struct AttractLampsDown SweepUp[] = {
 #define SOL_R_SAUCER                13
 #define SOL_DROP_TARGET_RESET       14
 
+// Define Scoring
+#define SCORE_SKILL_SHOT            25000
+   
+
 
 #if (RPU_MPU_ARCHITECTURE<10)
 // Machines with a -17, -35, 100, and 200 architecture
