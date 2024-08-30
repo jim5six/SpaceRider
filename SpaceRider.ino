@@ -1018,10 +1018,17 @@ void IncreasePlayfieldMultiplier(unsigned long duration) {
   if (PlayfieldMultiplierExpiration) PlayfieldMultiplierExpiration += duration;
   else PlayfieldMultiplierExpiration = CurrentTime + duration;
   PlayfieldMultiplier += 1;
-  if (PlayfieldMultiplier > 5) {
-    PlayfieldMultiplier = 5;
+  if (PlayfieldMultiplier > 3) {
+    PlayfieldMultiplier = 3;
+  }
+  if (PlayfieldMultiplier == 2) {
+    RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 0);
+  }
+  if (PlayfieldMultiplier == 3) {
+    RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
+    RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
   } else {
-//    QueueNotification(SOUND_EFFECT_VP_RETURN_TO_1X + (PlayfieldMultiplier - 1), 1);
+  //    QueueNotification(SOUND_EFFECT_VP_RETURN_TO_1X + (PlayfieldMultiplier - 1), 1);
   }
 }
 
@@ -2027,7 +2034,7 @@ int ManageGameMode() {
         }
         SetGeneralIlluminationOn(true);        
       }
-//      if (SkillShotHit && (CurrentTime-GameModeStartTime)<1500) {
+//      if (SkillShotHit && (CurrentTime-GameModeStartTime)<15000) {
 //          ShowLampAnimation(2, 240, CurrentTime, 14, false, false);
 //          }
 
@@ -2037,6 +2044,8 @@ int ManageGameMode() {
           PlayfieldMultiplierExpiration = 0;
 //          if (PlayfieldMultiplier > 1) QueueNotification(SOUND_EFFECT_VP_RETURN_TO_1X, 1);
           PlayfieldMultiplier = 1;
+          RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
+          RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
         } else {
           for (byte count = 0; count < 4; count++) {
             if (count != CurrentPlayer) OverrideScoreDisplay(count, PlayfieldMultiplier, DISPLAY_OVERRIDE_ANIMATION_BOUNCE);
@@ -2583,7 +2592,7 @@ void HandleGamePlaySwitches(byte switchHit) {
       PlaySoundEffect(SOUND_EFFECT_SAUCER);
       RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 4000, true);
       RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
-      RPU_SetLampState(LAMP_DROP_SPECIAL, 1, 0, 500);
+      IncreasePlayfieldMultiplier(25000);
       DropTargets.ResetDropTargets(CurrentTime + 500, true);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
