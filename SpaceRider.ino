@@ -110,6 +110,7 @@ boolean MachineStateChanged = true;
 #define SOUND_EFFECT_TILT               61
 #define SOUND_EFFECT_SCORE_TICK         67
 #define SOUND_EFFECT_BATTLE_SONG_1      40
+#define SOUND_EFFECT_BONUS_MAX          90
 #define SOUND_EFFECT_COIN_DROP_1        100
 #define SOUND_EFFECT_COIN_DROP_2        101
 #define SOUND_EFFECT_COIN_DROP_3        102
@@ -200,8 +201,9 @@ byte TimeRequiredToResetGame = 1;
 byte NumberOfBallsInPlay = 0;
 byte NumberOfBallsLocked = 0;
 byte NumberOfSpins[4];
+byte GoalsCompletedFlags[4];
 byte LampType = 0;
-boolean SkillShotHit;
+boolean SkillShotHit = false;
 boolean FreePlayMode = true;
 boolean HighScoreReplay = true;
 boolean MatchFeature = true;
@@ -254,8 +256,10 @@ unsigned long PlayfieldMultiplier;
 unsigned long LastTimeThroughLoop;
 unsigned long LastSwitchHitTime;
 unsigned long BallSaveEndTime;
+unsigned long SuperSpinnerEndTime = 0;
 
 #define BALL_SAVE_GRACE_PERIOD  2000
+
 
 /*********************************************************************
 
@@ -392,8 +396,8 @@ void setup() {
     Serial.write("Back from init\n");
   }
   
-  if (initResult & RPU_RET_SELECTOR_SWITCH_ON) QueueDIAGNotification(SOUND_EFFECT_DIAG_SELECTOR_SWITCH_ON);
-  else QueueDIAGNotification(SOUND_EFFECT_DIAG_SELECTOR_SWITCH_OFF);
+  //if (initResult & RPU_RET_SELECTOR_SWITCH_ON) QueueDIAGNotification(SOUND_EFFECT_DIAG_SELECTOR_SWITCH_ON);
+  //else QueueDIAGNotification(SOUND_EFFECT_DIAG_SELECTOR_SWITCH_OFF);
   
   if (initResult & RPU_RET_CREDIT_RESET_BUTTON_HIT) QueueDIAGNotification(SOUND_EFFECT_DIAG_CREDIT_RESET_BUTTON);
 
@@ -935,7 +939,7 @@ void AddCredit(boolean playSound = false, byte numToAdd = 1) {
     RPU_SetCoinLockout(false);
   } else {
     RPU_SetDisplayCredits(Credits, !FreePlayMode);
-    RPU_SetCoinLockout(true);
+    RPU_SetCoinLockout(false);
   }
 
 }
@@ -1008,7 +1012,7 @@ boolean AwardExtraBall() {
     SamePlayerShootsAgain = true;
     RPU_SetLampState(LAMP_SHOOT_AGAIN, SamePlayerShootsAgain);
     RPU_SetLampState(LAMP_HEAD_SAME_PLAYER_SHOOTS_AGAIN, SamePlayerShootsAgain);
-    QueueNotification(SOUND_EFFECT_VP_EXTRA_BALL, 8);
+    PlaySoundEffect(SOUND_EFFECT_VP_EXTRA_BALL);
   }
   return true;
 }
@@ -1028,7 +1032,7 @@ void IncreasePlayfieldMultiplier(unsigned long duration) {
     RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
     RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
   } else {
-  //    QueueNotification(SOUND_EFFECT_VP_RETURN_TO_1X + (PlayfieldMultiplier - 1), 1);
+//    PlaySoundEffect(SOUND_EFFECT_ + (PlayfieldMultiplier - 1), 1);
   }
 }
 
@@ -1909,14 +1913,18 @@ int InitNewBall(bool curStateChanged) {
     SkillShotHit = false;
     ExtraBallCollected = false;
     SpecialCollected = false;
-
+    
     PlayfieldMultiplier = 1;
     PlayfieldMultiplierExpiration = 0;
     ScoreAdditionAnimation = 0;
     ScoreAdditionAnimationStartTime = 0;
     BonusXAnimationStart = 0;
-
     BallSaveEndTime = 0;
+  for (int count = 0; count < 4; count++) {
+    NumberOfSpins[count] = 0;
+    GoalsCompletedFlags[count] = 0;
+    SuperSpinnerEndTime = 0;
+  }
 
     if (CurrentPlayer==0) {
       // Only change skill shot on first ball of round.
@@ -2034,15 +2042,10 @@ int ManageGameMode() {
         }
         SetGeneralIlluminationOn(true);        
       }
-//      if (SkillShotHit && (CurrentTime-GameModeStartTime)<15000) {
-//          ShowLampAnimation(2, 240, CurrentTime, 14, false, false);
-//          }
-
       // Playfield X value is only reset during unstructured play
       if (PlayfieldMultiplierExpiration) {
         if (CurrentTime > PlayfieldMultiplierExpiration) {
           PlayfieldMultiplierExpiration = 0;
-//          if (PlayfieldMultiplier > 1) QueueNotification(SOUND_EFFECT_VP_RETURN_TO_1X, 1);
           PlayfieldMultiplier = 1;
           RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
           RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
@@ -2055,6 +2058,9 @@ int ManageGameMode() {
       } else if (DisplaysNeedRefreshing) {
         DisplaysNeedRefreshing = false;
         ShowPlayerScores(0xFF, false, false);
+      }
+      if (CurrentTime>SuperSpinnerEndTime) {
+        SuperSpinnerEndTime = 0;
       }
 
       break;
@@ -2161,7 +2167,8 @@ int ManageGameMode() {
           // if we haven't used the ball save, and we're under the time limit, then save the ball
           if (BallSaveEndTime && CurrentTime<(BallSaveEndTime+BALL_SAVE_GRACE_PERIOD)) {
             RPU_PushToTimedSolenoidStack(SOL_OUTHOLE, 16, CurrentTime + 100);
-            QueueNotification(SOUND_EFFECT_VP_SHOOT_AGAIN, 10);
+//            QueueNotification(SOUND_EFFECT_SHOOTAGAIN, 10);
+            PlaySoundEffect(SOUND_EFFECT_SHOOTAGAIN);
             
             RPU_SetLampState(LAMP_SHOOT_AGAIN, 0);
             BallTimeInTrough = CurrentTime;
@@ -2530,34 +2537,29 @@ void HandleGamePlaySwitches(byte switchHit) {
       break;
 
     case SW_L_SPINNER:
-//      for (int count=0; count<6; count++) {
-//      if (currentSwitches&(1<<count)) {
-//      scoreAddition += SCORE_SPINNER_VAL_ADD_200;
-//      if (count==0 || count==5) scoreAddition += SCORE_SPINNER_VAL_ADD_600;
-//      }
-//      }
-//      if (SuperSpinnerEndTime) {
-//      CurrentScoreOfCurrentPlayer += (SCORE_SPINNER_SUPER_SPIN + SCORE_SPINNER_SUPER_SPIN_MULTIPLIER*scoreAddition);
-//      GoalsCompletedFlags[CurrentPlayer] |= GOAL_SUPER_SPINNER_ACHIEVED;
-//      }
-//      else CurrentScoreOfCurrentPlayer += (SCORE_SPINNER_SPIN + scoreAddition);
-      CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier;
+      if (SuperSpinnerEndTime) {
+      CurrentScores[CurrentPlayer] += (SCORE_SPINNER_SUPER);
+//      CurrentAchievements[CurrentPlayer] |= GOAL_SUPER_SPINNER_ACHIEVED;
+      }
+      else CurrentScores[CurrentPlayer] += (SCORE_SPINNER);
       PlaySoundEffect(SOUND_EFFECT_SPINNER2);
 //      SpinnerHitPhase = (SpinnerHitPhase+1)%12;
       LastTimeSpinnerHit = CurrentTime;
 //      shiftLamps = true;
       if (GameMode==GAME_MODE_UNSTRUCTURED_PLAY) {
-      NumberOfSpins[CurrentPlayer] += 1;
-      if (NumberOfSpins[CurrentPlayer]>99) {
-      NumberOfSpins[CurrentPlayer] = 0;
-//      SuperSpinnerEndTime = CurrentTime + SUPER_SPINNER_DURATION;
-//      PlaySoundEffect(SOUND_EFFECT_SUPER_SPINNER);
-      RPU_SetDisplayCredits(Credits);
+        NumberOfSpins[CurrentPlayer] += 1;
+        if (NumberOfSpins[CurrentPlayer]>99) {
+          NumberOfSpins[CurrentPlayer] = 0;
+          SuperSpinnerEndTime = CurrentTime + SUPER_SPINNER_DURATION;
+          PlaySoundEffect(SOUND_EFFECT_SPINNER);
+          ShowLampAnimation(3, 140, CurrentTime, 14, false, false, 4);
+          RPU_SetDisplayCredits(Credits);
+          } else {
+        RPU_SetDisplayCredits(99-NumberOfSpins[CurrentPlayer]);
       }
-      else{
-        RPU_SetDisplayCredits(0+NumberOfSpins[CurrentPlayer]);
-        }
     }  
+      if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
+
       break;
 
     case SW_CL_SPINNER:

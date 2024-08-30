@@ -189,8 +189,12 @@ struct AttractLampsDown SweepUp[] = {
 #define SOL_DROP_TARGET_RESET       14
 
 // Define Scoring
+#define SCORE_SPINNER               1000
+#define SCORE_SPINNER_SUPER         10000
 #define SCORE_SKILL_SHOT            25000
-   
+#define EXTRA_BALL_TOURN            25000
+#define SPECIAL_TOURN               50000
+#define SUPER_SPINNER_DURATION      40000
 
 
 #if (RPU_MPU_ARCHITECTURE<10)
