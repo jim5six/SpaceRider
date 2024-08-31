@@ -177,7 +177,7 @@ struct AttractLampsDown SweepUp[] = {
 
 #define SOL_KNOCKER                 2 //?
 #define SOL_COIN_LOCKOUT            1 //?
-#define SOL_CLOSE_GATE              3 //?
+#define SOL_CLOSE_GATE              4 //?
 #define SOL_OUTHOLE                 6
 #define SOL_R_POP_BUMPER            7
 #define SOL_L_POP_BUMPER            8
@@ -189,12 +189,14 @@ struct AttractLampsDown SweepUp[] = {
 #define SOL_DROP_TARGET_RESET       14
 
 // Define Scoring
-#define SCORE_SPINNER               1000
-#define SCORE_SPINNER_SUPER         10000
+#define SCORE_SPINNER1              100
+#define SCORE_SPINNER2              200
+#define SCORE_SPINNER3              1000
+#define SCORE_SPINNER4              2000
 #define SCORE_SKILL_SHOT            25000
 #define EXTRA_BALL_TOURN            25000
 #define SPECIAL_TOURN               50000
-#define SUPER_SPINNER_DURATION      40000
+#define SUPER_SPINNER_DURATION      30000
 
 
 #if (RPU_MPU_ARCHITECTURE<10)
