@@ -190,14 +190,17 @@ struct AttractLampsDown SweepUp[] = {
 
 // Define Scoring
 #define SCORE_SPINNER1              100
-#define SCORE_SPINNER2              200
-#define SCORE_SPINNER3              1000
-#define SCORE_SPINNER4              2000
+#define SCORE_SPINNER2              300
+#define SCORE_SPINNER3              1300
+#define SCORE_SPINNER4              3300
+#define SCORE_SPINNERFRENZY         10000
 #define SCORE_SKILL_SHOT            25000
 #define EXTRA_BALL_TOURN            25000
 #define SPECIAL_TOURN               50000
-#define SUPER_SPINNER_DURATION      30000
+#define SUPER_SPINNER_DURATION      25000
 
+// Goals
+#define GOAL_SUPER_SPINNER_ACHIEVED 0x01
 
 #if (RPU_MPU_ARCHITECTURE<10)
 // Machines with a -17, -35, 100, and 200 architecture

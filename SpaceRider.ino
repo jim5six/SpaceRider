@@ -16,7 +16,7 @@
 #include "LampAnimations.h"
 #include <EEPROM.h>
 
-#define GAME_MAJOR_VERSION  2023
+#define GAME_MAJOR_VERSION  2024
 #define GAME_MINOR_VERSION  1
 #define DEBUG_MESSAGES  1
 
@@ -59,9 +59,9 @@ boolean MachineStateChanged = true;
 
 #define GAME_MODE_SKILL_SHOT                        1
 #define GAME_MODE_UNSTRUCTURED_PLAY                 2
+#define GAME_MODE_SPINNER_FRENZY                    3
 // Add more game modes as necessary
 // Examples:
-#define GAME_MODE_SPINNER_FRENZY                     3
 //#define GAME_MODE_DROP_TARGET_FRENZY              4
 //#define GAME_MODE_DROP_TARGET_FRENZY_FINISH       5
 
@@ -178,7 +178,7 @@ unsigned short SelfTestStateToCalloutMap[34] = {  134, 135, 133, 136, 137, 138, 
 #define SOUND_EFFECT_DIAG_STARTING_DIAGNOSTICS    1914
 
 
-#define MAX_DISPLAY_BONUS     10
+#define MAX_DISPLAY_BONUS               100
 #define TILT_WARNING_DEBOUNCE_TIME      1000
 
 /*********************************************************************
@@ -1711,7 +1711,8 @@ int RunAttractMode(int curState, boolean curStateChanged) {
     AttractLastLadderTime = CurrentTime;
   }
   
-  ShowLampAnimation(1, 40, CurrentTime, 14, false, false);
+  ShowLampAnimation(2, 40, CurrentTime, 4, false, false);
+//  ShowLampAnimation(2, 40, CurrentTime, 4, false, true);
 //  ShowLampAnimation(1, 40, CurrentTime, 14, false, false);
   
   byte switchHit;
@@ -2029,7 +2030,7 @@ int ManageGameMode() {
         GameModeStage = 0;
         SetGeneralIlluminationOn(true);
       }
-    ShowLampAnimation(2, 200, CurrentTime, 14, false, false, 4);
+    ShowLampAnimation(3, 200, CurrentTime, 14, false, false, 4);
 
       // The switch handler will award the skill shot
       // (when applicable) and this mode will move
@@ -2072,6 +2073,18 @@ int ManageGameMode() {
         SuperSpinnerEndTime = 0;
       }
       RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
+
+      break;
+
+    case GAME_MODE_SPINNER_FRENZY:
+      if (GameModeStartTime == 0) {
+        GameModeStartTime = CurrentTime;
+      }  
+      RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 500);
+      RPU_SetLampState(LAMP_L_SPINNER_200, 1, 0, 500);
+      RPU_SetLampState(LAMP_L_SPINNER_1000, 1, 0, 500);
+      RPU_SetLampState(LAMP_L_SPINNER_2000, 1, 0, 500);
+      GoalsCompletedFlags[CurrentPlayer] |= GOAL_SUPER_SPINNER_ACHIEVED;
 
       break;
 
@@ -2547,28 +2560,47 @@ void HandleGamePlaySwitches(byte switchHit) {
       break;
 
     case SW_L_SPINNER:
-      if (SuperSpinnerEndTime) {
-      CurrentScores[CurrentPlayer] += (SCORE_SPINNER4) * PlayfieldMultiplier;
+      if (CurrentTime < SuperSpinnerEndTime) {
+      SetGameMode(GAME_MODE_SPINNER_FRENZY);
       PlaySoundEffect(SOUND_EFFECT_SPINNER);
-      RPU_SetLampState(LAMP_L_SPINNER_2000, 1, 0, 500);
-//      GoalsCompletedFlags[CurrentPlayer] |= GOAL_SUPER_SPINNER_ACHIEVED;
-      } else { CurrentScores[CurrentPlayer] += (SCORE_SPINNER1) * PlayfieldMultiplier;
-      PlaySoundEffect(SOUND_EFFECT_SPINNER2);
-//      SpinnerHitPhase = (SpinnerHitPhase+1)%12;
-      LastTimeSpinnerHit = CurrentTime;
-//      shiftLamps = true;
+      CurrentScores[CurrentPlayer] += (SCORE_SPINNERFRENZY) * PlayfieldMultiplier;
+      } else { 
+      SetGameMode(GAME_MODE_UNSTRUCTURED_PLAY);
       }
       if (GameMode==GAME_MODE_UNSTRUCTURED_PLAY) {
         NumberOfSpins[CurrentPlayer] += 1;
-        if (NumberOfSpins[CurrentPlayer]>99) {
+        if (NumberOfSpins[CurrentPlayer]>200) {
           NumberOfSpins[CurrentPlayer] = 0;
           SuperSpinnerEndTime = CurrentTime + SUPER_SPINNER_DURATION;
           RPU_SetDisplayCredits(Credits);
           } else {
-        RPU_SetDisplayCredits(99-NumberOfSpins[CurrentPlayer]);
-        RPU_SetLampState(LAMP_L_SPINNER_2000, 0, 0, 0);
+        RPU_SetDisplayCredits(0+NumberOfSpins[CurrentPlayer]);
+        }
+        if (NumberOfSpins[CurrentPlayer] < 51){
+          CurrentScores[CurrentPlayer] += (SCORE_SPINNER1) * PlayfieldMultiplier;
+          RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
+          RPU_SetLampState(LAMP_L_SPINNER_200, 0, 0, 0);
+          RPU_SetLampState(LAMP_L_SPINNER_1000, 0, 0, 0);
+          RPU_SetLampState(LAMP_L_SPINNER_2000, 0, 0, 0);
+          PlaySoundEffect(SOUND_EFFECT_SPINNER2);
+        }
+        if (NumberOfSpins[CurrentPlayer] > 50 && NumberOfSpins[CurrentPlayer] < 101){
+          CurrentScores[CurrentPlayer] += (SCORE_SPINNER2) * PlayfieldMultiplier;
+          RPU_SetLampState(LAMP_L_SPINNER_200, 1, 0, 0);
+          PlaySoundEffect(SOUND_EFFECT_SPINNER2);
+        }
+        if (NumberOfSpins[CurrentPlayer] > 100 && NumberOfSpins[CurrentPlayer] < 151){
+          CurrentScores[CurrentPlayer] += (SCORE_SPINNER3) * PlayfieldMultiplier;
+          RPU_SetLampState(LAMP_L_SPINNER_1000, 1, 0, 0);
+          PlaySoundEffect(SOUND_EFFECT_SPINNER2);
+        }
+        if (NumberOfSpins[CurrentPlayer] > 150){
+          CurrentScores[CurrentPlayer] += (SCORE_SPINNER4) * PlayfieldMultiplier;
+          RPU_SetLampState(LAMP_L_SPINNER_2000, 1, 0, 0);
+          PlaySoundEffect(SOUND_EFFECT_SPINNER2);
+        }
       }
-    }  
+      LastTimeSpinnerHit = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
 
       break;
