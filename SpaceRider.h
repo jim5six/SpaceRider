@@ -177,7 +177,7 @@ struct AttractLampsDown SweepUp[] = {
 
 #define SOL_KNOCKER                 2 //?
 #define SOL_COIN_LOCKOUT            1 //?
-#define SOL_CLOSE_GATE              4 //?
+#define SOL_CLOSE_GATE              5 //?
 #define SOL_OUTHOLE                 6
 #define SOL_R_POP_BUMPER            7
 #define SOL_L_POP_BUMPER            8
@@ -197,6 +197,8 @@ struct AttractLampsDown SweepUp[] = {
 #define SCORE_SKILL_SHOT            25000
 #define EXTRA_BALL_TOURN            25000
 #define SPECIAL_TOURN               50000
+
+// Define Time
 #define SUPER_SPINNER_DURATION      25000
 
 // Goals
