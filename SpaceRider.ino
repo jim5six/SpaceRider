@@ -2753,7 +2753,7 @@ void HandleGamePlaySwitches(byte switchHit) {
       AddToBonus(1);
       PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
       RPU_SetContinuousSolenoidBit(true, 0x10);
-      RPU_SetLampState(LAMP_R_OUTLANE, 1, 2, 500)
+      RPU_SetLampState(LAMP_R_OUTLANE, 1, 2, 500);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;  
