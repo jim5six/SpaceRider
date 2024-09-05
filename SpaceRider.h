@@ -175,9 +175,9 @@ struct AttractLampsDown SweepUp[] = {
 
 // Space Rider Solinoids
 
-#define SOL_KNOCKER                 2 //?
+#define SOL_KNOCKER                 5
 #define SOL_COIN_LOCKOUT            1 //?
-#define SOL_CLOSE_GATE              5 //?
+#define SOL_CLOSE_GATE               //?
 #define SOL_OUTHOLE                 6
 #define SOL_R_POP_BUMPER            7
 #define SOL_L_POP_BUMPER            8
@@ -194,15 +194,18 @@ struct AttractLampsDown SweepUp[] = {
 #define SCORE_SPINNER3              1300
 #define SCORE_SPINNER4              3300
 #define SCORE_SPINNERFRENZY         10000
+#define SCORE_POPFRENZY             5000
 #define SCORE_SKILL_SHOT            25000
 #define EXTRA_BALL_TOURN            25000
 #define SPECIAL_TOURN               50000
 
 // Define Time
 #define SUPER_SPINNER_DURATION      25000
+#define SUPER_POP_DURATION          25000
 
 // Goals
 #define GOAL_SUPER_SPINNER_ACHIEVED 0x01
+#define GOAL_SUPER_POP_ACHIEVED     0x01
 
 #if (RPU_MPU_ARCHITECTURE<10)
 // Machines with a -17, -35, 100, and 200 architecture
