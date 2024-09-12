@@ -35,6 +35,7 @@ struct PlayfieldAndCabinetSwitch {
 #define SWITCH_STACK_EMPTY  0xFF
 #define CONTSOL_DISABLE_FLIPPERS      0x40
 #define CONTSOL_DISABLE_COIN_LOCKOUT  0x20
+#define CONTSOL_DISABLE_GATE  0x10
 
 
 // RPU_InitializeMPU will always boot none of the following
@@ -88,6 +89,7 @@ void RPU_ClearUpDownSwitchState();
 void RPU_PushToSolenoidStack(byte solenoidNumber, byte numPushes, boolean disableOverride = false);
 void RPU_SetCoinLockout(boolean lockoutOff = false, byte solbit = CONTSOL_DISABLE_COIN_LOCKOUT);
 void RPU_SetDisableFlippers(boolean disableFlippers = true, byte solbit = CONTSOL_DISABLE_FLIPPERS);
+void RPU_SetDisableGate(boolean disableGate = true, byte solbit = CONTSOL_DISABLE_GATE);
 void RPU_SetContinuousSolenoidBit(boolean bitOn, byte solBit = 0x10);
 #if (RPU_MPU_ARCHITECTURE>=10)
 void RPU_SetContinuousSolenoid(boolean solOn, byte solNum);

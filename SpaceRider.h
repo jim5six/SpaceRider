@@ -176,8 +176,6 @@ struct AttractLampsDown SweepUp[] = {
 // Space Rider Solinoids
 
 #define SOL_KNOCKER                 5
-#define SOL_COIN_LOCKOUT            1 //?
-#define SOL_CLOSE_GATE               //?
 #define SOL_OUTHOLE                 6
 #define SOL_R_POP_BUMPER            7
 #define SOL_L_POP_BUMPER            8
@@ -190,22 +188,34 @@ struct AttractLampsDown SweepUp[] = {
 
 // Define Scoring
 #define SCORE_SPINNER1              100
-#define SCORE_SPINNER2              300
-#define SCORE_SPINNER3              1300
-#define SCORE_SPINNER4              3300
+#define SCORE_SPINNER2              200
+#define SCORE_SPINNER3              1000
+#define SCORE_SPINNER4              2000
+#define SCORE_C_SPINNER1            100
+#define SCORE_C_SPINNER2            250
+#define SCORE_C_SPINNER3            500
+#define SCORE_C_SPINNER4            750
+#define SCORE_C_SPINNER5            1000
 #define SCORE_SPINNERFRENZY         10000
 #define SCORE_POPFRENZY             5000
+#define SCORE_BLASTOFF_COLLECT      25000
 #define SCORE_SKILL_SHOT            25000
 #define EXTRA_BALL_TOURN            25000
 #define SPECIAL_TOURN               50000
 
 // Define Time
 #define SUPER_SPINNER_DURATION      25000
+#define SUPER_SPINNER_OVER          500
+#define SUPER_BLASTOFF_DURATION     30000
+#define SUPER_BLASTOFF_OVER         100
 #define SUPER_POP_DURATION          25000
+#define SUPER_POP_OVER              500
 
 // Goals
-#define GOAL_SUPER_SPINNER_ACHIEVED 0x01
-#define GOAL_SUPER_POP_ACHIEVED     0x01
+#define GOAL_SUPER_SPINNER_ACHIEVED 0x10
+#define GOAL_SUPER_POP_ACHIEVED     0x20
+#define GOAL_BLAST_OFF_ACHIEVED     0x40
+
 
 #if (RPU_MPU_ARCHITECTURE<10)
 // Machines with a -17, -35, 100, and 200 architecture

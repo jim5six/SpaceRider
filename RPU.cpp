@@ -1528,6 +1528,17 @@ void RPU_SetDisableFlippers(boolean disableFlippers, byte solbit) {
   RPU_DataWrite(ADDRESS_U11_B, CurrentSolenoidByte);
 }
 
+// Gate is a continous solenoid
+
+void RPU_SetDisableGate(boolean disableGate, byte solbit) {
+  if (disableGate) {
+    CurrentSolenoidByte = CurrentSolenoidByte | solbit;
+  } else {
+    CurrentSolenoidByte = CurrentSolenoidByte & ~solbit;
+  }
+  
+  RPU_DataWrite(ADDRESS_U11_B, CurrentSolenoidByte);
+}
 
 void RPU_SetContinuousSolenoidBit(boolean bitOn, byte solbit) {
   if (bitOn) {
