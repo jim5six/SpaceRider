@@ -213,8 +213,8 @@ struct AttractLampsDown SweepUp[] = {
 
 // Goals
 #define GOAL_SUPER_SPINNER_ACHIEVED 0x10
-#define GOAL_SUPER_POP_ACHIEVED     0x20
-#define GOAL_BLAST_OFF_ACHIEVED     0x40
+#define GOAL_SUPER_POP_ACHIEVED     0x10
+#define GOAL_BLAST_OFF_ACHIEVED     0x10
 
 
 #if (RPU_MPU_ARCHITECTURE<10)
