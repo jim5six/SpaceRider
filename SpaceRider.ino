@@ -9,7 +9,7 @@
 
 #include "RPU_Config.h"
 #include "RPU.h"
-#include "DropTargets.h"
+//#include "DropTargets.h"
 #include "SpaceRider.h"
 #include "SelfTestAndAudit.h"
 #include "AudioHandler.h"
@@ -41,22 +41,23 @@ boolean MachineStateChanged = true;
 #define MACHINE_STATE_MATCH_MODE      110
 #define MACHINE_STATE_DIAGNOSTICS     120
 
-#define MACHINE_STATE_ADJUST_FREEPLAY             (MACHINE_STATE_TEST_DONE-1)
-#define MACHINE_STATE_ADJUST_BALL_SAVE            (MACHINE_STATE_TEST_DONE-2)
-#define MACHINE_STATE_ADJUST_SOUND_SELECTOR       (MACHINE_STATE_TEST_DONE-3)
-#define MACHINE_STATE_ADJUST_MUSIC_VOLUME         (MACHINE_STATE_TEST_DONE-4)
-#define MACHINE_STATE_ADJUST_SFX_VOLUME           (MACHINE_STATE_TEST_DONE-5)
-#define MACHINE_STATE_ADJUST_CALLOUTS_VOLUME      (MACHINE_STATE_TEST_DONE-6)
-#define MACHINE_STATE_ADJUST_TOURNAMENT_SCORING   (MACHINE_STATE_TEST_DONE-7)
-#define MACHINE_STATE_ADJUST_TILT_WARNING         (MACHINE_STATE_TEST_DONE-8)
-#define MACHINE_STATE_ADJUST_AWARD_OVERRIDE       (MACHINE_STATE_TEST_DONE-9)
-#define MACHINE_STATE_ADJUST_BALLS_OVERRIDE       (MACHINE_STATE_TEST_DONE-10)
-#define MACHINE_STATE_ADJUST_SCROLLING_SCORES     (MACHINE_STATE_TEST_DONE-11)
-#define MACHINE_STATE_ADJUST_EXTRA_BALL_AWARD     (MACHINE_STATE_TEST_DONE-12)
-#define MACHINE_STATE_ADJUST_SPECIAL_AWARD        (MACHINE_STATE_TEST_DONE-13)
-#define MACHINE_STATE_ADJUST_CREDIT_RESET_HOLD_TIME          (MACHINE_STATE_TEST_DONE-14)
-#define MACHINE_STATE_ADJUST_DONE                 (MACHINE_STATE_TEST_DONE-15)
+#define MACHINE_STATE_ADJUST_FREEPLAY                 (MACHINE_STATE_TEST_DONE-1)
+#define MACHINE_STATE_ADJUST_BALL_SAVE                (MACHINE_STATE_TEST_DONE-2)
+#define MACHINE_STATE_ADJUST_SOUND_SELECTOR           (MACHINE_STATE_TEST_DONE-3)
+#define MACHINE_STATE_ADJUST_MUSIC_VOLUME             (MACHINE_STATE_TEST_DONE-4)
+#define MACHINE_STATE_ADJUST_SFX_VOLUME               (MACHINE_STATE_TEST_DONE-5)
+#define MACHINE_STATE_ADJUST_CALLOUTS_VOLUME          (MACHINE_STATE_TEST_DONE-6)
+#define MACHINE_STATE_ADJUST_TOURNAMENT_SCORING       (MACHINE_STATE_TEST_DONE-7)
+#define MACHINE_STATE_ADJUST_TILT_WARNING             (MACHINE_STATE_TEST_DONE-8)
+#define MACHINE_STATE_ADJUST_AWARD_OVERRIDE           (MACHINE_STATE_TEST_DONE-9)
+#define MACHINE_STATE_ADJUST_BALLS_OVERRIDE           (MACHINE_STATE_TEST_DONE-10)
+#define MACHINE_STATE_ADJUST_SCROLLING_SCORES         (MACHINE_STATE_TEST_DONE-11)
+#define MACHINE_STATE_ADJUST_EXTRA_BALL_AWARD         (MACHINE_STATE_TEST_DONE-12)
+#define MACHINE_STATE_ADJUST_SPECIAL_AWARD            (MACHINE_STATE_TEST_DONE-13)
+#define MACHINE_STATE_ADJUST_CREDIT_RESET_HOLD_TIME   (MACHINE_STATE_TEST_DONE-14)
+#define MACHINE_STATE_ADJUST_DONE                     (MACHINE_STATE_TEST_DONE-15)
 
+// Game Modes
 #define GAME_MODE_SKILL_SHOT                        1
 #define GAME_MODE_UNSTRUCTURED_PLAY                 2
 #define GAME_MODE_SPINNER_FRENZY                    3
@@ -65,10 +66,6 @@ boolean MachineStateChanged = true;
 #define GAME_MODE_POP_FRENZY_OVER                   6
 #define GAME_MODE_BLAST_OFF_COLLECT                 7
 #define GAME_MODE_BLAST_OFF_OVER                    8
-// Add more game modes as necessary
-// Examples:
-//#define GAME_MODE_DROP_TARGET_FRENZY              4
-//#define GAME_MODE_DROP_TARGET_FRENZY_FINISH       5
 
 // Indices of EEPROM save locations
 #define EEPROM_BALL_SAVE_BYTE           100
@@ -87,21 +84,27 @@ boolean MachineStateChanged = true;
 #define EEPROM_EXTRA_BALL_SCORE_UL      140
 #define EEPROM_SPECIAL_SCORE_UL         144
 
-
+// Sound Effects
 #define SOUND_EFFECT_NONE               0
+
 #define SOUND_EFFECT_BONUS_COUNT_1k     2
 #define SOUND_EFFECT_ROLL_OVER          3
 #define SOUND_EFFECT_OUTLANE            4
+
 #define SOUND_EFFECT_SLINGSHOT          6
 #define SOUND_EFFECT_POPBUMPER          7
 #define SOUND_EFFECT_SAUCER             8 //REPLACE
 #define SOUND_EFFECT_DROPTARGET         9
 #define SOUND_EFFECT_ADDCREDIT          10
+
 #define SOUND_EFFECT_BALL_OVER          19
 #define SOUND_EFFECT_GAME_OVER          20
+
 #define SOUND_EFFECT_BACKGROUND1        25
 #define SOUND_EFFECT_SWITCHHIT          26
+
 #define SOUND_EFFECT_TILT_WARNING       28
+
 #define SOUND_EFFECT_MATCH_SPIN         30
 
 #define SOUND_EFFECT_SPINNER100         32
@@ -187,7 +190,7 @@ unsigned short SelfTestStateToCalloutMap[34] = {  134, 135, 133, 136, 137, 138, 
 #define SOUND_EFFECT_DIAG_STARTING_DIAGNOSTICS    1914
 
 
-#define MAX_DISPLAY_BONUS               40
+#define MAX_DISPLAY_BONUS               10
 #define TILT_WARNING_DEBOUNCE_TIME      1000
 
 /*********************************************************************
@@ -214,6 +217,7 @@ byte NumberOfCenterSpins[4];
 byte NumberOfHits[4];
 byte GoalsCompletedFlags[4];
 byte CurrentAchievements[4];
+byte TargetBankComplete[4];
 byte LampType = 0;
 boolean SkillShotHit = false;
 boolean FreePlayMode = true;
@@ -298,7 +302,7 @@ unsigned long BonusXAnimationStart;
 boolean GateOpen = true;
 unsigned long GateOpenTime = 0;
 
-DropTargetBank DropTargets(4, 1, DROP_TARGET_TYPE_BLY_1, 50);
+//DropTargetBank DropTargets(4, 1, DROP_TARGET_TYPE_BLY_1, 50);
 
 
 /******************************************************
@@ -463,11 +467,12 @@ void setup() {
   CurrentAchievements[3] = 0;
 
   // Initialize any drop target variables here
-  DropTargets.DefineSwitch(3, SW_DROP_1);
-  DropTargets.DefineSwitch(2, SW_DROP_2);
-  DropTargets.DefineSwitch(1, SW_DROP_3);
-  DropTargets.DefineSwitch(0, SW_DROP_4);
-  DropTargets.DefineResetSolenoid(0, SOL_DROP_TARGET_RESET);
+//  DropTargets.DefineSwitch(3, SW_DROP_1);
+//  DropTargets.DefineSwitch(2, SW_DROP_2);
+//  DropTargets.DefineSwitch(1, SW_DROP_3);
+//  DropTargets.DefineSwitch(0, SW_DROP_4);
+//  DropTargets.DefineResetSolenoid(0, SOL_DROP_TARGET_RESET);
+  RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime, true);
 
   Audio.SetMusicDuckingGain(12);
   Audio.QueueSound(SOUND_EFFECT_GAME_START, AUDIO_PLAY_TYPE_WAV_TRIGGER, CurrentTime+1200);
@@ -517,22 +522,25 @@ void ShowBonusLamps() {
   if (bonus>MAX_DISPLAY_BONUS) bonus = MAX_DISPLAY_BONUS;
     byte cap = 9;
   
-    while (bonus>cap) {
-      RPU_SetLampState(LAMP_BONUS_400-(cap-6), 1, 1, 100);
-      bonus -= cap;
-      cap -= 1;
-      if (cap==0) bonus = 0;
+    if (bonus>cap) {
+      RPU_SetLampState(LAMP_BONUS_100, 1, 0, 100);
+//      bonus -= cap;
+//      cap -= 1;
+    }
+    if (cap==0) {
+      bonus = 0;
     }
 
     if (bonus==0) {
-      for (byte count=1; count<=cap; count++) RPU_SetLampState(LAMP_BONUS_10+(count-1), 0);
+      for (byte count=1; count<=cap; count++)
+        RPU_SetLampState(LAMP_BONUS_10+(count-1), 0, 0, 0);
       return;
     }
 
     byte bottom; 
-    for (bottom=1; bottom<bonus; bottom++){
-      RPU_SetLampState(LAMP_BONUS_10+(bottom-1), 1, 0);
-    }
+      for (bottom=0; bottom<bonus; bottom++){
+        RPU_SetLampState(LAMP_BONUS_10+(bottom-1), 1, 0);
+      }
   
     if (bottom<=cap) {
       RPU_SetLampState(LAMP_BONUS_10+(bottom-1), 1, 0);
@@ -2008,6 +2016,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
       NumberOfHits[count] = 0;
       GoalsCompletedFlags[count] = 0;
       CurrentAchievements[count] = 0;
+      TargetBankComplete[count] = 0;
     }
     SuperSpinnerEndTime = 0;
     SuperPopEndTime = 0;
@@ -2023,8 +2032,8 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
     }
 
     // Reset Drop Targets
-    DropTargets.ResetDropTargets(CurrentTime + 100, true);
-    
+    RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime, true);
+
     RPU_PushToTimedSolenoidStack(SOL_OUTHOLE, 16, CurrentTime + 1000);
     NumberOfBallsInPlay = 1;
 //    QueueNotification(SOUND_EFFECT_GAME_START, 1);
@@ -2073,9 +2082,9 @@ boolean AddABall(boolean ballLocked = false, boolean ballSave = true) {
 }
 */
 
-void UpdateDropTargets() {
-  DropTargets.Update(CurrentTime);
-}
+//void UpdateDropTargets() {
+//  DropTargets.Update(CurrentTime);
+//}
 
 byte GameModeStage;
 boolean DisplaysNeedRefreshing = false;
@@ -2093,7 +2102,7 @@ int ManageGameMode() {
 
   boolean specialAnimationRunning = false;
 
-  UpdateDropTargets();
+//  UpdateDropTargets();
 
   if ((CurrentTime - LastSwitchHitTime) > 3000) TimersPaused = true;
   else TimersPaused = false;
@@ -2214,6 +2223,20 @@ int ManageGameMode() {
         GateOpenTime = 0;
       }
 
+      if (RPU_ReadLampState(LAMP_TARGET_1) && RPU_ReadLampState(LAMP_TARGET_2) && RPU_ReadLampState(LAMP_TARGET_3) &&
+          RPU_ReadLampState(LAMP_TARGET_4) && RPU_ReadLampState(LAMP_TARGET_5)) {
+          TargetBankComplete[CurrentPlayer] += 1;
+          }
+      if (TargetBankComplete[CurrentPlayer] > 3) {
+        TargetBankComplete[CurrentPlayer] == 3;
+        }
+      if (TargetBankComplete[CurrentPlayer] = 1) {
+        RPU_SetLampState(LAMP_BONUS_200, 1, 0, 100);
+        } else if (TargetBankComplete[CurrentPlayer] = 2) {
+        RPU_SetLampState(LAMP_BONUS_300, 1, 0, 100);
+        } else if (TargetBankComplete[CurrentPlayer] = 3) {
+        RPU_SetLampState(LAMP_BONUS_400, 1, 0, 100);
+        }
       break;
 
     case GAME_MODE_SPINNER_FRENZY:
@@ -3162,12 +3185,17 @@ void HandleGamePlaySwitches(byte switchHit) {
       RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
       RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
       IncreasePlayfieldMultiplier(25000);
-      DropTargets.ResetDropTargets(CurrentTime + 2500, true);
+      RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 3000, true);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
 
     case SW_R_TARGET:
+      RPU_SetLampState(LAMP_TARGET_1, 0, 0, 0);
+      RPU_SetLampState(LAMP_TARGET_2, 0, 0, 0);
+      RPU_SetLampState(LAMP_TARGET_3, 0, 0, 0);
+      RPU_SetLampState(LAMP_TARGET_4, 0, 0, 0);
+      RPU_SetLampState(LAMP_TARGET_5, 0, 0, 0);
       if (RPU_ReadLampState(LAMP_OPENGATE)){
         CurrentScores[CurrentPlayer] += 100 * PlayfieldMultiplier;
         QueueNotification(SOUND_EFFECT_GATEOPEN, 1);
