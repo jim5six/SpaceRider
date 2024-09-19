@@ -60,7 +60,7 @@
 #define RPU_OS_USE_WAV_TRIGGER_1p3
 //#define RPU_OS_DISABLE_CPC_FOR_SPACE
 //#define RPU_OS_USE_AUX_LAMPS
-//#define RPU_OS_USE_7_DIGIT_DISPLAYS
+#define RPU_OS_USE_7_DIGIT_DISPLAYS
 //#define RPU_USE_EXTENDED_SWITCHES_ON_PB4
 //#define RPU_USE_EXTENDED_SWITCHES_ON_PB7
 //#define RPU_OS_USE_WTYPE_1_SOUND
@@ -98,8 +98,8 @@
 #define RPU_OS_MASK_SHIFT_1            0x60
 #define RPU_OS_MASK_SHIFT_2            0x0C
 #else
-#define RPU_OS_MASK_SHIFT_1            0x30
-#define RPU_OS_MASK_SHIFT_2            0x06
+#define RPU_OS_MASK_SHIFT_1            0x60
+#define RPU_OS_MASK_SHIFT_2            0x0C
 #endif
 
 #ifdef RPU_OS_USE_7_DIGIT_DISPLAYS

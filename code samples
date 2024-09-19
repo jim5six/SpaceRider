@@ -1,0 +1,10 @@
+if (time condition) {
+        if (CurrentTime > Time condition) {
+          Time condition Expiration = 0;
+          Set other variables here
+        } else {
+          for (byte count = 0; count < 4; count++) {
+            if (count != CurrentPlayer) OverrideScoreDisplay(count, PlayfieldMultiplier, DISPLAY_OVERRIDE_ANIMATION_BOUNCE);
+          }
+          DisplaysNeedRefreshing = true;
+        }

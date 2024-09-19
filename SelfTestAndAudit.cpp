@@ -97,7 +97,7 @@ byte GetCPCCredits(byte cpcSelection) {
 #ifdef RPU_OS_USE_6_DIGIT_CREDIT_DISPLAY_WITH_7_DIGIT_DISPLAYS
 #define TOTAL_DISPLAY_DIGITS 34
 #else
-#define TOTAL_DISPLAY_DIGITS 35
+#define TOTAL_DISPLAY_DIGITS 34
 #endif
 #else
 #define TOTAL_DISPLAY_DIGITS 30
