@@ -8,3 +8,277 @@ if (time condition) {
           }
           DisplaysNeedRefreshing = true;
         }
+
+
+
+
+// 
+// Marquee Animation Timing
+//
+
+void MarqueeAttract(byte Segment, int Speed, boolean CW, boolean priority) {
+
+if (MarqueeDisabled && (priority == false)) {
+  return;
+}
+
+// Default speeds, Segment 1 = 100
+  
+  byte MQPhase1 = (CurrentTime/Speed)%4; // 4 steps
+  byte MQPhase2 = (CurrentTime/(Speed*3))%3; // 3 steps
+  if ((Segment == 1) || (Segment == 4)) {
+    // Rotate CW
+    // First leg
+    RPU_SetLampState(LA_BIG_1, (CW == true)?(MQPhase1==0):(MQPhase1==3), 0); 
+    RPU_SetLampState(LA_BIG_2, (CW == true)?(MQPhase1==1):(MQPhase1==2), 0);
+    RPU_SetLampState(LA_BIG_3, (CW == true)?(MQPhase1==2):(MQPhase1==1), 0);
+    RPU_SetLampState(LA_BIG_4, (CW == true)?(MQPhase1==3):(MQPhase1==0), 0);
+    // Second leg
+    RPU_SetLampState(LA_BIG_5, (CW == true)?(MQPhase1==0):(MQPhase1==3), 0); 
+    RPU_SetLampState(LA_BIG_9, (CW == true)?(MQPhase1==1):(MQPhase1==2), 0);
+    RPU_SetLampState(LA_BIG_12, (CW == true)?(MQPhase1==2):(MQPhase1==1), 0);
+    RPU_SetLampState(LA_BIG_14, (CW == true)?(MQPhase1==3):(MQPhase1==0), 0);
+    // Third leg
+    RPU_SetLampState(LA_BIG_15, (CW == true)?(MQPhase1==0):(MQPhase1==3), 0); 
+    RPU_SetLampState(LA_BIG_13, (CW == true)?(MQPhase1==1):(MQPhase1==2), 0);
+    RPU_SetLampState(LA_BIG_10, (CW == true)?(MQPhase1==2):(MQPhase1==1), 0);
+    RPU_SetLampState(LA_BIG_6, (CW == true)?(MQPhase1==3):(MQPhase1==0), 0);
+    // Inner rack lamps 
+    RPU_SetLampState(LA_BIG_7, (CW == true)?(MQPhase2==0):(MQPhase2==2), 0); 
+    RPU_SetLampState(LA_BIG_11, (CW == true)?(MQPhase2==1):(MQPhase2==1), 0);
+    RPU_SetLampState(LA_BIG_8, (CW == true)?(MQPhase2==2):(MQPhase2==0), 0);
+  }
+
+  byte MQPhase3 = (CurrentTime/(Speed*54/100))%6; //  6 steps
+  if ((Segment == 2) || (Segment == 4)) {
+    // Bank Shot lamps
+    RPU_SetLampState(LA_BANK_SHOT_5000, ((CW == true)?(MQPhase3==0):(MQPhase3==5))||((CW == true)?(MQPhase3==1):(MQPhase3==0)), ((CW == true)?(MQPhase3==1):(MQPhase3==0))); 
+    RPU_SetLampState(LA_BANK_SHOT_1500, ((CW == true)?(MQPhase3==1):(MQPhase3==4))||((CW == true)?(MQPhase3==2):(MQPhase3==5)), ((CW == true)?(MQPhase3==2):(MQPhase3==5)));
+    RPU_SetLampState(LA_BANK_SHOT_1200, ((CW == true)?(MQPhase3==2):(MQPhase3==3))||((CW == true)?(MQPhase3==3):(MQPhase3==4)), ((CW == true)?(MQPhase3==3):(MQPhase3==4)));
+    RPU_SetLampState(LA_BANK_SHOT_900, ((CW == true)?(MQPhase3==3):(MQPhase3==2))||((CW == true)?(MQPhase3==4):(MQPhase3==3)), ((CW == true)?(MQPhase3==4):(MQPhase3==3)));
+    RPU_SetLampState(LA_BANK_SHOT_600, ((CW == true)?(MQPhase3==4):(MQPhase3==1))||((CW == true)?(MQPhase3==5):(MQPhase3==2)), ((CW == true)?(MQPhase3==5):(MQPhase3==2)));
+    RPU_SetLampState(LA_BANK_SHOT_300, ((CW == true)?(MQPhase3==5):(MQPhase3==0))||((CW == true)?(MQPhase3==0):(MQPhase3==1)), ((CW == true)?(MQPhase3==0):(MQPhase3==1)));
+  }
+
+  byte MQPhase4 = (CurrentTime/(Speed*3/2))%3; //  3 steps
+  byte MQPhase5 = (CurrentTime/(Speed*60/100))%8; //  8 steps
+
+  if ((Segment == 5) || (Segment == 4)) {
+    // Multiplier lamps
+    RPU_SetLampState(LA_5X, MQPhase4==0||MQPhase4==1, 0); 
+    RPU_SetLampState(LA_3X, MQPhase4==1||MQPhase4==2, 0);
+    RPU_SetLampState(LA_2X, MQPhase4==2||MQPhase4==0, 0);
+  }
+
+  if ((Segment == 3) || (Segment == 4)) {
+    // Upper alley Marquee
+    // Top Row
+    RPU_SetLampState(LA_SMALL_1, MQPhase5==0||MQPhase5==1||MQPhase5==2, MQPhase5==2); 
+    RPU_SetLampState(LA_SMALL_2, MQPhase5==1||MQPhase5==2||MQPhase5==3, MQPhase5==3);
+    RPU_SetLampState(LA_SMALL_3, MQPhase5==2||MQPhase5==3||MQPhase5==4, MQPhase5==4);
+    RPU_SetLampState(LA_SMALL_4, MQPhase5==3||MQPhase5==4||MQPhase5==5, MQPhase5==5);
+    // Bottom Row
+    RPU_SetLampState(LA_SMALL_12, MQPhase5==4||MQPhase5==5||MQPhase5==6, MQPhase5==6); 
+    RPU_SetLampState(LA_SMALL_11, MQPhase5==5||MQPhase5==6||MQPhase5==7, MQPhase5==7);
+    RPU_SetLampState(LA_SMALL_10, MQPhase5==6||MQPhase5==7||MQPhase5==0, MQPhase5==0);
+    RPU_SetLampState(LA_SMALL_9, MQPhase5==7||MQPhase5==0||MQPhase5==1, MQPhase5==1);
+  }
+
+  byte MQPhase6 = (CurrentTime/Speed)%4; // 4 steps
+
+  if ((Segment == 6) || (Segment == 4)) {
+    // Player Lamps
+    RPU_SetLampState(LA_1_PLAYER, MQPhase6==0||MQPhase6==1, 0); 
+    RPU_SetLampState(LA_2_PLAYER, MQPhase6==1||MQPhase6==2, 0);
+    RPU_SetLampState(LA_3_PLAYER, MQPhase6==2||MQPhase6==3, 0);
+    RPU_SetLampState(LA_4_PLAYER, MQPhase6==3||MQPhase6==0, 0);
+  }
+
+  if ((Segment == 7) || (Segment == 4)) {
+    // Remaining lamps
+    RPU_SetLampState(LA_SMALL_5, 1, 0, 125);
+    RPU_SetLampState(LA_SMALL_13, 1, 0, 250);
+    RPU_SetLampState(LA_SMALL_6, 1, 0, 125);
+    RPU_SetLampState(LA_SMALL_14, 1, 0, 250);
+    RPU_SetLampState(LA_SMALL_7, 1, 0, 125);
+    RPU_SetLampState(LA_SMALL_15, 1, 0, 250);
+ 
+    RPU_SetLampState(LA_SMALL_8, 1, 0, 250);
+    RPU_SetLampState(SAME_PLAYER, 1, 0, 500);
+    RPU_SetLampState(LA_SUPER_BONUS, 1, 0, 500);
+    RPU_SetLampState(LA_SPINNER, 1, 0, 250);
+    RPU_SetLampState(LA_OUTLANE_SPECIAL, 1, 0, 125);
+  }
+}
+
+
+
+//
+//  SetGoals Ver 1 
+//
+// Bit 1 - SuperSpinner Achieved
+// Bit 2 - SuperPop Achieved
+// Bit 3 - Blast Off Achieved
+// Bit 4 - Playfield 5x Achieved
+// Bit 5 - SPACE Achieved
+// Bit 6 - 3 Goals achieved
+// Bit 7 - 5 Goals achieved
+
+void SetGoals(byte goalnum) {   // Set goal flag and update display score
+
+  Goals[CurrentPlayer] = (Goals[CurrentPlayer] | (0b1<<(goalnum - 1))); // Raise flag
+
+  // Count how many goals are met and update display
+  unsigned int countOnes = Goals[CurrentPlayer];
+  byte numOnes = 0;
+  for (int count = 0; count < 6; count++) {
+    if ( (countOnes & 0b1) == 1 ) {
+      numOnes++;
+    }
+    countOnes >>= 1;
+  }
+  
+  CurrentScores[CurrentPlayer] = (CurrentScores[CurrentPlayer]/10*10 + numOnes);
+
+#if 0
+  if ( numOnes == 3 && !(Goals[CurrentPlayer] & (0b1<<6)) ) {       // Start Ball chase
+    #ifdef EXECUTION_MESSAGES
+    Serial.println(F("SetGoals - Chase Ball section, 3 goals met"));
+    #endif
+    Goals[CurrentPlayer] = (Goals[CurrentPlayer] | (0b1<<6));       // Raise 7th bit
+    ClearRack();
+    ClearSmallBalls();
+    //NextBall = 0;             // Cannot cancel NextBall here, over-ridden by CaptureBall
+    //NextBallTime = 0;
+
+    // Triple knocker signifying 3 goals met
+    RPU_PushToTimedSolenoidStack(SOL_KNOCKER, 3, CurrentTime + 750, true);
+    RPU_PushToTimedSolenoidStack(SOL_KNOCKER, 3, CurrentTime + 900, true);
+    RPU_PushToTimedSolenoidStack(SOL_KNOCKER, 3, CurrentTime + 1250, true);
+    //MarqueeDisabled = true;
+    GameMode[CurrentPlayer] = 3;                                    // Trigger Mode 3
+    ChaseBallStage = 1;                                             // First part of challenge
+    ChaseBallTimeStart = CurrentTime;
+    // Chase ball is not shifted by player number
+    ChaseBall = ( 1 + CurrentTime%7 );                              // ChaseBall is 1-7
+    ShowPlayerScores(0xFF, true, false);                            // Set displays back to normal
+    #ifdef EXECUTION_MESSAGES
+    Serial.print(F("SetGoals - ChaseBall is set to : "));
+    Serial.println(ChaseBall, DEC);
+    Serial.println();
+    #endif
+    //BallLighting();
+  }
+#endif
+
+#if 1
+  //
+  // Roaming Mode 4 start
+  //
+  if ( (numOnes == 3 || numOnes == 4) && !(Goals[CurrentPlayer] & (0b1<<6)) ) { // Enable Roaming
+  //if ( numOnes == 1 && !(Goals[CurrentPlayer] & (0b1<<6)) ) {       // Enable Roaming
+    #ifdef EXECUTION_MESSAGES
+    Serial.println(F("SetGoals - Starting Mode 4 Roaming"));
+    #endif
+    // Set goal bit in CaptureBall instead of here
+    //Goals[CurrentPlayer] = (Goals[CurrentPlayer] | (0b1<<6));       // Raise 7th bit
+    AlleyModeFinish();                                              // Cancel if running
+    NextBallFinish();                                               // Cancel if running
+    GameMode[CurrentPlayer] = 4;                                    // Switch to Roaming mode
+    RoamingBalls = 0;                                               // Clear values when mode starts
+    RoamingStage = 1;                                               // Start mode activity
+    NumCapturedLetters=0;                                           // Reset counter
+    MarqueeOffTime = 0;                                             // Cancel previous animation
+    ClearSmallBalls();
+    ClearRack();
+    // Triple knocker signifying 3 goals met
+    RPU_PushToTimedSolenoidStack(SOL_KNOCKER, 3, CurrentTime + 750, true);
+    RPU_PushToTimedSolenoidStack(SOL_KNOCKER, 3, CurrentTime + 900, true);
+    RPU_PushToTimedSolenoidStack(SOL_KNOCKER, 3, CurrentTime + 1250, true);
+    RoamingRotateTime = CurrentTime;
+    RoamingModeTime = CurrentTime;
+  }
+#endif
+
+  //
+  // AlleyMode
+  //
+  // Start only when pop goal and spinner goal met in a single ball.  Triggers are reset each ball.
+  if (goalnum == 3) AlleyModePopsTrigger = true;                    // Set pops trigger
+  if (goalnum == 4) AlleyModeSpinnerTrigger = true;                 // Set spinner trigger
+  if ( (AlleyModePopsTrigger) && (AlleyModeSpinnerTrigger) ) {      // Trigger mode if both are set
+    AlleyModeStart();                                               // Function checks for GameMode == 1
+  }
+
+  // 15 Ball Mode
+  if ( numOnes == 5 && !(Goals[CurrentPlayer] & (0b1<<7)) ) {       // Start 15 Ball mode
+    #ifdef EXECUTION_MESSAGES
+    Serial.println(F("SetGoals - 5 goals met"));
+    #endif
+    Goals[CurrentPlayer] = (Goals[CurrentPlayer] | (0b1<<7));       // Raise 8th bit
+    // Shut off applicable modes that might be running
+    if (goalnum == 5) {
+      SpinnerComboFinish();
+    }
+    AlleyModeFinish();                                              // Cancel if running
+    NextBallFinish();                                               // Cancel if running
+    RoamingFinish();
+    ClearRack();
+    //FlashingArrows(DownwardV, 125, 9);
+    //RPU_TurnOffAttractLamps;
+    SamePlayerShootsAgain = true;
+    RPU_SetLampState(SAME_PLAYER, 1, 0, 150);
+    RPU_SetLampState(LA_SPSA_BACK, 1, 0, 175);
+    PlaySoundEffect(SOUND_EFFECT_8_BALL_CAPTURE);
+    // 5 knocker hits signifying 5 goals met.  Sound effect includes 1 knocker hit at 900 msec
+    RPU_PushToTimedSolenoidStack(SOL_KNOCKER, 3, CurrentTime + 1050, true);
+    RPU_PushToTimedSolenoidStack(SOL_KNOCKER, 3, CurrentTime + 1350, true);
+    RPU_PushToTimedSolenoidStack(SOL_KNOCKER, 3, CurrentTime + 1450, true);
+    RPU_PushToTimedSolenoidStack(SOL_KNOCKER, 3, CurrentTime + 1550, true);
+    //RPU_DisableSolenoidStack();
+    RPU_SetDisableFlippers(true);
+    MarqueeDisabled = true;
+    FifteenBallQualified[CurrentPlayer] = true;
+  }
+  
+}
+
+
+//
+//  ShowLampAnimation - Ver 3
+//    Ver 1 - Modified from version in Meteor
+//    Ver 2 - Altered to enable use of Aux board lamps
+//    Ver 3 - Use baseTime offset from 0 to allow animations to start on frame 0
+
+void ShowLampAnimation(byte animationNum[][8], byte frames, unsigned long divisor, 
+unsigned long baseTime, byte subOffset, boolean dim, boolean reverse = false, 
+byte keepLampOn = 99, boolean AuxLamps = false) {
+
+  byte currentStep = ((baseTime-ShowLampTimeOffset) / divisor) % frames;
+  if (reverse) currentStep = (frames - 1) - currentStep;
+
+  byte lampNum = 0;
+  for (int byteNum = 0; byteNum < ((AuxLamps)?2:8); byteNum++) {
+//  for (int byteNum = 0; byteNum < 8; byteNum++) {
+    for (byte bitNum = 0; bitNum < 8; bitNum++) {
+
+      // if there's a subOffset, turn off lights at that offset
+      if (subOffset) {
+        byte lampOff = true;
+        lampOff = animationNum[(currentStep + subOffset) % frames][byteNum] & (1 << bitNum);
+        if (lampOff && lampNum != keepLampOn) RPU_SetLampState((lampNum + ((AuxLamps)?60:0) ), 0);
+//        if (lampOff && lampNum != keepLampOn) RPU_SetLampState(lampNum, 0);
+      }
+
+      byte lampOn = false;
+      lampOn = animationNum[currentStep][byteNum] & (1 << bitNum);
+      if (lampOn) RPU_SetLampState((lampNum + ((AuxLamps)?60:0)), 1, dim);
+//      if (lampOn) RPU_SetLampState(lampNum, 1, dim);
+
+      lampNum += 1;
+    }
+#if not defined (RPU_OS_SOFTWARE_DISPLAY_INTERRUPT)
+    if (byteNum % 2) RPU_DataRead(0);
+#endif
+  }
+}

@@ -216,12 +216,12 @@ byte NumberOfBallsLocked = 0;
 byte NumberOfSpins[4];
 byte NumberOfCenterSpins[4];
 byte NumberOfHits[4];
-byte GoalsCompletedFlags[4];
-byte CurrentAchievements[4];
+byte Goals[4]={0,0,0,0};
 byte TargetBankComplete[4];
 byte LampType = 0;
 boolean SkillShotHit = false;
 boolean FreePlayMode = true;
+boolean GoalsDisplayToggle;
 boolean HighScoreReplay = true;
 boolean MatchFeature = true;
 boolean TournamentScoring = false;
@@ -461,11 +461,6 @@ void setup() {
   CurrentScores[1] = GAME_MINOR_VERSION;
   CurrentScores[2] = RPU_OS_MAJOR_VERSION;
   CurrentScores[3] = RPU_OS_MINOR_VERSION;
-
-  CurrentAchievements[0] = 0;
-  CurrentAchievements[1] = 0;
-  CurrentAchievements[2] = 0;
-  CurrentAchievements[3] = 0;
 
   // Initialize any drop target variables here
 //  DropTargets.DefineSwitch(3, SW_DROP_1);
@@ -812,17 +807,17 @@ void ShowPlayerScores(byte displayToUpdate, boolean flashCurrent, boolean dashCu
       }
 
     } else {
-      boolean showingCurrentAchievement = false;
+      boolean showingCurrentGoals = false;
       // No override, update scores designated by displayToUpdate
       if (allScoresShowValue == 0) {
         displayScore = CurrentScores[scoreCount];
-        displayScore += (CurrentAchievements[scoreCount] % 10);
-        if (CurrentAchievements[scoreCount]) showingCurrentAchievement = true;
+        displayScore += (Goals[scoreCount] % 10);
+        if (Goals[scoreCount]) showingCurrentGoals = true;
       }
       else displayScore = allScoresShowValue;
 
       // If we're updating all displays, or the one currently matching the loop, or if we have to scroll
-      if (displayToUpdate == 0xFF || displayToUpdate == scoreCount || displayScore > RPU_OS_MAX_DISPLAY_SCORE || showingCurrentAchievement) {
+      if (displayToUpdate == 0xFF || displayToUpdate == scoreCount || displayScore > RPU_OS_MAX_DISPLAY_SCORE || showingCurrentGoals) {
 
         // Don't show this score if it's not a current player score (even if it's scrollable)
         if (displayToUpdate == 0xFF && (scoreCount >= CurrentNumPlayers && CurrentNumPlayers != 0) && allScoresShowValue == 0) {
@@ -836,7 +831,7 @@ void ShowPlayerScores(byte displayToUpdate, boolean flashCurrent, boolean dashCu
             // show score for four seconds after change
             RPU_SetDisplay(scoreCount, displayScore % (RPU_OS_MAX_DISPLAY_SCORE + 1), false);
             byte blank = RPU_OS_ALL_DIGITS_MASK;
-            if (showingCurrentAchievement && (CurrentTime / 200) % 2) {
+            if (showingCurrentGoals && (CurrentTime / 200) % 2) {
               blank &= ~(0x01 << (RPU_OS_NUM_DIGITS - 1));
             }
             RPU_SetDisplayBlank(scoreCount, blank);
@@ -907,7 +902,7 @@ void ShowPlayerScores(byte displayToUpdate, boolean flashCurrent, boolean dashCu
           } else {
             byte blank;
             blank = RPU_SetDisplay(scoreCount, displayScore, false, 2);
-            if (showingCurrentAchievement && (CurrentTime / 200) % 2) {
+            if (showingCurrentGoals && (CurrentTime / 200) % 2) {
               blank &= ~(0x01 << (RPU_OS_NUM_DIGITS - 1));
             }
             RPU_SetDisplayBlank(scoreCount, blank);
@@ -945,7 +940,6 @@ void StartScoreAnimation(unsigned long scoreToAnimate) {
   LastRemainingAnimatedScoreShown = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////
 //
 //  Machine State Helper functions
@@ -979,7 +973,6 @@ boolean AddPlayer(boolean resetNumPlayers = false) {
 
   return true;
 }
-
 
 unsigned short ChuteAuditByte[] = {RPU_CHUTE_1_COINS_START_BYTE, RPU_CHUTE_2_COINS_START_BYTE, RPU_CHUTE_3_COINS_START_BYTE};
 void AddCoinToAudit(byte chuteNum) {
@@ -1119,16 +1112,18 @@ void IncreasePlayfieldMultiplier(unsigned long duration) {
   else PlayfieldMultiplierExpiration = CurrentTime + duration;
   PlayfieldMultiplier += 1;
   if (PlayfieldMultiplier > 3) {
-    PlayfieldMultiplier = 3;
+    PlayfieldMultiplier = 5;
   }
   if (PlayfieldMultiplier == 2) {
     RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 0);
-  }
-  if (PlayfieldMultiplier == 3) {
+  } else if (PlayfieldMultiplier == 3) {
     RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
     RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
-  } else {
-//    PlaySoundEffect(SOUND_EFFECT_ + (PlayfieldMultiplier - 1), 1);
+  } else if (PlayfieldMultiplier == 5) {
+    RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 0);
+    RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
+    RPU_SetLampState(LAMP_DROP_SPECIAL, 1, 0, 500);
+    SetGoals(4);
   }
 }
 
@@ -1719,6 +1714,7 @@ unsigned long AttractDisplayRampStart = 0;
 byte AttractLastHeadMode = 255;
 byte AttractLastPlayfieldMode = 255;
 byte InAttractMode = false;
+unsigned long ShowLampTimeOffset = 0;
 
 byte LastSolPhase = 0;
 
@@ -1809,13 +1805,7 @@ int RunAttractMode(int curState, boolean curStateChanged) {
     AttractLastLadderTime = CurrentTime;
   }
   
-  for (byte count = 0; count < 3; count++) {
-    ShowLampAnimation(count, 40, CurrentTime, 14, false, false);
-    if (count == 2){
-      count = 0;
-    }
-  }
-//  ShowLampAnimation(1, 40, CurrentTime, 14, false, false);
+  ShowLampAnimation(1, 120, CurrentTime, 14, false, false);
 //  ShowLampAnimation(0, 40, CurrentTime, 14, false, false);
 
   byte switchHit;
@@ -1839,8 +1829,6 @@ int RunAttractMode(int curState, boolean curStateChanged) {
 
   return returnState;
 }
-
-
 
 
 
@@ -1971,7 +1959,7 @@ int InitGamePlay(boolean curStateChanged) {
   for (int count = 0; count < 4; count++) {
     // Initialize game-specific variables
     BonusX[count] = 1;
-    GoalsCompletedFlags[count] = 0;
+    Goals[count] = 0;
     NumberOfSpins[count] = 0;
     NumberOfHits[count] = 0;
     Bonus[count] = 0;
@@ -2041,8 +2029,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
       NumberOfSpins[count] = 1;
       NumberOfCenterSpins[count] = 1;
       NumberOfHits[count] = 0;
-      GoalsCompletedFlags[count] = 0;
-      CurrentAchievements[count] = 0;
+      //Goals[count] = 0;
       TargetBankComplete[count] = 1;
     }
     SuperSpinnerEndTime = 0;
@@ -2079,7 +2066,6 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
      
   LastTimeThroughLoop = CurrentTime;
 }
-
 
 /*
 boolean AddABall(boolean ballLocked = false, boolean ballSave = true) {
@@ -2132,7 +2118,6 @@ int ManageGameMode() {
 
   if ((CurrentTime - LastSwitchHitTime) > 3000) TimersPaused = true;
   else TimersPaused = false;
-  
 
   switch ( GameMode ) {
     case GAME_MODE_SKILL_SHOT:
@@ -2256,7 +2241,8 @@ int ManageGameMode() {
       break;
 
     case GAME_MODE_SPINNER_FRENZY:
-      CurrentAchievements[CurrentPlayer] |= GOAL_SUPER_SPINNER_ACHIEVED;
+      //Goals[CurrentPlayer] |= GOAL_SUPER_SPINNER_ACHIEVED;
+      SetGoals(1);
       ShowLampAnimation(4, 120, CurrentTime, 4, false, false);
       
       if (SuperSpinnerStartTime == 0) {
@@ -2307,6 +2293,7 @@ int ManageGameMode() {
       
       if (RPU_ReadSingleSwitchState(SW_C_SAUCER)) {
         SuperBlastOffEndTime = 0;
+        SetGoals(3);
         SetGameMode(GAME_MODE_UNSTRUCTURED_PLAY);
         QueueNotification(SOUND_EFFECT_BLASTOFF_GOAL, 1);
       } 
@@ -2348,7 +2335,8 @@ int ManageGameMode() {
 
 
     case GAME_MODE_POP_FRENZY:
-      CurrentAchievements[CurrentPlayer] |= GOAL_SUPER_POP_ACHIEVED;
+      //Goals[CurrentPlayer] |= GOAL_SUPER_POP_ACHIEVED;
+      SetGoals(2);
       RPU_SetLampState(LAMP_LR_POP, 1, 0, 100);
       RPU_SetLampState(LAMP_C_POP, 1, 0, 100);
       
@@ -2393,7 +2381,17 @@ int ManageGameMode() {
       break;
   }
   
-   
+if ((BallFirstSwitchHitTime == 0) && GoalsDisplayValue(Goals[CurrentPlayer])) {   // If ball not in play and if any goals have been reached
+    for (byte count = 0; count < 4; count++) {
+      if (count != CurrentPlayer) {
+        OverrideScoreDisplay(count, GoalsDisplayValue(Goals[CurrentPlayer]), false);  // Show achieved goals
+      }
+    }
+    GoalsDisplayToggle = true;
+  } else if ((BallFirstSwitchHitTime > 0) && GoalsDisplayToggle) {
+    ShowPlayerScores(0xFF, false, false);                                             //  Reset all score displays
+    GoalsDisplayToggle = false;
+  }   
 
   if ( !specialAnimationRunning && NumTiltWarnings <= MaxTiltWarnings ) {
 //    ShowTopSpaceLamps();
@@ -2855,7 +2853,7 @@ void HandleGamePlaySwitches(byte switchHit) {
       }
       if (GameMode==GAME_MODE_UNSTRUCTURED_PLAY) {
         NumberOfHits[CurrentPlayer] += 1;
-        if (NumberOfHits[CurrentPlayer] > 50) {
+        if (NumberOfHits[CurrentPlayer] > 25) {
           NumberOfHits[CurrentPlayer] = 0;
           SuperPopEndTime = CurrentTime + SUPER_POP_DURATION;
           RPU_SetDisplayCredits(Credits);
@@ -3227,7 +3225,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             QueueNotification(SOUND_EFFECT_BLASTOFF_GOAL, 1);
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1500, true);
             CurrentScores[CurrentPlayer] += SCORE_BLASTOFF_COLLECT;
-            CurrentAchievements[CurrentPlayer] |= GOAL_BLAST_OFF_ACHIEVED;
+            //Goals[CurrentPlayer] |= GOAL_BLAST_OFF_ACHIEVED;
         } else if (GameMode==GAME_MODE_UNSTRUCTURED_PLAY) {
             CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier;
             PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
@@ -3245,7 +3243,6 @@ void HandleGamePlaySwitches(byte switchHit) {
       IncreasePlayfieldMultiplier(25000);
       RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
       LastSwitchHitTime = CurrentTime;
-      if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
 
     case SW_R_TARGET:
@@ -3521,6 +3518,44 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
   return returnState;
 }
 
+unsigned long GoalsDisplayValue(byte currentgoals) {
+  unsigned long Result = 0;
+  for(int i=0; i<6; i++) {                     // Filter lower 6 goals
+    Result = Result * 10;
+    if (Goals[CurrentPlayer] & (0b100000 >> i)) {
+      Result +=1;
+    }
+  }
+  return Result;
+}
+
+//
+//  SetGoals Ver 1 
+//
+// Bit 1 - SuperSpinner Achieved
+// Bit 2 - SuperPop Achieved
+// Bit 3 - Blast Off Achieved
+// Bit 4 - Playfield 5x Achieved
+// Bit 5 - SPACE Achieved
+// Bit 6 - 3 Goals achieved
+// Bit 7 - 5 Goals achieved
+
+void SetGoals(byte goalnum) {   // Set goal flag and update display score
+
+  Goals[CurrentPlayer] = (Goals[CurrentPlayer] | (0b1<<(goalnum - 1))); // Raise flag
+
+  // Count how many goals are met and update display
+  unsigned int countOnes = Goals[CurrentPlayer];
+  byte numOnes = 0;
+  for (int count = 0; count < 6; count++) {
+    if ( (countOnes & 0b1) == 1 ) {
+      numOnes++;
+    }
+    countOnes >>= 1;
+  }
+  
+  CurrentScores[CurrentPlayer] = (CurrentScores[CurrentPlayer]/10*10 + numOnes);
+}
 
 #if (RPU_MPU_ARCHITECTURE>=10)
 unsigned long LastLEDUpdateTime = 0;
