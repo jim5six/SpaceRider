@@ -161,7 +161,7 @@ unsigned short SelfTestStateToCalloutMap[34] = {  134, 135, 133, 136, 137, 138, 
 #define SOUND_EFFECT_SUPERSPINNER_GOAL  306
 #define SOUND_EFFECT_BLASTOFF_GOAL      307
 #define SOUND_EFFECT_SPINNER_HELD       308
-#define SOUND_EFFECT_PLAYFIELD_MULTI    309
+#define SOUND_EFFECT_PLAYFIELD_MULTI    309  //Add differnt call outs for the multiplyer value
 #define SOUND_EFFECT_BLASTOFF_HELD      310
 #define SOUND_EFFECT_POP_HELD           311
 #define SOUND_EFFECT_SUPERPOP_GOAL      312
@@ -252,7 +252,7 @@ byte BonusX[4];
 byte GameMode = GAME_MODE_SKILL_SHOT;
 byte MaxTiltWarnings = 2;
 byte NumTiltWarnings = 0;
-byte HoldoverAwards[4];
+byte HoldoverGoals[4];
 byte AwardPhase;
 
 boolean SamePlayerShootsAgain = false;
@@ -611,22 +611,6 @@ void ShowShootAgainLamps() {
   }
 }
 
-/*
-boolean RequestedGIState;
-unsigned long GIOverrideEndTime;
-
-void SetGeneralIlluminationOn(boolean generalIlluminationOn = true) {
-  RequestedGIState = generalIlluminationOn;
-  if (GIOverrideEndTime) return;
-  RPU_SetContinuousSolenoid(!generalIlluminationOn, SOL_GI_RELAY);
-}
-
-void OverrideGeneralIllumination(boolean generalIlluminationOn, unsigned long endTime) {
-  GIOverrideEndTime = endTime;
-  RPU_SetContinuousSolenoid(!generalIlluminationOn, SOL_GI_RELAY);
-}
-*/
-
 ////////////////////////////////////////////////////////////////////////////
 //
 //  Display Management functions
@@ -953,12 +937,6 @@ boolean AddPlayer(boolean resetNumPlayers = false) {
 
   CurrentNumPlayers += 1;
   RPU_SetDisplay(CurrentNumPlayers - 1, 0, true, 2);
-//  RPU_SetDisplayBlank(CurrentNumPlayers - 1, 0x30);
-
-//  RPU_SetLampState(LAMP_HEAD_1_PLAYER, CurrentNumPlayers==1, 0, 500);
-//  RPU_SetLampState(LAMP_HEAD_2_PLAYERS, CurrentNumPlayers==2, 0, 500);
-//  RPU_SetLampState(LAMP_HEAD_3_PLAYERS, CurrentNumPlayers==3, 0, 500);
-//  RPU_SetLampState(LAMP_HEAD_4_PLAYERS, CurrentNumPlayers==4, 0, 500);
 
   if (!FreePlayMode) {
     Credits -= 1;
@@ -1055,7 +1033,7 @@ void AwardSpecial() {
   if (TournamentScoring) {
     CurrentScores[CurrentPlayer] += SpecialValue * PlayfieldMultiplier;
   } else {
-    AddSpecialCredit();
+    AwardExtraBall();
   }
 }
 
@@ -1111,20 +1089,26 @@ void IncreasePlayfieldMultiplier(unsigned long duration) {
   if (PlayfieldMultiplierExpiration) PlayfieldMultiplierExpiration += duration;
   else PlayfieldMultiplierExpiration = CurrentTime + duration;
   PlayfieldMultiplier += 1;
-  if (PlayfieldMultiplier > 3) {
-    PlayfieldMultiplier = 5;
+  if (PlayfieldMultiplier > 5) {
+    PlayfieldMultiplier = 1;
   }
   if (PlayfieldMultiplier == 2) {
     RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 0);
+    QueueNotification(SOUND_EFFECT_PLAYFIELD_MULTI, 1);
   } else if (PlayfieldMultiplier == 3) {
     RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
     RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
-  } else if (PlayfieldMultiplier == 5) {
+    QueueNotification(SOUND_EFFECT_PLAYFIELD_MULTI, 1);
+  } else if (PlayfieldMultiplier == 4) {
     RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 0);
     RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
+    QueueNotification(SOUND_EFFECT_PLAYFIELD_MULTI, 1); //Change to Playfield Multi goal achieved
     RPU_SetLampState(LAMP_DROP_SPECIAL, 1, 0, 500);
     SetGoals(4);
-  }
+  } else if (PlayfieldMultiplier == 5) {
+    RPU_SetLampState(LAMP_DROP_SPECIAL, 0, 0, 0);
+    AwardSpecial();
+  }  
 }
 
 /*
@@ -1460,16 +1444,13 @@ int RunSelfTest(int curState, boolean curStateChanged) {
     // If any variables have been set to non-override (99), return
     // them to dip switch settings
     // Balls Per Game, Player Loses On Ties, Novelty Scoring, Award Score
-    //    DecodeDIPSwitchParameters();
+    // DecodeDIPSwitchParameters();
     RPU_SetDisplayCredits(Credits, !FreePlayMode);
     ReadStoredParameters();
   }
 
   return returnState;
 }
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////
 //
@@ -1482,7 +1463,6 @@ void PlayBackgroundSong(unsigned int songNum) {
 
   Audio.PlayBackgroundSong(songNum);
 }
-
 
 unsigned long NextSoundEffectTime = 0;
 
@@ -1497,77 +1477,15 @@ void PlaySoundEffect(unsigned int soundEffectNum) {
   // SOUND_EFFECT_ defines can also be translated into
   // commands for the sound card
   switch (soundEffectNum) {
-/*    
-    case SOUND_EFFECT_LEFT_SHOOTER_LANE:
-      Audio.PlaySoundCardWhenPossible(12, CurrentTime, 0, 500, 7);
-      break;
-    case SOUND_EFFECT_RETURN_TO_SHOOTER_LANE:
-      Audio.PlaySoundCardWhenPossible(22, CurrentTime, 0, 500, 8);
-      break;
-    case SOUND_EFFECT_SAUCER:
-      Audio.PlaySoundCardWhenPossible(14, CurrentTime, 0, 500, 7);
-      break;
-    case SOUND_EFFECT_DROP_TARGET_HURRY:
-      Audio.PlaySoundCardWhenPossible(2, CurrentTime, 0, 45, 3);
-      break;
-    case SOUND_EFFECT_DROP_TARGET_COMPLETE:
-      Audio.PlaySoundCardWhenPossible(9, CurrentTime, 0, 1400, 4);
-      Audio.PlaySoundCardWhenPossible(19, CurrentTime, 1500, 10, 4);
-      break;
-    case SOUND_EFFECT_HOOFBEATS:
-      Audio.PlaySoundCardWhenPossible(12, CurrentTime, 0, 100, 10);
-      break;
-    case SOUND_EFFECT_STOP_BACKGROUND:
-      Audio.PlaySoundCardWhenPossible(19, CurrentTime, 0, 10, 10);
-      break;
-    case SOUND_EFFECT_DROP_TARGET_HIT:
-      Audio.PlaySoundCardWhenPossible(7, CurrentTime, 0, 150, 5);
-      break;
-    case SOUND_EFFECT_SPINNER:
-      Audio.PlaySoundCardWhenPossible(6, CurrentTime, 0, 25, 2);
-      break;
-*/      
   }
 }
-
 
 void QueueNotification(unsigned int soundEffectNum, byte priority) {
   if (CalloutsVolume==0) return;
   if (SoundSelector<3 || SoundSelector==4 || SoundSelector==7 || SoundSelector==9) return; 
   if (soundEffectNum < SOUND_EFFECT_BALL_SAVE || soundEffectNum >= (SOUND_EFFECT_BALL_SAVE + NUM_VOICE_NOTIFICATIONS)) return;
-
-  // With RPU_OS_HARDWARE_REV 4 and above, the WAV trigger has two-way communication,
-  // so it's not necesary to tell it the length of a notification. For support for 
-  // earlier hardware, you'll need an array of VoicePromptLengths for each prompt
-  // played (for queueing and ducking)
-//  Audio.QueuePrioritizedNotification(soundEffectNum, VoicePromptLengths[soundEffectNum-SOUND_EFFECT_VP_VOICE_NOTIFICATIONS_START], priority, CurrentTime);
   Audio.QueuePrioritizedNotification(soundEffectNum, 0, priority, CurrentTime);
-
 }
-
-
-//void AlertPlayerUp(byte playerNum) {
-//  (void)playerNum;
-  // if (AlertPlayerUp(1)){
-  //   PlaySoundEffect(SOUND_EFFECT_RIDER1);
-  // }
-  // if (AlertPlayerUp(2)){
-  //   PlaySoundEffect(SOUND_EFFECT_RIDER2);
-  // }
-  // if (AlertPlayerUp(3)){
-  //   PlaySoundEffect(SOUND_EFFECT_RIDER3);
-  // }
-  // if (AlertPlayerUp(4)){
-  //   PlaySoundEffect(SOUND_EFFECT_RIDER4);
-  // }
-//  QueueNotification(SOUND_EFFECT_VP_PLAYER, 1);
-//  QueueNotification(SOUND_EFFECT_VP_ONE + playerNum, 1);
-//  QueueNotification(SOUND_EFFECT_RIDER1, 1); 
-//}
-
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////
 //
@@ -1580,127 +1498,9 @@ int RunDiagnosticsMode(int curState, boolean curStateChanged) {
   int returnState = curState;
 
   if (curStateChanged) {
-
-/*
-    char buf[256];
-    boolean errorSeen;
-
-    Serial.write("Testing Volatile RAM at IC13 (0x0000 - 0x0080): writing & reading... ");
-    Serial.write("3 ");
-    delay(500);
-    Serial.write("2 ");
-    delay(500);
-    Serial.write("1 \n");
-    delay(500);
-    errorSeen = false;
-    for (byte valueCount=0; valueCount<0xFF; valueCount++) {
-      for (unsigned short address=0x0000; address<0x0080; address++) {
-        RPU_DataWrite(address, valueCount);
-      }
-      for (unsigned short address=0x0000; address<0x0080; address++) {
-        byte readValue = RPU_DataRead(address);
-        if (readValue!=valueCount) {
-          sprintf(buf, "Write/Read failure at address=0x%04X (expected 0x%02X, read 0x%02X)\n", address, valueCount, readValue);
-          Serial.write(buf);
-          errorSeen = true;
-        }
-        if (errorSeen) break;
-      }
-      if (errorSeen) break;
-    }
-    if (errorSeen) {
-      Serial.write("!!! Error in Volatile RAM\n");
-    }
-
-    Serial.write("Testing Volatile RAM at IC16 (0x0080 - 0x0100): writing & reading... ");
-    Serial.write("3 ");
-    delay(500);
-    Serial.write("2 ");
-    delay(500);
-    Serial.write("1 \n");
-    delay(500);
-    errorSeen = false;
-    for (byte valueCount=0; valueCount<0xFF; valueCount++) {
-      for (unsigned short address=0x0080; address<0x0100; address++) {
-        RPU_DataWrite(address, valueCount);
-      }
-      for (unsigned short address=0x0080; address<0x0100; address++) {
-        byte readValue = RPU_DataRead(address);
-        if (readValue!=valueCount) {
-          sprintf(buf, "Write/Read failure at address=0x%04X (expected 0x%02X, read 0x%02X)\n", address, valueCount, readValue);
-          Serial.write(buf);
-          errorSeen = true;
-        }
-        if (errorSeen) break;
-      }
-      if (errorSeen) break;
-    }
-    if (errorSeen) {
-      Serial.write("!!! Error in Volatile RAM\n");
-    }
-    
-    // Check the CMOS RAM to see if it's operating correctly
-    errorSeen = false;
-    Serial.write("Testing CMOS RAM: writing & reading... ");
-    Serial.write("3 ");
-    delay(500);
-    Serial.write("2 ");
-    delay(500);
-    Serial.write("1 \n");
-    delay(500);
-    for (byte valueCount=0; valueCount<0x10; valueCount++) {
-      for (unsigned short address=0x0100; address<0x0200; address++) {
-        RPU_DataWrite(address, valueCount);
-      }
-      for (unsigned short address=0x0100; address<0x0200; address++) {
-        byte readValue = RPU_DataRead(address);
-        if ((readValue&0x0F)!=valueCount) {
-          sprintf(buf, "Write/Read failure at address=0x%04X (expected 0x%02X, read 0x%02X)\n", address, valueCount, (readValue&0x0F));
-          Serial.write(buf);
-          errorSeen = true;
-        }
-        if (errorSeen) break;
-      }
-      if (errorSeen) break;
-    }
-    
-    if (errorSeen) {
-      Serial.write("!!! Error in CMOS RAM\n");
-    }
-    
-    
-    // Check the ROMs
-    Serial.write("CMOS RAM dump... ");
-    Serial.write("3 ");
-    delay(500);
-    Serial.write("2 ");
-    delay(500);
-    Serial.write("1 \n");
-    delay(500);
-    for (unsigned short address=0x0100; address<0x0200; address++) {
-      if ((address&0x000F)==0x0000) {
-        sprintf(buf, "0x%04X:  ", address);
-        Serial.write(buf);
-      }
-//      RPU_DataWrite(address, address&0xFF);
-      sprintf(buf, "0x%02X ", RPU_DataRead(address));
-      Serial.write(buf);
-      if ((address&0x000F)==0x000F) {
-        Serial.write("\n");
-      }
-    }
-
-*/
-
-//    RPU_EnableSolenoidStack();
-//    RPU_SetDisableFlippers(false);
-        
   }
-
   return returnState;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////
 //
@@ -1738,15 +1538,9 @@ int RunAttractMode(int curState, boolean curStateChanged) {
     AttractLastPlayfieldMode = 0;
     RPU_SetDisplayCredits(Credits, !FreePlayMode);
     for (byte count = 0; count < 4; count++) {
-//      RPU_SetLampState(LAMP_HEAD_PLAYER_1_UP + count, 0);
     }
 
-//    RPU_SetLampState(LAMP_HEAD_1_PLAYER, 0);
-//    RPU_SetLampState(LAMP_HEAD_2_PLAYERS, 0);
-//    RPU_SetLampState(LAMP_HEAD_3_PLAYERS, 0);
-//    RPU_SetLampState(LAMP_HEAD_4_PLAYERS, 0);
-
-    // If this machine has a saucer, clear it in attract mode
+  // If this machine has a saucer, clear it in attract mode
     
     if (RPU_ReadSingleSwitchState(SW_C_SAUCER)) {
       RPU_PushToSolenoidStack(SOL_C_SAUCER, 16, true);
@@ -1757,10 +1551,6 @@ int RunAttractMode(int curState, boolean curStateChanged) {
 
   }
 
-  // Some machines have a kicker to move the ball
-  // from the outhole to the re-shooter ramp
-//  MoveBallFromOutholeToRamp();
-  
   // Alternate displays between high score and blank
   if (CurrentTime < 16000) {
     if (AttractLastHeadMode != 1) {
@@ -1929,16 +1719,9 @@ int InitGamePlay(boolean curStateChanged) {
   }
 
   if (CountBallsInTrough()==0) {
-
-    // Some machines have a kicker to move the ball
-    // from the outhole to the re-shooter ramp
-//    MoveBallFromOutholeToRamp();
-
     if (CurrentTime>(GameStartNotificationTime+5000)) {
       GameStartNotificationTime = CurrentTime;
-//      QueueNotification(SOUND_EFFECT_VP_BALL_MISSING, 10);
     }
-    
     return MACHINE_STATE_INIT_GAMEPLAY;
   }
   
@@ -2241,7 +2024,6 @@ int ManageGameMode() {
       break;
 
     case GAME_MODE_SPINNER_FRENZY:
-      //Goals[CurrentPlayer] |= GOAL_SUPER_SPINNER_ACHIEVED;
       SetGoals(1);
       ShowLampAnimation(4, 120, CurrentTime, 4, false, false);
       
@@ -2270,7 +2052,6 @@ int ManageGameMode() {
 
     case GAME_MODE_SPINNER_FRENZY_OVER:
       if (SuperSpinnerOverStartTime == 0) {
-        //RPU_TurnOffAllLamps();
         SuperSpinnerOverStartTime = CurrentTime;
         SuperSpinnerOverEndTime = CurrentTime + SUPER_POP_OVER;
       }
@@ -2323,7 +2104,6 @@ int ManageGameMode() {
 
     case GAME_MODE_BLAST_OFF_OVER:
       if (SuperBlastOffOverStartTime == 0) {
-        //RPU_TurnOffAllLamps();
         SuperBlastOffOverStartTime = CurrentTime;
         SuperBlastOffOverEndTime = CurrentTime + SUPER_BLASTOFF_OVER;
       }
@@ -2335,7 +2115,6 @@ int ManageGameMode() {
 
 
     case GAME_MODE_POP_FRENZY:
-      //Goals[CurrentPlayer] |= GOAL_SUPER_POP_ACHIEVED;
       SetGoals(2);
       RPU_SetLampState(LAMP_LR_POP, 1, 0, 100);
       RPU_SetLampState(LAMP_C_POP, 1, 0, 100);
@@ -2365,7 +2144,6 @@ int ManageGameMode() {
 
     case GAME_MODE_POP_FRENZY_OVER:
       if (SuperPopOverStartTime == 0) {
-        //RPU_TurnOffAllLamps();
         SuperPopOverStartTime = CurrentTime;
         SuperPopOverEndTime = CurrentTime + SUPER_POP_OVER;
       }
@@ -2883,7 +2661,6 @@ void HandleGamePlaySwitches(byte switchHit) {
       PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
       SpinnerToggle();
       RPU_SetLampState(LAMP_OPENGATE, 1, 0, 0);
-      RPU_SetLampState(LAMP_5000, 0, 0, 0);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
@@ -2902,8 +2679,6 @@ void HandleGamePlaySwitches(byte switchHit) {
       PlaySoundEffect(SOUND_EFFECT_BASS_RUMBLE);
       SpinnerToggle();
       RPU_SetLampState(LAMP_DROP_TARGET, 1, 0, 500);
-      RPU_SetLampState(LAMP_EXTRABALL, 1, 0, 0);
-      RPU_SetLampState(LAMP_OPENGATE, 0, 0, 0);
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
@@ -3218,14 +2993,11 @@ void HandleGamePlaySwitches(byte switchHit) {
       if (GameMode==GAME_MODE_SKILL_SHOT) {
             QueueNotification(SOUND_EFFECT_SKILLSHOT, 1);
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1500, true);
-            //RPU_TurnOffAllLamps();
             CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             SkillShotHit = true;
         } else if (GameMode==GAME_MODE_BLAST_OFF_COLLECT) {
-            QueueNotification(SOUND_EFFECT_BLASTOFF_GOAL, 1);
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1500, true);
             CurrentScores[CurrentPlayer] += SCORE_BLASTOFF_COLLECT;
-            //Goals[CurrentPlayer] |= GOAL_BLAST_OFF_ACHIEVED;
         } else if (GameMode==GAME_MODE_UNSTRUCTURED_PLAY) {
             CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier;
             PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
@@ -3237,7 +3009,6 @@ void HandleGamePlaySwitches(byte switchHit) {
 
     case SW_R_SAUCER:
       CurrentScores[CurrentPlayer] += 25000 * PlayfieldMultiplier;
-      QueueNotification(SOUND_EFFECT_PLAYFIELD_MULTI, 1);
       RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
       RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
       IncreasePlayfieldMultiplier(25000);
@@ -3372,7 +3143,6 @@ void HandleGamePlaySwitches(byte switchHit) {
             PlaySoundEffect(SOUND_EFFECT_BALL_SAVE);
             CurrentScores[CurrentPlayer] += 100;
             RPU_SetLampState(LAMP_OPENGATE, 0, 0, 0);
-            RPU_SetLampState(LAMP_5000, 1, 0, 0);
             RPU_SetLampState(LAMP_R_OUTLANE, 0, 0, 0);
             GateOpen = true;
             GateOpenTime = CurrentTime;
@@ -3529,8 +3299,8 @@ unsigned long GoalsDisplayValue(byte currentgoals) {
   return Result;
 }
 
-//
-//  SetGoals Ver 1 
+
+//  SetGoals
 //
 // Bit 1 - SuperSpinner Achieved
 // Bit 2 - SuperPop Achieved

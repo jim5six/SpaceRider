@@ -213,12 +213,6 @@ struct AttractLampsDown SweepUp[] = {
 #define SUPER_POP_DURATION          25000
 #define SUPER_POP_OVER              500
 
-// Goals
-#define GOAL_SUPER_SPINNER_ACHIEVED 0x10
-#define GOAL_SUPER_POP_ACHIEVED     0x10
-#define GOAL_BLAST_OFF_ACHIEVED     0x10
-
-
 #if (RPU_MPU_ARCHITECTURE<10)
 // Machines with a -17, -35, 100, and 200 architecture
 // almost always have software based switch-triggered solenoids. 
