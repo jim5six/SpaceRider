@@ -90,17 +90,19 @@ boolean MachineStateChanged = true;
 #define SOUND_EFFECT_BONUS_COUNT_1k     2
 #define SOUND_EFFECT_ROLL_OVER          3
 #define SOUND_EFFECT_OUTLANE            4
-
+#define SOUND_EFFECT_ALARM              5
 #define SOUND_EFFECT_SLINGSHOT          6
 #define SOUND_EFFECT_POPBUMPER          7
-#define SOUND_EFFECT_SAUCER             8 //REPLACE
+
 #define SOUND_EFFECT_DROPTARGET         9
 #define SOUND_EFFECT_ADDCREDIT          10
 
 #define SOUND_EFFECT_BALL_OVER          19
 #define SOUND_EFFECT_GAME_OVER          20
-
-#define SOUND_EFFECT_BACKGROUND1        25
+#define SOUND_EFFECT_BACKGROUND1        21
+#define SOUND_EFFECT_BACKGROUND2        22
+#define SOUND_EFFECT_BACKGROUND3        23
+#define SOUND_EFFECT_BACKGROUND4        24
 #define SOUND_EFFECT_SWITCHHIT          26
 
 #define SOUND_EFFECT_TILT_WARNING       28
@@ -114,17 +116,19 @@ boolean MachineStateChanged = true;
 #define SOUND_EFFECT_SPINNER2000        36
 #define SOUND_EFFECT_SPINNERCENTER      37
 
+
+
 #define SOUND_EFFECT_ROCKET_BLAST       44
 #define SOUND_EFFECT_BASS_RUMBLE        45
 #define SOUND_EFFECT_HURRY_UP           46
-#define SOUND_EFFECT_BACKGROUND2        25
+#define SOUND_EFFECT_SONARBG            47
 #define SOUND_EFFECT_BONUS_COUNT_2k     48
 #define SOUND_EFFECT_BONUS_COUNT_3k     49
 #define SOUND_EFFECT_RUBBER             50
 
 #define SOUND_EFFECT_TILT               61
 
-#define NUM_BACKGROUND_SONGS            1
+#define NUM_BACKGROUND_SONGS            4
 
 #if (RPU_MPU_ARCHITECTURE<10) && !defined(RPU_OS_DISABLE_CPC_FOR_SPACE)
 // This array maps the self-test modes to audio callouts
@@ -150,7 +154,7 @@ unsigned short SelfTestStateToCalloutMap[34] = {  134, 135, 133, 136, 137, 138, 
 
 
 // Game play status callouts
-#define NUM_VOICE_NOTIFICATIONS                 35
+#define NUM_VOICE_NOTIFICATIONS                 45
 
 #define SOUND_EFFECT_BALL_SAVE          300
 #define SOUND_EFFECT_EXTRABALL          301
@@ -166,12 +170,20 @@ unsigned short SelfTestStateToCalloutMap[34] = {  134, 135, 133, 136, 137, 138, 
 #define SOUND_EFFECT_POP_HELD           311
 #define SOUND_EFFECT_SUPERPOP_GOAL      312
 #define SOUND_EFFECT_SPACE_HELD         313
-
+#define SOUND_EFFECT_GATE_LIT           314
+#define SOUND_EFFECT_GATE_CLOSED        315
+#define SOUND_EFFECT_L_OUTLANE_LIT      316
+#define SOUND_EFFECT_EXTRABALL_LIT      317
+#define SOUND_EFFECT_GOAL               318
 #define SOUND_EFFECT_GAME_START         319
 #define SOUND_EFFECT_RIDER1             320
 #define SOUND_EFFECT_RIDER2             321
 #define SOUND_EFFECT_RIDER3             322
 #define SOUND_EFFECT_RIDER4             323
+#define SOUND_EFFECT_MULTI_2X           324
+#define SOUND_EFFECT_MULTI_3X           325
+#define SOUND_EFFECT_MULTI_5X           326
+#define SOUND_EFFECT_MULTI_GOAL         327
 
 #define SOUND_EFFECT_DIAG_START                   1900
 #define SOUND_EFFECT_DIAG_CREDIT_RESET_BUTTON     1900
@@ -1094,15 +1106,16 @@ void IncreasePlayfieldMultiplier(unsigned long duration) {
   }
   if (PlayfieldMultiplier == 2) {
     RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 0);
-    QueueNotification(SOUND_EFFECT_PLAYFIELD_MULTI, 1);
+    QueueNotification(SOUND_EFFECT_MULTI_2X, 1);
   } else if (PlayfieldMultiplier == 3) {
     RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
     RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
-    QueueNotification(SOUND_EFFECT_PLAYFIELD_MULTI, 1);
+    QueueNotification(SOUND_EFFECT_MULTI_3X, 1);
   } else if (PlayfieldMultiplier == 4) {
     RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 0);
     RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
-    QueueNotification(SOUND_EFFECT_PLAYFIELD_MULTI, 1); //Change to Playfield Multi goal achieved
+    QueueNotification(SOUND_EFFECT_MULTI_5X, 1);
+    QueueNotification(SOUND_EFFECT_MULTI_GOAL, 1);
     RPU_SetLampState(LAMP_DROP_SPECIAL, 1, 0, 500);
     SetGoals(4);
   } else if (PlayfieldMultiplier == 5) {
@@ -1744,6 +1757,7 @@ int InitGamePlay(boolean curStateChanged) {
     BonusX[count] = 1;
     Goals[count] = 0;
     NumberOfSpins[count] = 0;
+    NumberOfCenterSpins[count] = 0;
     NumberOfHits[count] = 0;
     Bonus[count] = 0;
     TargetBankComplete[count] = 1;
@@ -1812,7 +1826,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
       NumberOfSpins[count] = 1;
       NumberOfCenterSpins[count] = 1;
       NumberOfHits[count] = 0;
-      //Goals[count] = 0;
+      Goals[count] = 0;
       TargetBankComplete[count] = 1;
     }
     SuperSpinnerEndTime = 0;
@@ -1879,10 +1893,6 @@ boolean AddABall(boolean ballLocked = false, boolean ballSave = true) {
 }
 */
 
-//void UpdateDropTargets() {
-//  DropTargets.Update(CurrentTime);
-//}
-
 byte GameModeStage;
 boolean DisplaysNeedRefreshing = false;
 unsigned long LastTimePromptPlayed = 0;
@@ -1912,7 +1922,7 @@ int ManageGameMode() {
         SetGeneralIlluminationOn(false);
       }
       ShowLampAnimation(3, 200, CurrentTime, 14, false, false, 4);
-
+      
     if (RPU_ReadSingleSwitchState(SW_C_SAUCER)){
       if (RPU_ReadLampState(LAMP_TOP_S)) {
         RPU_SetLampState(LAMP_LOWER_S, 1, 0, 0);
@@ -1959,6 +1969,7 @@ int ManageGameMode() {
 
     case GAME_MODE_UNSTRUCTURED_PLAY:
       // If this is the first time in this mode
+      
       if (GameModeStartTime == 0) {
         GameModeStartTime = CurrentTime;
         DisplaysNeedRefreshing = true;
@@ -1979,22 +1990,23 @@ int ManageGameMode() {
         ShowPlayerScores(0xFF, false, false);
       }
 
-    if (CurrentTime>SuperSpinnerEndTime) {
+    if (CurrentTime > SuperSpinnerEndTime) {
       SuperSpinnerEndTime = 0;
     }
 
-    if (CurrentTime>SuperPopEndTime) {
+    if (CurrentTime > SuperPopEndTime) {
       SuperPopEndTime = 0;
     }
 
-    if (CurrentTime>SuperBlastOffEndTime) {
+    if (CurrentTime > SuperBlastOffEndTime) {
       SuperBlastOffEndTime = 0;
     }  
-      ShowLampAnimation(3, 200, CurrentTime, 14, false, false, 4);
+    
+    ShowLampAnimation(3, 200, CurrentTime, 14, false, false, 4);
 
-      if (RPU_ReadSingleSwitchState(SW_C_SAUCER)){
-        if (RPU_ReadLampState(LAMP_TOP_S)) {
-          RPU_SetLampState(LAMP_LOWER_S, 1, 0, 0);
+    if (RPU_ReadSingleSwitchState(SW_C_SAUCER)){
+      if (RPU_ReadLampState(LAMP_TOP_S)) {
+        RPU_SetLampState(LAMP_LOWER_S, 1, 0, 0);
       } if (RPU_ReadLampState(LAMP_TOP_P)) {
           RPU_SetLampState(LAMP_LOWER_P, 1, 0, 0);
       } if (RPU_ReadLampState(LAMP_TOP_A)) {
@@ -2006,15 +2018,15 @@ int ManageGameMode() {
       }
     } 
       
-      RPU_SetLampState(LAMP_LR_POP, 1, 0, 0);
-      RPU_SetLampState(LAMP_C_POP, 1, 0, 0);
+    RPU_SetLampState(LAMP_LR_POP, 1, 0, 0);
+    RPU_SetLampState(LAMP_C_POP, 1, 0, 0);
       
       if ( (GateOpenTime != 0) && ((CurrentTime-GateOpenTime) > 1000) ) {  
         RPU_SetDisableGate(false);
         GateOpenTime = 0;
       }
 
-      if (CurrentTime<PlayfieldMultiplierExpiration) {
+      if (CurrentTime < PlayfieldMultiplierExpiration) {
         for (byte count=0; count<4; count++) {
           if (count!=CurrentPlayer) OverrideScoreDisplay(count, (PlayfieldMultiplierExpiration-CurrentTime)/1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
           }
@@ -2071,11 +2083,15 @@ int ManageGameMode() {
       RPU_SetLampState(LAMP_TOP_A, 1, 0, 500);
       RPU_SetLampState(LAMP_TOP_C, 1, 0, 500);
       RPU_SetLampState(LAMP_TOP_E, 1, 0, 500);
+
+      if (SuperBlastOffStartTime == 0) {
+        SuperBlastOffStartTime = CurrentTime;
+        SuperBlastOffEndTime = CurrentTime + SUPER_BLASTOFF_DURATION;
+      }
       
       if (RPU_ReadSingleSwitchState(SW_C_SAUCER)) {
         SuperBlastOffEndTime = 0;
         SetGoals(3);
-        SetGameMode(GAME_MODE_UNSTRUCTURED_PLAY);
         QueueNotification(SOUND_EFFECT_BLASTOFF_GOAL, 1);
       } 
       
@@ -2089,11 +2105,6 @@ int ManageGameMode() {
 
       if (CurrentTime>SuperBlastOffEndTime) {
         SetGameMode(GAME_MODE_BLAST_OFF_OVER);
-      }
-
-      if (SuperBlastOffStartTime == 0) {
-        SuperBlastOffStartTime = CurrentTime;
-        SuperBlastOffEndTime = CurrentTime + SUPER_BLASTOFF_DURATION;
       }
       
       if ( (GateOpenTime != 0) && ((CurrentTime-GateOpenTime) > 1000) ) {  
@@ -2437,7 +2448,6 @@ int ShowMatchSequence(boolean curStateChanged) {
     if (CurrentTime > (MatchSequenceStartTime + MatchDelay)) {
       MatchDigit += 1;
       if (MatchDigit > 9) MatchDigit = 0;
-      //PlaySoundEffect(10+(MatchDigit%2));
       PlaySoundEffect(SOUND_EFFECT_MATCH_SPIN);
       RPU_SetDisplayBallInPlay((int)MatchDigit * 10);
       MatchDelay += 50 + 4 * NumMatchSpins;
@@ -2658,7 +2668,7 @@ void HandleGamePlaySwitches(byte switchHit) {
     case SW_DROP_2:
       CurrentScores[CurrentPlayer] += 2000 * PlayfieldMultiplier;
       AddToBonus(1);
-      PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
+      QueueNotification(SOUND_EFFECT_GATE_LIT, 1);
       SpinnerToggle();
       RPU_SetLampState(LAMP_OPENGATE, 1, 0, 0);
       LastSwitchHitTime = CurrentTime;
@@ -2667,7 +2677,7 @@ void HandleGamePlaySwitches(byte switchHit) {
     case SW_DROP_3:
       CurrentScores[CurrentPlayer] += 3000 * PlayfieldMultiplier;
       AddToBonus(1);
-      PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
+      QueueNotification(SOUND_EFFECT_L_OUTLANE_LIT, 1);
       SpinnerToggle();
       RPU_SetLampState(LAMP_L_OUTLANE, 1, 0, 0);
       LastSwitchHitTime = CurrentTime;
@@ -3140,7 +3150,7 @@ void HandleGamePlaySwitches(byte switchHit) {
 
     case SW_R_OUTLANE:
       if (GateOpen == false) {
-            PlaySoundEffect(SOUND_EFFECT_BALL_SAVE);
+            QueueNotification(SOUND_EFFECT_GATE_CLOSED, 1);
             CurrentScores[CurrentPlayer] += 100;
             RPU_SetLampState(LAMP_OPENGATE, 0, 0, 0);
             RPU_SetLampState(LAMP_R_OUTLANE, 0, 0, 0);

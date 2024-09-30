@@ -207,11 +207,11 @@ struct AttractLampsDown SweepUp[] = {
 
 // Define Time
 #define SUPER_SPINNER_DURATION      25000
-#define SUPER_SPINNER_OVER          500
+#define SUPER_SPINNER_OVER          100
 #define SUPER_BLASTOFF_DURATION     30000
 #define SUPER_BLASTOFF_OVER         100
 #define SUPER_POP_DURATION          25000
-#define SUPER_POP_OVER              500
+#define SUPER_POP_OVER              100
 
 #if (RPU_MPU_ARCHITECTURE<10)
 // Machines with a -17, -35, 100, and 200 architecture
