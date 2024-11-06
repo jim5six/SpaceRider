@@ -69,71 +69,7 @@
 #define LAMP_HEAD_GAME_OVER                 51
 #endif
 
-/*
-//
-// Bottom to Top sweep, 51 lamps, 16 frames
-//
-
-struct AttractLampsDown SweepUp[] = {
-  {0 LAMP_BONUS_10,         1},
-  {1 LAMP_BONUS_20,         2},
-  {2 LAMP_BONUS_30,         2},
-  {3 LAMP_BONUS_40,         3},
-  {4 LAMP_BONUS_50,         3},
-  {5 LAMP_BONUS_60,         3},
-  {6 LAMP_BONUS_70,         4},
-  {7 LAMP_BONUS_80,         4},
-  {8 LAMP_BONUS_90,         4},
-  {52 LAMP_BONUS_100,        4},
-  {53 LAMP_BONUS_200,        5},
-  {54 LAMP_BONUS_300,        5},
-  {55 LAMP_BONUS_400,        5},
-  {44 LAMP_BONUS_2X,         6},
-  {45 LAMP_BONUS_3X,         6},
-  {46 LAMP_BONUS_5X,         6},
-  {47 LAMP_BONUS_SPECIAL,    6},
-  {30 LAMP_L_OUTLANE,        6},
-  {18 LAMP_R_OUTLANE,        6},
-  {56 LAMP_LOWER_S,          7},
-  {57 LAMP_LOWER_P,          7},
-  {58 LAMP_LOWER_A,          7},
-  {59 LAMP_LOWER_C,          7},
-  {40 LAMP_LOWER_E,          7},
-  {36 LAMP_TARGET_5,         7},
-  {9 LAMP_5000,              7},
-  {35 LAMP_TARGET_4,         8},
-  {17 LAMP_OPENGATE,         8},
-  {12 LAMP_C_SPINNER_1,      8},
-  {39 LAMP_EXTRABALL,        9},
-  {34 LAMP_TARGET_3,         9},
-  {29 LAMP_TARGET_SPECIAL,   9},
-  {13 LAMP_C_SPINNER_2,      9},
-  {33 LAMP_TARGET_2,         10},
-  {14 LAMP_C_SPINNER_3,      10},
-  {19 LAMP_DROP_TARGET,      10},
-  {15 LAMP_C_SPINNER_4,     11},
-  {32 LAMP_TARGET_1,        11},
-  {11 LAMP_CL_WHENLIT,      11},
-  {10 LAMP_CR_WHENLIT,      11},
-  {31 LAMP_DROP_SPECIAL,    12},
-  {16 LAMP_C_SPINNER_5,     12},
-  {20 LAMP_L_SPINNER_100,   12},
-  {21 LAMP_L_SPINNER_200,   13},
-  {22 LAMP_L_SPINNER_1000,  13},
-  {23 LAMP_L_SPINNER_2000,  14},
-  {37 LAMP_C_POP,           15},
-  {38 LAMP_LR_POP,          15},
-  {24 LAMP_TOP_S,           16},
-  {25 LAMP_TOP_P,           16},
-  {26 LAMP_TOP_A,           16},
-  {27 LAMP_TOP_C,           16},
-  {28 LAMP_TOP_E,           16},
-  };
-*/
-
-
 // Space Rider Switches
-
 #if (RPU_MPU_ARCHITECTURE<10)
 #define SW_DROP_4                   0
 #define SW_DROP_3                   1
@@ -174,7 +110,6 @@ struct AttractLampsDown SweepUp[] = {
 #endif
 
 // Space Rider Solinoids
-
 #define SOL_KNOCKER                 5
 #define SOL_OUTHOLE                 6
 #define SOL_R_POP_BUMPER            7
