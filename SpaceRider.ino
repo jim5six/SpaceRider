@@ -303,7 +303,7 @@ unsigned long SuperPopOverEndTime = 0;
     Game Specific State Variables
 
 *********************************************************************/
-unsigned long PlayfieldMultiplierExpiration;
+//unsigned long PlayfieldMultiplierExpiration;
 unsigned long BonusChanged;
 unsigned long BonusXAnimationStart;
 boolean GateOpen = true;
@@ -1092,8 +1092,8 @@ void TargetBank() {
 }
 
 void IncreasePlayfieldMultiplier(unsigned long duration) {
-  if (PlayfieldMultiplierExpiration) PlayfieldMultiplierExpiration += duration;
-  else PlayfieldMultiplierExpiration = CurrentTime + duration;
+//  if (PlayfieldMultiplierExpiration) PlayfieldMultiplierExpiration += duration;
+//  else PlayfieldMultiplierExpiration = CurrentTime + duration;
   PlayfieldMultiplier += 1;
   if (PlayfieldMultiplier > 5) {
     PlayfieldMultiplier = 1;
@@ -1810,7 +1810,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
     ExtraBallCollected = false;
     SpecialCollected = false;
     PlayfieldMultiplier = 1;
-    PlayfieldMultiplierExpiration = 0;
+//    PlayfieldMultiplierExpiration = 0;
     ScoreAdditionAnimation = 0;
     ScoreAdditionAnimationStartTime = 0;
     BonusXAnimationStart = 0;
@@ -1828,6 +1828,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
     SuperPopEndTime = 0;
     SuperBlastOffEndTime = 0;
     TargetBank();
+    RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
 
   // Reset gate
     GateOpen = true;        // Unpowered gate is open, gate open when true
@@ -1948,19 +1949,19 @@ int ManageGameMode() {
         SetGeneralIlluminationOn(true);        
       }
       // Playfield X value is only reset during unstructured play
-      if (PlayfieldMultiplierExpiration) {
-        if (CurrentTime > PlayfieldMultiplierExpiration) {
-          PlayfieldMultiplierExpiration = 0;
-          PlayfieldMultiplier = 1;
-          RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
-          RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
-        } else {
-          DisplaysNeedRefreshing = true;
-        }
-      } else if (DisplaysNeedRefreshing) {
-        DisplaysNeedRefreshing = false;
-        ShowPlayerScores(0xFF, false, false);
-      }
+//      if (PlayfieldMultiplierExpiration) {
+//        if (CurrentTime > PlayfieldMultiplierExpiration) {
+//          PlayfieldMultiplierExpiration = 0;
+//          PlayfieldMultiplier = 1;
+//          RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
+//          RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
+//        } else {
+//          DisplaysNeedRefreshing = true;
+//        }
+//      } else if (DisplaysNeedRefreshing) {
+//        DisplaysNeedRefreshing = false;
+//        ShowPlayerScores(0xFF, false, false);
+//      }
 
     if (CurrentTime > SuperSpinnerEndTime) {
       SuperSpinnerEndTime = 0;
@@ -1982,12 +1983,12 @@ int ManageGameMode() {
         GateOpenTime = 0;
       }
 
-      if (CurrentTime < PlayfieldMultiplierExpiration) {
-        for (byte count=0; count<4; count++) {
-          if (count!=CurrentPlayer) OverrideScoreDisplay(count, (PlayfieldMultiplierExpiration-CurrentTime)/1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
-          }
-        } else
-          ShowPlayerScores(0xFF, false, false);
+//      if (CurrentTime < PlayfieldMultiplierExpiration) {
+//        for (byte count=0; count<4; count++) {
+//          if (count!=CurrentPlayer) OverrideScoreDisplay(count, (PlayfieldMultiplierExpiration-CurrentTime)/1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
+//          }
+//        } else
+//          ShowPlayerScores(0xFF, false, false);
   
       break;
 
@@ -2025,6 +2026,8 @@ int ManageGameMode() {
         SuperSpinnerOverEndTime = CurrentTime + SUPER_POP_OVER;
       }
       
+      RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
+
       if (CurrentTime>SuperSpinnerOverEndTime) {
         SetGameMode(GAME_MODE_UNSTRUCTURED_PLAY);
       }
@@ -2082,6 +2085,17 @@ int ManageGameMode() {
         SuperBlastOffOverEndTime = CurrentTime + SUPER_BLASTOFF_OVER;
       }
       
+      RPU_SetLampState(LAMP_TOP_S, 0, 0, 0);
+      RPU_SetLampState(LAMP_TOP_P, 0, 0, 0);
+      RPU_SetLampState(LAMP_TOP_A, 0, 0, 0);
+      RPU_SetLampState(LAMP_TOP_C, 0, 0, 0);
+      RPU_SetLampState(LAMP_TOP_E, 0, 0, 0);
+      RPU_SetLampState(LAMP_C_SPINNER_1, 0, 0, 0);
+      RPU_SetLampState(LAMP_C_SPINNER_2, 0, 0, 0);
+      RPU_SetLampState(LAMP_C_SPINNER_3, 0, 0, 0);
+      RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
+      RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
+
       if (CurrentTime>SuperBlastOffOverEndTime) {
         SetGameMode(GAME_MODE_UNSTRUCTURED_PLAY);
       }
@@ -2123,6 +2137,9 @@ int ManageGameMode() {
         SuperPopOverEndTime = CurrentTime + SUPER_POP_OVER;
       }
       
+      RPU_SetLampState(LAMP_LR_POP, 1, 0, 0);
+      RPU_SetLampState(LAMP_C_POP, 1, 0, 0);
+
       if (CurrentTime>SuperPopOverEndTime) {
         SetGameMode(GAME_MODE_UNSTRUCTURED_PLAY);
       }
@@ -2955,13 +2972,30 @@ void HandleGamePlaySwitches(byte switchHit) {
 
     case SW_C_SAUCER:
       if (GameMode==GAME_MODE_SKILL_SHOT) {
-            QueueNotification(SOUND_EFFECT_SKILLSHOT, 1);
-            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1500, true);
+            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
             CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             SkillShotHit = true;
-            if (RPU_ReadLampState(LAMP_TOP_C)) {
-              RPU_SetLampState(LAMP_LOWER_C, 1, 0, 0);
-            }  
+            if (RPU_ReadLampState(LAMP_TOP_S)) {
+              QueueNotification(SOUND_EFFECT_SPINNER_HELD, 1);
+              HOLDOVER_AWARD_SPINNER_PROGRESS;
+              RPU_SetLampState(LAMP_LOWER_S, 1, 0, 500);
+            } else if (RPU_ReadLampState(LAMP_TOP_P)) {
+              QueueNotification(SOUND_EFFECT_POP_HELD, 1);
+              HOLDOVER_AWARD_POP_PROGRESS;
+              RPU_SetLampState(LAMP_LOWER_P, 1, 0, 500);
+            } else if (RPU_ReadLampState(LAMP_TOP_A)) {
+              QueueNotification(SOUND_EFFECT_BLASTOFF_HELD, 1);
+              HOLDOVER_AWARD_BLASTOFF_PROGRESS;
+              RPU_SetLampState(LAMP_LOWER_A, 1, 0, 500);
+            } else if (RPU_ReadLampState(LAMP_TOP_C)) {
+              QueueNotification(SOUND_EFFECT_SKILLSHOT, 1);    //need bonus held callout
+              HOLDOVER_AWARD_BONUS;
+              RPU_SetLampState(LAMP_LOWER_C, 1, 0, 500);
+            } else if (RPU_ReadLampState(LAMP_TOP_E)) {
+              QueueNotification(SOUND_EFFECT_SKILLSHOT, 1);    //need playfieldx held callout
+              HOLDOVER_AWARD_PLAYFIELDX;
+              RPU_SetLampState(LAMP_LOWER_E, 1, 0, 500);
+            }
         } else if (GameMode==GAME_MODE_BLAST_OFF_COLLECT) {
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1500, true);
             CurrentScores[CurrentPlayer] += SCORE_BLASTOFF_COLLECT;
