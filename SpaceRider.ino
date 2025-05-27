@@ -5,7 +5,7 @@
     GNU General Public License for more details.
 
     See <https://www.gnu.org/licenses/>. 
-*/
+***************************************************************************/
 
 #include "RPU_Config.h"
 #include "RPU.h"
@@ -155,12 +155,12 @@ unsigned short SelfTestStateToCalloutMap[34] = {  134, 135, 133, 136, 137, 138, 
 #define SOUND_EFFECT_BLASTOFF_HELD      310
 #define SOUND_EFFECT_POP_HELD           311
 #define SOUND_EFFECT_SUPERPOP_GOAL      312
-#define SOUND_EFFECT_SPACE_HELD         313
+#define SOUND_EFFECT_PLAYFIELDX_HELD    313
 #define SOUND_EFFECT_GATE_LIT           314
 #define SOUND_EFFECT_GATE_CLOSED        315
 #define SOUND_EFFECT_L_OUTLANE_LIT      316
 #define SOUND_EFFECT_EXTRABALL_LIT      317
-#define SOUND_EFFECT_GOAL               318
+#define SOUND_EFFECT_GOAL_ACHIEVED      318
 #define SOUND_EFFECT_GAME_START         319
 #define SOUND_EFFECT_RIDER1             320
 #define SOUND_EFFECT_RIDER2             321
@@ -171,6 +171,8 @@ unsigned short SelfTestStateToCalloutMap[34] = {  134, 135, 133, 136, 137, 138, 
 #define SOUND_EFFECT_MULTI_5X           326
 #define SOUND_EFFECT_MULTI_GOAL         327
 #define SOUND_EFFECT_SPACE_GOAL         328
+#define SOUND_EFFECT_BONUS_HELD         329
+
 
 #define SOUND_EFFECT_DIAG_START                   1900
 #define SOUND_EFFECT_DIAG_CREDIT_RESET_BUTTON     1900
@@ -2020,6 +2022,7 @@ int ManageGameMode() {
       RPU_SetLampState(LAMP_LOWER_S, 1, 0, 0);
       S_GoalComplete[CurrentPlayer] = 1;
       ShowLampAnimation(4, 120, CurrentTime, 4, false, false);
+      PlayBackgroundSong(SOUND_EFFECT_HURRY_UP);
       
       if (SuperSpinnerStartTime == 0) {
         SuperSpinnerStartTime = CurrentTime;
@@ -2080,12 +2083,12 @@ int ManageGameMode() {
       }
       
       if (RPU_ReadSingleSwitchState(SW_C_SAUCER)) {
-        PlaySoundEffect(SOUND_EFFECT_BLASTOFF_GOAL);
+        //PlaySoundEffect(SOUND_EFFECT_BLASTOFF_GOAL);
         RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
         A_GoalComplete[CurrentPlayer] = 1;
         SetGameMode(GAME_MODE_BLAST_OFF_OVER);
         SuperBlastOffOverStartTime = 0;
-        RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
+        //RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
         ShowPlayerScores(0xFF, false, false);
       }
       
@@ -3008,27 +3011,27 @@ void HandleGamePlaySwitches(byte switchHit) {
             if (RPU_ReadLampState(LAMP_TOP_S)) {
               QueueNotification(SOUND_EFFECT_SPINNER_HELD, 1);
               HOLD_SPINNER_PROGRESS[CurrentPlayer] = 1;
-              //RPU_SetLampState(LAMP_LOWER_S, 1, 0, 500);
+              RPU_SetLampState(LAMP_LOWER_S, 1, 0, 500);
             } else if (RPU_ReadLampState(LAMP_TOP_P)) {
               QueueNotification(SOUND_EFFECT_POP_HELD, 1);
               HOLD_POP_PROGRESS[CurrentPlayer] = 1;
-              //RPU_SetLampState(LAMP_LOWER_P, 1, 0, 500);
+              RPU_SetLampState(LAMP_LOWER_P, 1, 0, 500);
             } else if (RPU_ReadLampState(LAMP_TOP_A)) {
               QueueNotification(SOUND_EFFECT_BLASTOFF_HELD, 1);
               HOLD_BLASTOFF_PROGRESS[CurrentPlayer] = 1;
-              //RPU_SetLampState(LAMP_LOWER_A, 1, 0, 500);
+              RPU_SetLampState(LAMP_LOWER_A, 1, 0, 500);
             } else if (RPU_ReadLampState(LAMP_TOP_C)) {
-              QueueNotification(SOUND_EFFECT_SKILLSHOT, 1);    //need bonus held callout
+              QueueNotification(SOUND_EFFECT_BONUS_HELD, 1);
               HOLD_BONUS[CurrentPlayer] = 1;
-              //RPU_SetLampState(LAMP_LOWER_C, 1, 0, 500);
+              RPU_SetLampState(LAMP_LOWER_C, 1, 0, 500);
             } else if (RPU_ReadLampState(LAMP_TOP_E)) {
-              QueueNotification(SOUND_EFFECT_SKILLSHOT, 1);    //need playfieldx held callout
+              QueueNotification(SOUND_EFFECT_PLAYFIELDX_HELD, 1);
               HOLD_PLAYFIELDX[CurrentPlayer] = 1;
-              //RPU_SetLampState(LAMP_LOWER_E, 1, 0, 500);
+              RPU_SetLampState(LAMP_LOWER_E, 1, 0, 500);
             }
         } else if (GameMode==GAME_MODE_BLAST_OFF_COLLECT) {
-            //PlaySoundEffect(SOUND_EFFECT_BLASTOFF_GOAL);
-            //RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1500, true);
+            PlaySoundEffect(SOUND_EFFECT_BLASTOFF_GOAL);
+            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1500, true);
             CurrentScores[CurrentPlayer] += SCORE_BLASTOFF_COLLECT;
         } else if (GameMode==GAME_MODE_UNSTRUCTURED_PLAY) {
             CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
