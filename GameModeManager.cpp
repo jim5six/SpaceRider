@@ -15,13 +15,6 @@ struct ModeStatuses
 
 ModeStatuses modeStates;
 
-#define SUPER_SPINNER_DURATION      25000
-#define SUPER_SPINNER_OVER          100
-#define SUPER_BLASTOFF_DURATION     30000
-#define SUPER_BLASTOFF_OVER         100
-#define SUPER_POP_DURATION          25000
-#define SUPER_POP_OVER              100
-
 void ResetModes(void)
 {
     modeStates.superSpinner.startTime = 0;
