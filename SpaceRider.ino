@@ -1605,7 +1605,7 @@ int RunAttractMode(int curState, boolean curStateChanged) {
     AttractLastLadderTime = CurrentTime;
   }
   
-  int rand = random() % 3;
+    int rand = random() % 3;
   if (rand == 0){
       ShowLampAnimation(0, 120, CurrentTime, 14, false, false);
     } else if (rand == 1) {
@@ -1614,7 +1614,7 @@ int RunAttractMode(int curState, boolean curStateChanged) {
       ShowLampAnimation(2, 40, CurrentTime, 14, false, false);
     }
   
-//  ShowLampAnimation(1, 120, CurrentTime, 14, false, false);
+//  ShowLampAnimation(2, 40, CurrentTime, 14, false, false);
 //  ShowLampAnimation(0, 40, CurrentTime, 14, false, false);
 
   byte switchHit;
@@ -1898,13 +1898,17 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
     RPU_PushToTimedSolenoidStack(SOL_OUTHOLE, 16, CurrentTime + 1000);
     NumberOfBallsInPlay = 1;
 //    QueueNotification(SOUND_EFFECT_GAME_START, 1);
-    int rand = random() % 3;
+    int rand = random() % 5;
   if (rand == 0){
       PlayBackgroundSong(SOUND_EFFECT_BACKGROUND1);
     } else if (rand == 1) {
       PlayBackgroundSong(SOUND_EFFECT_BACKGROUND2);
-    } else {
+    } else if (rand == 2) {
       PlayBackgroundSong(SOUND_EFFECT_BACKGROUND3);
+    } else if (rand == 3) {
+      PlayBackgroundSong(SOUND_EFFECT_BACKGROUND4);
+    } else {
+      PlayBackgroundSong(SOUND_EFFECT_SONARBG);
     }
 
   }
@@ -2096,12 +2100,12 @@ int ManageGameMode() {
       }
       
       if (RPU_ReadSingleSwitchState(SW_C_SAUCER)) {
-        //PlaySoundEffect(SOUND_EFFECT_BLASTOFF_GOAL);
+        PlaySoundEffect(SOUND_EFFECT_BLASTOFF_GOAL);
         RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
         A_GoalComplete[CurrentPlayer] = 1;
         SetGameMode(GAME_MODE_BLAST_OFF_OVER);
         SuperBlastOffOverStartTime = 0;
-        //RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
+        RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
         ShowPlayerScores(0xFF, false, false);
       }
       

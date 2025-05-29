@@ -9,5 +9,6 @@ All goals should be able to be completed simultaniously
 Add hurry up background sound while timers are running. Currently plays sound but never stops.
 Randomize background songs when ball starts. (need to make more songs to add to game)
 Blast off collect does not work. Ball gets stuck in the saucer and goal is not achieved, I think the second time you hit saucer it works.
+    JIM 5/29 - works now, collect and call out. lights stay blinking until end of ball however.
 I would like to change the light show for blast off collect.
 If all goals are commpleted in a game ( (S)Super spinner, (P)Pop bumper Frenzy, (A)Blast off collect, (C)Max bonus (E)5x playfield). A cool wizard mode needs to be created.
