@@ -1,5 +1,18 @@
 #include "GameModeManager.h"
 
+struct SingleModeStatus
+{
+    unsigned long startTime = 0;
+    unsigned long endTime = 0;
+};
+
+struct ModeStatuses
+{
+    SingleModeStatus superSpinner;
+    SingleModeStatus superBlastOff;
+    SingleModeStatus superPops;
+};
+
 ModeStatuses modeStates;
 
 #define SUPER_SPINNER_DURATION      25000
