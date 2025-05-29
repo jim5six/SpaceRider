@@ -1994,9 +1994,7 @@ int ManageGameMode() {
       // If this is the first time in this mode
       
       if (GameModeStartTime == 0) {
-        GameModeStartTime = CurrentTime;
-        DisplaysNeedRefreshing = true;
-        SetGeneralIlluminationOn(true);        
+        GameModeStartTime = CurrentTime;  
       }
       // Playfield X value is only reset during unstructured play
 //      if (PlayfieldMultiplier[CurrentPlayer]Expiration) {

@@ -1,13 +1,19 @@
 #include "GameModeManager.h"
 
-ModeStatuses modeStates;
+struct SingleModeStatus
+{
+    unsigned long startTime = 0;
+    unsigned long endTime = 0;
+};
 
-#define SUPER_SPINNER_DURATION      25000
-#define SUPER_SPINNER_OVER          100
-#define SUPER_BLASTOFF_DURATION     30000
-#define SUPER_BLASTOFF_OVER         100
-#define SUPER_POP_DURATION          25000
-#define SUPER_POP_OVER              100
+struct ModeStatuses
+{
+    SingleModeStatus superSpinner;
+    SingleModeStatus superBlastOff;
+    SingleModeStatus superPops;
+};
+
+ModeStatuses modeStates;
 
 void ResetModes(void)
 {
