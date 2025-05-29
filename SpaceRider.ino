@@ -14,6 +14,7 @@
 #include "SelfTestAndAudit.h"
 #include "AudioHandler.h"
 #include "LampAnimations.h"
+#include "GameModeManager.h"
 #include <EEPROM.h>
 
 #define GAME_MAJOR_VERSION  2024
@@ -300,6 +301,7 @@ unsigned long SuperPopStartTime = 0;
 unsigned long SuperPopEndTime = 0;
 unsigned long SuperPopOverStartTime = 0;
 unsigned long SuperPopOverEndTime = 0;
+
 
 #define BALL_SAVE_GRACE_PERIOD  2000
 
@@ -1783,7 +1785,6 @@ int InitGamePlay(boolean curStateChanged) {
   return MACHINE_STATE_INIT_NEW_BALL;
 }
 
-
 int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
 
   // If we're coming into this mode for the first time
@@ -1837,6 +1838,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
     SuperPopEndTime = 0;
     SuperBlastOffEndTime = 0;
     TargetBank();
+    ResetModes();
     RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
 
   // Reset gate
@@ -1887,9 +1889,10 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
     RPU_PushToTimedSolenoidStack(SOL_OUTHOLE, 16, CurrentTime + 1000);
     NumberOfBallsInPlay = 1;
 //    QueueNotification(SOUND_EFFECT_GAME_START, 1);
-  if (ballNum==1){
+    int rand = random() % 3;
+  if (rand == 0){
       PlayBackgroundSong(SOUND_EFFECT_BACKGROUND1);
-    } else if (ballNum==2) {
+    } else if (rand == 1) {
       PlayBackgroundSong(SOUND_EFFECT_BACKGROUND2);
     } else {
       PlayBackgroundSong(SOUND_EFFECT_BACKGROUND3);
@@ -1948,6 +1951,9 @@ int ManageGameMode() {
   int returnState = MACHINE_STATE_NORMAL_GAMEPLAY;
 
   boolean specialAnimationRunning = false;
+
+//Determine which spinner lights should be on 
+  DetermineLeftSpinnerLights();
 
   if ((CurrentTime - LastSwitchHitTime) > 3000) TimersPaused = true;
   else TimersPaused = false;
@@ -2019,50 +2025,50 @@ int ManageGameMode() {
     break;
 
     case GAME_MODE_SPINNER_FRENZY:
-      RPU_SetLampState(LAMP_LOWER_S, 1, 0, 0);
-      S_GoalComplete[CurrentPlayer] = 1;
-      ShowLampAnimation(4, 120, CurrentTime, 4, false, false);
-      PlayBackgroundSong(SOUND_EFFECT_HURRY_UP);
-      
-      if (SuperSpinnerStartTime == 0) {
-        SuperSpinnerStartTime = CurrentTime;
-        SuperSpinnerEndTime = CurrentTime + SUPER_SPINNER_DURATION;
-      }
-
-      if (CurrentTime<SuperSpinnerEndTime) {
-        for (byte count=0; count<4; count++) {
-          if (count!=CurrentPlayer) OverrideScoreDisplay(count, (SuperSpinnerEndTime-CurrentTime)/1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
-        }
-      } else if (SuperSpinnerOverEndTime) {
-          ShowPlayerScores(0xFF, false, false);
-      }
-      
-      if (CurrentTime>SuperSpinnerEndTime) {
-        SetGameMode(GAME_MODE_SPINNER_FRENZY_OVER);
-      }
-
-      if ( (GateOpenTime != 0) && ((CurrentTime-GateOpenTime) > 1000) ) {  
-        RPU_SetDisableGate(false);
-        GateOpenTime = 0;
-      }
+      //RPU_SetLampState(LAMP_LOWER_S, 1, 0, 0);
+      //S_GoalComplete[CurrentPlayer] = 1;
+      //ShowLampAnimation(4, 120, CurrentTime, 4, false, false);
+      //PlaySoundEffect(SOUND_EFFECT_HURRY_UP);
+      //
+      //if (SuperSpinnerStartTime == 0) {
+      //  SuperSpinnerStartTime = CurrentTime;
+      //  SuperSpinnerEndTime = CurrentTime + SUPER_SPINNER_DURATION;
+      //}
+//
+      //if (CurrentTime<SuperSpinnerEndTime) {
+      //  for (byte count=0; count<4; count++) {
+      //    if (count!=CurrentPlayer) OverrideScoreDisplay(count, (SuperSpinnerEndTime-CurrentTime)/1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
+      //  }
+      //} else if (SuperSpinnerOverEndTime) {
+      //    ShowPlayerScores(0xFF, false, false);
+      //}
+      //
+      //if (CurrentTime>SuperSpinnerEndTime) {
+      //  SetGameMode(GAME_MODE_SPINNER_FRENZY_OVER);
+      //}
+//
+      //if ( (GateOpenTime != 0) && ((CurrentTime-GateOpenTime) > 1000) ) {  
+      //  RPU_SetDisableGate(false);
+      //  GateOpenTime = 0;
+      //}
       break;
 
     case GAME_MODE_SPINNER_FRENZY_OVER:
-      if (SuperSpinnerOverStartTime == 0) {
-        SuperSpinnerOverStartTime = CurrentTime;
-        SuperSpinnerOverEndTime = CurrentTime + SUPER_POP_OVER;
-      }
-      
-      RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
-
-      if (CurrentTime>SuperSpinnerOverEndTime) {
-        SetGameMode(GAME_MODE_UNSTRUCTURED_PLAY);
-        ShowPlayerScores(0xFF, false, false);
-      }
-      if ( (GateOpenTime != 0) && ((CurrentTime-GateOpenTime) > 1000) ) {  
-        RPU_SetDisableGate(false);
-        GateOpenTime = 0;
-      }
+      //if (SuperSpinnerOverStartTime == 0) {
+      //  SuperSpinnerOverStartTime = CurrentTime;
+      //  SuperSpinnerOverEndTime = CurrentTime + SUPER_POP_OVER;
+      //}
+      //
+      //RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
+//
+      //if (CurrentTime>SuperSpinnerOverEndTime) {
+      //  SetGameMode(GAME_MODE_UNSTRUCTURED_PLAY);
+      //  ShowPlayerScores(0xFF, false, false);
+      //}
+      //if ( (GateOpenTime != 0) && ((CurrentTime-GateOpenTime) > 1000) ) {  
+      //  RPU_SetDisableGate(false);
+      //  GateOpenTime = 0;
+      //}
       break;
 
     case GAME_MODE_BLAST_OFF_COLLECT:
@@ -2133,18 +2139,18 @@ int ManageGameMode() {
       }
       break;
 
-
     case GAME_MODE_POP_FRENZY:
-      RPU_SetLampState(LAMP_LOWER_P, 1, 0, 0);
-      RPU_SetLampState(LAMP_LR_POP, 1, 0, 100);
-      RPU_SetLampState(LAMP_C_POP, 1, 0, 100);
+      //RPU_SetLampState(LAMP_LOWER_P, 1, 0, 0);
+      //RPU_SetLampState(LAMP_LR_POP, 1, 0, 100);
+      //RPU_SetLampState(LAMP_C_POP, 1, 0, 100);
       
-      if (SuperPopStartTime == 0) {
-        SuperPopStartTime = CurrentTime;
-        SuperPopEndTime = CurrentTime + SUPER_POP_DURATION;
-      }
+      //if (SuperPopStartTime == 0) {
+      //  SuperPopStartTime = CurrentTime;
+      //  SuperPopEndTime = CurrentTime + SUPER_POP_DURATION;
+      //}
 
-      if (CurrentTime<SuperPopEndTime) {
+      //if (CurrentTime<SuperPopEndTime) {
+        /*
         for (byte count=0; count<4; count++) {
           if (count!=CurrentPlayer) OverrideScoreDisplay(count, (SuperPopEndTime-CurrentTime)/1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
           }
@@ -2159,51 +2165,85 @@ int ManageGameMode() {
       if ( (GateOpenTime != 0) && ((CurrentTime-GateOpenTime) > 1000) ) {  
         RPU_SetDisableGate(false);
         GateOpenTime = 0;
-      }  
+      }  */
       break;
 
     case GAME_MODE_POP_FRENZY_OVER:
-      if (SuperPopOverStartTime == 0) {
-        SuperPopOverStartTime = CurrentTime;
-        SuperPopOverEndTime = CurrentTime + SUPER_POP_OVER;
-      }
+      //if (SuperPopOverStartTime == 0) {
+      //  SuperPopOverStartTime = CurrentTime;
+      //  SuperPopOverEndTime = CurrentTime + SUPER_POP_OVER;
+      //}
       
-      RPU_SetLampState(LAMP_LR_POP, 1, 0, 0);
-      RPU_SetLampState(LAMP_C_POP, 1, 0, 0);
+      //RPU_SetLampState(LAMP_LR_POP, 1, 0, 0);
+      //RPU_SetLampState(LAMP_C_POP, 1, 0, 0);
 
-      if (CurrentTime>SuperPopOverEndTime) {
-        SetGameMode(GAME_MODE_UNSTRUCTURED_PLAY);
-        ShowPlayerScores(0xFF, false, false);
-      }
+      //if (CurrentTime>SuperPopOverEndTime) {
+      //  SetGameMode(GAME_MODE_UNSTRUCTURED_PLAY);
+      //  ShowPlayerScores(0xFF, false, false);
+      //}
 
-      if ( (GateOpenTime != 0) && ((CurrentTime-GateOpenTime) > 1000) ) {  
-        RPU_SetDisableGate(false);
-        GateOpenTime = 0;
-      }
+      //if ( (GateOpenTime != 0) && ((CurrentTime-GateOpenTime) > 1000) ) {  
+      //  RPU_SetDisableGate(false);
+      //  GateOpenTime = 0;
+      //}
       break;
   }
-  
-if ((BallFirstSwitchHitTime == 0) && GoalsDisplayValue(Goals[CurrentPlayer])) {   // If ball not in play and if any goals have been reached
-    for (byte count = 0; count < 4; count++) {
-      if (count != CurrentPlayer) {
-        OverrideScoreDisplay(count, GoalsDisplayValue(Goals[CurrentPlayer]), false);  // Show achieved goals
-      }
-    }
-    GoalsDisplayToggle = true;
-  } else if ((BallFirstSwitchHitTime > 0) && GoalsDisplayToggle) {
-    ShowPlayerScores(0xFF, false, false);                                             //  Reset all score displays
-    GoalsDisplayToggle = false;
-  }   
 
-  if ( !specialAnimationRunning && NumTiltWarnings <= MaxTiltWarnings ) {
-//    ShowTopSpaceLamps();
-//    ShowLowerSpaceLamps();
-    ShowBonusLamps();
-//    ShowStandupLamps();
-    ShowShootAgainLamps();
-//    ShowPopBumpersLamps();
-//    ShowCenterSpinnerLamps();
-  }
+    if (IsSuperSpinnerActive(CurrentTime)) {
+        //RPU_SetLampState(LAMP_LOWER_S, 1, 0, 0);
+        
+
+        for (byte count=0; count<4; count++) {
+            if (count!=CurrentPlayer) OverrideScoreDisplay(count, (SuperSpinnerEndTime-CurrentTime)/1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
+        }
+    }
+
+    if (IsSuperPopsActive(CurrentTime))
+    {
+        RPU_SetLampState(LAMP_LOWER_P, 1, 0, 0);
+        RPU_SetLampState(LAMP_LR_POP, 1, 0, 100);
+        RPU_SetLampState(LAMP_C_POP, 1, 0, 100);
+
+        for (byte count=0; count<4; count++) {
+            if (count!=CurrentPlayer) OverrideScoreDisplay(count, (SuperPopEndTime-CurrentTime)/1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
+        }
+    }
+    else
+    {
+        RPU_SetLampState(LAMP_LR_POP, 1, 0, 0);
+        RPU_SetLampState(LAMP_C_POP, 1, 0, 0);
+    }
+
+    if (!IsSuperSpinnerActive(CurrentTime) && !(IsSuperPopsActive(CurrentTime))) {
+        ShowPlayerScores(0xFF, false, false);
+    }
+
+    if ( (GateOpenTime != 0) && ((CurrentTime-GateOpenTime) > 1000) ) {  
+        RPU_SetDisableGate(false);
+        GateOpenTime = 0;
+    }  
+  
+    if ((BallFirstSwitchHitTime == 0) && GoalsDisplayValue(Goals[CurrentPlayer])) {   // If ball not in play and if any goals have been reached
+        for (byte count = 0; count < 4; count++) {
+        if (count != CurrentPlayer) {
+            OverrideScoreDisplay(count, GoalsDisplayValue(Goals[CurrentPlayer]), false);  // Show achieved goals
+        }
+        }
+        GoalsDisplayToggle = true;
+    } else if ((BallFirstSwitchHitTime > 0) && GoalsDisplayToggle) {
+        ShowPlayerScores(0xFF, false, false);                                             //  Reset all score displays
+        GoalsDisplayToggle = false;
+    }   
+
+    if ( !specialAnimationRunning && NumTiltWarnings <= MaxTiltWarnings ) {
+    //    ShowTopSpaceLamps();
+    //    ShowLowerSpaceLamps();
+        ShowBonusLamps();
+    //    ShowStandupLamps();
+        ShowShootAgainLamps();
+    //    ShowPopBumpersLamps();
+    //    ShowCenterSpinnerLamps();
+    }
 
 
   // Three types of display modes are shown here:
@@ -2627,7 +2667,37 @@ int HandleSystemSwitches(int curState, byte switchHit) {
 //   }
 // }
 
-
+void DetermineLeftSpinnerLights(void) {
+    if (IsSuperSpinnerActive(CurrentTime)) {
+        ShowLampAnimation(4, 120, CurrentTime, 4, false, false);
+    }
+    else {
+        if (NumberOfSpins[CurrentPlayer] > 0 && NumberOfSpins[CurrentPlayer] < 51){
+                RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
+                RPU_SetLampState(LAMP_L_SPINNER_200, 0, 0, 0);
+                RPU_SetLampState(LAMP_L_SPINNER_1000, 0, 0, 0);
+                RPU_SetLampState(LAMP_L_SPINNER_2000, 0, 0, 0);
+        }
+        if (NumberOfSpins[CurrentPlayer] > 50 && NumberOfSpins[CurrentPlayer] < 101){
+                RPU_SetLampState(LAMP_L_SPINNER_100, 0, 0, 0);
+                RPU_SetLampState(LAMP_L_SPINNER_200, 1, 0, 0);
+                RPU_SetLampState(LAMP_L_SPINNER_1000, 0, 0, 0);
+                RPU_SetLampState(LAMP_L_SPINNER_2000, 0, 0, 0);
+        }
+        if (NumberOfSpins[CurrentPlayer] > 100 && NumberOfSpins[CurrentPlayer] < 151){
+                RPU_SetLampState(LAMP_L_SPINNER_100, 0, 0, 0);
+                RPU_SetLampState(LAMP_L_SPINNER_200, 0, 0, 0);
+                RPU_SetLampState(LAMP_L_SPINNER_1000, 1, 0, 0);
+                RPU_SetLampState(LAMP_L_SPINNER_2000, 0, 0, 0);
+        }
+        if (NumberOfSpins[CurrentPlayer] > 150 && NumberOfSpins[CurrentPlayer] < 201){
+                RPU_SetLampState(LAMP_L_SPINNER_100, 0, 0, 0);
+                RPU_SetLampState(LAMP_L_SPINNER_200, 0, 0, 0);
+                RPU_SetLampState(LAMP_L_SPINNER_1000, 0, 0, 0);
+                RPU_SetLampState(LAMP_L_SPINNER_2000, 1, 0, 0);
+        }
+    }
+}
 
 void HandleGamePlaySwitches(byte switchHit) {
 
@@ -2645,27 +2715,28 @@ void HandleGamePlaySwitches(byte switchHit) {
     case SW_L_POP_BUMPER:
     case SW_C_POP_BUMPER:
     case SW_R_POP_BUMPER:
-      if (CurrentTime < SuperPopEndTime) {
-      SetGameMode(GAME_MODE_POP_FRENZY);
-      PlaySoundEffect(SOUND_EFFECT_POPBUMPER);
-      CurrentScores[CurrentPlayer] += (SCORE_POPFRENZY) * PlayfieldMultiplier[CurrentPlayer];
-      } else { 
-      SetGameMode(GAME_MODE_UNSTRUCTURED_PLAY);
+      if (IsSuperPopsActive(CurrentTime)) {
+        SetGameMode(GAME_MODE_POP_FRENZY);
+        PlaySoundEffect(SOUND_EFFECT_POPBUMPER);
+        CurrentScores[CurrentPlayer] += (SCORE_POPFRENZY) * PlayfieldMultiplier[CurrentPlayer];
       }
-      if (GameMode==GAME_MODE_UNSTRUCTURED_PLAY) {
+      else {
+        // Super pops are not active
         NumberOfHits[CurrentPlayer] += 1;
-        if (NumberOfHits[CurrentPlayer] > 25) {
-          NumberOfHits[CurrentPlayer] = 0;
-          SuperPopEndTime = CurrentTime + SUPER_POP_DURATION;
-          RPU_SetDisplayCredits(Credits);
-          QueueNotification(SOUND_EFFECT_SUPERPOP_GOAL, 1);
-          P_GoalComplete[CurrentPlayer] = 1;
-          } else {
-        RPU_SetDisplayCredits(0+NumberOfHits[CurrentPlayer]);
+        if (NumberOfHits[CurrentPlayer] >= 25) {
+            NumberOfHits[CurrentPlayer] = 0;
+            RPU_SetDisplayCredits(Credits);
+            QueueNotification(SOUND_EFFECT_SUPERPOP_GOAL, 1);
+            P_GoalComplete[CurrentPlayer] = 1;
+            StartSuperPops(CurrentTime);
+        } 
+        else {
+            RPU_SetDisplayCredits(NumberOfHits[CurrentPlayer]);
         }
-      CurrentScores[CurrentPlayer] += 100 * PlayfieldMultiplier[CurrentPlayer];
-      PlaySoundEffect(SOUND_EFFECT_POPBUMPER);
-      }  
+        CurrentScores[CurrentPlayer] += 100 * PlayfieldMultiplier[CurrentPlayer];
+        PlaySoundEffect(SOUND_EFFECT_POPBUMPER);
+      } 
+
       LastSwitchHitTime = CurrentTime;
       if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;  
@@ -2708,58 +2779,43 @@ void HandleGamePlaySwitches(byte switchHit) {
       break;
 
     case SW_L_SPINNER:
-      if (CurrentTime < SuperSpinnerEndTime) {
-      SetGameMode(GAME_MODE_SPINNER_FRENZY);
-      PlaySoundEffect(SOUND_EFFECT_SPINNERFRENZY);
-      CurrentScores[CurrentPlayer] += (SCORE_SPINNERFRENZY) * PlayfieldMultiplier[CurrentPlayer];
-      } else { 
-      SetGameMode(GAME_MODE_UNSTRUCTURED_PLAY);
-      }
-      if (GameMode==GAME_MODE_UNSTRUCTURED_PLAY) {
-        NumberOfSpins[CurrentPlayer] += 1;
-        if (NumberOfSpins[CurrentPlayer] > 200) {
-          NumberOfSpins[CurrentPlayer] = 1;
-          SuperSpinnerEndTime = CurrentTime + SUPER_SPINNER_DURATION;
-          RPU_SetDisplayCredits(Credits);
-          QueueNotification(SOUND_EFFECT_SUPERSPINNER_GOAL, 1);
-          } else {
-        RPU_SetDisplayCredits(0+NumberOfSpins[CurrentPlayer]);
+        if (IsSuperSpinnerActive(CurrentTime)) {
+            SetGameMode(GAME_MODE_SPINNER_FRENZY);
+            PlaySoundEffect(SOUND_EFFECT_SPINNERFRENZY);
+            CurrentScores[CurrentPlayer] += (SCORE_SPINNERFRENZY) * PlayfieldMultiplier[CurrentPlayer];
+        } 
+        else {
+            NumberOfSpins[CurrentPlayer] += 1;
+            if (NumberOfSpins[CurrentPlayer] > 200) {
+                NumberOfSpins[CurrentPlayer] = 1;
+                StartSuperSpinner(CurrentTime);
+                RPU_SetLampState(LAMP_TOP_S, 0, 0, 0);
+                S_GoalComplete[CurrentPlayer] = 1;
+                RPU_SetDisplayCredits(Credits);
+                QueueNotification(SOUND_EFFECT_SUPERSPINNER_GOAL, 1);
+                PlayBackgroundSong(SOUND_EFFECT_ROCKET_BLAST);
+            } else {
+                RPU_SetDisplayCredits(0+NumberOfSpins[CurrentPlayer]);
+            }
+            if (NumberOfSpins[CurrentPlayer] > 0 && NumberOfSpins[CurrentPlayer] < 51){
+                CurrentScores[CurrentPlayer] += (SCORE_SPINNER1) * PlayfieldMultiplier[CurrentPlayer];
+                PlaySoundEffect(SOUND_EFFECT_SPINNER100);
+            }
+                if (NumberOfSpins[CurrentPlayer] > 50 && NumberOfSpins[CurrentPlayer] < 101){
+                CurrentScores[CurrentPlayer] += (SCORE_SPINNER2) * PlayfieldMultiplier[CurrentPlayer];
+                PlaySoundEffect(SOUND_EFFECT_SPINNER200);
+            }
+                if (NumberOfSpins[CurrentPlayer] > 100 && NumberOfSpins[CurrentPlayer] < 151){
+                CurrentScores[CurrentPlayer] += (SCORE_SPINNER3) * PlayfieldMultiplier[CurrentPlayer];
+                PlaySoundEffect(SOUND_EFFECT_SPINNER1000);
+            }
+                if (NumberOfSpins[CurrentPlayer] > 150 && NumberOfSpins[CurrentPlayer] < 201){
+                CurrentScores[CurrentPlayer] += (SCORE_SPINNER4) * PlayfieldMultiplier[CurrentPlayer];
+                PlaySoundEffect(SOUND_EFFECT_SPINNER2000);
+            }
         }
-        if (NumberOfSpins[CurrentPlayer] > 0 && NumberOfSpins[CurrentPlayer] < 51){
-          CurrentScores[CurrentPlayer] += (SCORE_SPINNER1) * PlayfieldMultiplier[CurrentPlayer];
-          RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
-          RPU_SetLampState(LAMP_L_SPINNER_200, 0, 0, 0);
-          RPU_SetLampState(LAMP_L_SPINNER_1000, 0, 0, 0);
-          RPU_SetLampState(LAMP_L_SPINNER_2000, 0, 0, 0);
-          PlaySoundEffect(SOUND_EFFECT_SPINNER100);
-        }
-        if (NumberOfSpins[CurrentPlayer] > 50 && NumberOfSpins[CurrentPlayer] < 101){
-          CurrentScores[CurrentPlayer] += (SCORE_SPINNER2) * PlayfieldMultiplier[CurrentPlayer];
-          RPU_SetLampState(LAMP_L_SPINNER_100, 0, 0, 0);
-          RPU_SetLampState(LAMP_L_SPINNER_200, 1, 0, 0);
-          RPU_SetLampState(LAMP_L_SPINNER_1000, 0, 0, 0);
-          RPU_SetLampState(LAMP_L_SPINNER_2000, 0, 0, 0);
-          PlaySoundEffect(SOUND_EFFECT_SPINNER200);
-        }
-        if (NumberOfSpins[CurrentPlayer] > 100 && NumberOfSpins[CurrentPlayer] < 151){
-          CurrentScores[CurrentPlayer] += (SCORE_SPINNER3) * PlayfieldMultiplier[CurrentPlayer];
-          RPU_SetLampState(LAMP_L_SPINNER_100, 0, 0, 0);
-          RPU_SetLampState(LAMP_L_SPINNER_200, 0, 0, 0);
-          RPU_SetLampState(LAMP_L_SPINNER_1000, 1, 0, 0);
-          RPU_SetLampState(LAMP_L_SPINNER_2000, 0, 0, 0);
-          PlaySoundEffect(SOUND_EFFECT_SPINNER1000);
-        }
-        if (NumberOfSpins[CurrentPlayer] > 150 && NumberOfSpins[CurrentPlayer] < 201){
-          CurrentScores[CurrentPlayer] += (SCORE_SPINNER4) * PlayfieldMultiplier[CurrentPlayer];
-          RPU_SetLampState(LAMP_L_SPINNER_100, 0, 0, 0);
-          RPU_SetLampState(LAMP_L_SPINNER_200, 0, 0, 0);
-          RPU_SetLampState(LAMP_L_SPINNER_1000, 0, 0, 0);
-          RPU_SetLampState(LAMP_L_SPINNER_2000, 1, 0, 0);
-          PlaySoundEffect(SOUND_EFFECT_SPINNER2000);
-        }
-      }
-      LastTimeSpinnerHit = CurrentTime;
-      if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
+        LastTimeSpinnerHit = CurrentTime;
+        if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
       break;
 
     case SW_CL_SPINNER:
