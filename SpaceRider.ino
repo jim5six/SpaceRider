@@ -1605,7 +1605,16 @@ int RunAttractMode(int curState, boolean curStateChanged) {
     AttractLastLadderTime = CurrentTime;
   }
   
-  ShowLampAnimation(1, 120, CurrentTime, 14, false, false);
+  int rand = random() % 3;
+  if (rand == 0){
+      ShowLampAnimation(0, 120, CurrentTime, 14, false, false);
+    } else if (rand == 1) {
+      ShowLampAnimation(1, 40, CurrentTime, 14, false, false);
+    } else {
+      ShowLampAnimation(2, 40, CurrentTime, 14, false, false);
+    }
+  
+//  ShowLampAnimation(1, 120, CurrentTime, 14, false, false);
 //  ShowLampAnimation(0, 40, CurrentTime, 14, false, false);
 
   byte switchHit;
@@ -2791,7 +2800,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 S_GoalComplete[CurrentPlayer] = 1;
                 RPU_SetDisplayCredits(Credits);
                 QueueNotification(SOUND_EFFECT_SUPERSPINNER_GOAL, 1);
-                PlayBackgroundSong(SOUND_EFFECT_ROCKET_BLAST);
+                PlayBackgroundSong(SOUND_EFFECT_HURRY_UP);
             } else {
                 RPU_SetDisplayCredits(0+NumberOfSpins[CurrentPlayer]);
             }
