@@ -1605,16 +1605,24 @@ int RunAttractMode(int curState, boolean curStateChanged) {
     AttractLastLadderTime = CurrentTime;
   }
   
-    int rand = random() % 3;
-  if (rand == 0){
-      ShowLampAnimation(0, 120, CurrentTime, 14, false, false);
-    } else if (rand == 1) {
-      ShowLampAnimation(1, 40, CurrentTime, 14, false, false);
+  unsigned long AttractModeStartTime = 0;
+
+  unsigned long animationTime = (CurrentTime-AttractModeStartTime);
+    if (animationTime<1000) {
+      ShowLampAnimation(0, 36, animationTime, 11, false, false);
+    } else if (animationTime<2000) {
+      ShowLampAnimation(0, 36, animationTime, 11, false, true);
+    } else if (animationTime<3000) {
+      ShowLampAnimation(1, 64, animationTime, 11, false, false);
+    } else if  (animationTime<5000) {
+      ShowLampAnimation(2, 36, animationTime, 11, false, false);
+    } else if (animationTime<6000) {
+      ShowLampAnimation(2, 36, animationTime, 11, false, true);
     } else {
-      ShowLampAnimation(2, 40, CurrentTime, 14, false, false);
-    }
-  
-//  ShowLampAnimation(2, 40, CurrentTime, 14, false, false);
+      AttractModeStartTime = CurrentTime;
+  }
+      
+//  ShowLampAnimation(0, 40, CurrentTime, 14, false, false);
 //  ShowLampAnimation(0, 40, CurrentTime, 14, false, false);
 
   byte switchHit;
