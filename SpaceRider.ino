@@ -1607,17 +1607,17 @@ int RunAttractMode(int curState, boolean curStateChanged) {
   
   unsigned long AttractModeStartTime = 0;
 
-  unsigned long animationTime = (CurrentTime-AttractModeStartTime);
+  unsigned long animationTime = (CurrentTime - AttractModeStartTime);
     if (animationTime<1000) {
-      ShowLampAnimation(0, 36, animationTime, 11, false, false);
+      ShowLampAnimation(0, 63, animationTime, 2, false, false);
     } else if (animationTime<2000) {
-      ShowLampAnimation(0, 36, animationTime, 11, false, true);
+      ShowLampAnimation(0, 63, animationTime, 2, false, true);
     } else if (animationTime<3000) {
-      ShowLampAnimation(1, 64, animationTime, 11, false, false);
-    } else if  (animationTime<5000) {
-      ShowLampAnimation(2, 36, animationTime, 11, false, false);
-    } else if (animationTime<6000) {
-      ShowLampAnimation(2, 36, animationTime, 11, false, true);
+      ShowLampAnimation(1, 63, animationTime, 2, false, false);
+    } else if  (animationTime<4000) {
+      ShowLampAnimation(2, 63, animationTime, 2, false, false);
+    } else if (animationTime<5000) {
+      ShowLampAnimation(2, 63, animationTime, 2, false, true);
     } else {
       AttractModeStartTime = CurrentTime;
   }

@@ -3,6 +3,7 @@ Early solid state pinball implementation
 ToDo list:
 Fix bonus count and bonus hold. Currently bonus is a mess and doent work right. Needs to be created as a goal as well (lower E lights solid when max bunus is achieved)
 Make attract lightshow more robust and have it run is sequence. Spiral, Up, Down, Left, Right; repeat
+    JIM 5/31 - Light show is running sequentially now but it only runs once. I don't know how to make it repeat.
 Remove all aspects of Goal count showing in first display digit
 Fix display countdown timers (can they be assigned to individual displays so they dont fight each other?)
 All goals should be able to be completed simultaniously
