@@ -269,7 +269,13 @@ boolean ExtraBallCollected = false;
 boolean SpecialCollected = false;
 boolean TimersPaused = true;
 boolean AllowResetAfterBallOne = true;
-boolean RightSpinner = true;
+
+enum EnumCenterSpinnerStatus {
+    CENTER_LEFT_SPINNER_LIT = 0,
+    CENTER_RIGHT_SPINNER_LIT
+};
+
+EnumCenterSpinnerStatus CenterSpinnerStatus = CENTER_LEFT_SPINNER_LIT; // Whether the right spinner is lit for blast off count
 
 unsigned long CurrentScores[4];
 unsigned long BallFirstSwitchHitTime = 0;
@@ -1047,14 +1053,14 @@ boolean AwardExtraBall() {
 }
 
 void SpinnerToggle() {
-    if (RightSpinner == false) {
+    if (CenterSpinnerStatus == CENTER_LEFT_SPINNER_LIT) {
         RPU_SetLampState(LAMP_CR_WHENLIT, 1);
         RPU_SetLampState(LAMP_CL_WHENLIT, 0);
-        RightSpinner = true;
+        CenterSpinnerStatus = CENTER_RIGHT_SPINNER_LIT;
     } else {
         RPU_SetLampState(LAMP_CR_WHENLIT, 0);
         RPU_SetLampState(LAMP_CL_WHENLIT, 1);
-        RightSpinner = false;
+        CenterSpinnerStatus = CENTER_LEFT_SPINNER_LIT;
     }
 }
 
@@ -2839,7 +2845,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             PlaySoundEffect(SOUND_EFFECT_SPINNERCENTER);
             CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
         } else {
-            if (RPU_ReadLampState(LAMP_CL_WHENLIT)) {
+            if (CenterSpinnerStatus == CENTER_LEFT_SPINNER_LIT)) { 
                 NumberOfCenterSpins[CurrentPlayer] += 1;
                 if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 41) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
@@ -2886,7 +2892,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                     RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 100);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER1000);
                 }
-            } else if (RPU_ReadLampState(LAMP_CR_WHENLIT)) {
+            } else {
                 NumberOfCenterSpins[CurrentPlayer] -= 1;
                 if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 41) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
@@ -3106,7 +3112,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
             ShowPlayerScores(0xFF, false, false);
 
-            // Turn all the spinner and upper SPACE lamps off
+            // Turn all the spinner and upper SPACE lamps ogg
             RPU_SetLampState(LAMP_TOP_S, 0, 0, 0);
             RPU_SetLampState(LAMP_TOP_P, 0, 0, 0);
             RPU_SetLampState(LAMP_TOP_A, 0, 0, 0);
