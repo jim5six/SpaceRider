@@ -1523,8 +1523,9 @@ byte AttractLastLadderBonus = 0;
 unsigned long AttractDisplayRampStart = 0;
 byte AttractLastHeadMode = 255;
 byte AttractLastPlayfieldMode = 255;
-byte InAttractMode = false;
+byte InAttractMode = true;
 unsigned long ShowLampTimeOffset = 0;
+unsigned long AttractModeStartTime = 0;
 
 byte LastSolPhase = 0;
 
@@ -1605,26 +1606,19 @@ int RunAttractMode(int curState, boolean curStateChanged) {
     AttractLastLadderTime = CurrentTime;
   }
   
-  unsigned long AttractModeStartTime = 0;
-
   unsigned long animationTime = (CurrentTime - AttractModeStartTime);
     if (animationTime<1000) {
       ShowLampAnimation(0, 63, animationTime, 2, false, false);
     } else if (animationTime<2000) {
       ShowLampAnimation(0, 63, animationTime, 2, false, true);
     } else if (animationTime<3000) {
-      ShowLampAnimation(1, 63, animationTime, 2, false, false);
-    } else if  (animationTime<4000) {
       ShowLampAnimation(2, 63, animationTime, 2, false, false);
-    } else if (animationTime<5000) {
+    } else if (animationTime<4000) {
       ShowLampAnimation(2, 63, animationTime, 2, false, true);
     } else {
       AttractModeStartTime = CurrentTime;
-  }
-      
-//  ShowLampAnimation(0, 40, CurrentTime, 14, false, false);
-//  ShowLampAnimation(0, 40, CurrentTime, 14, false, false);
-
+    }
+   
   byte switchHit;
   while ( (switchHit = RPU_PullFirstFromSwitchStack()) != SWITCH_STACK_EMPTY ) {
     if (switchHit == SW_CREDIT_RESET) {
