@@ -2809,16 +2809,6 @@ void HandleGamePlaySwitches(byte switchHit) {
             PlaySoundEffect(SOUND_EFFECT_SPINNERCENTER);
             CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
         } else {
-            if (NumberOfCenterSpins[CurrentPlayer] > 200) {
-                NumberOfCenterSpins[CurrentPlayer] = 1;
-                StartSuperBlastOff(CurrentTime);
-                CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
-                RPU_SetDisplayBallInPlay(CurrentBallInPlay);
-            } else if (NumberOfCenterSpins[CurrentPlayer] < 1) {
-                NumberOfCenterSpins[CurrentPlayer] = 1;
-            } else {
-                RPU_SetDisplayBallInPlay( NumberOfCenterSpins[CurrentPlayer]);
-            }
             if (RPU_ReadLampState(LAMP_CL_WHENLIT)) {
                 NumberOfCenterSpins[CurrentPlayer] += 1;
                 if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 41) {
@@ -2917,6 +2907,17 @@ void HandleGamePlaySwitches(byte switchHit) {
                 CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER0)*PlayfieldMultiplier[CurrentPlayer];
                 PlaySoundEffect(SOUND_EFFECT_SPINNER100); //TODO: Correct sound?
             }
+
+            if (NumberOfCenterSpins[CurrentPlayer] >= 200) {
+                NumberOfCenterSpins[CurrentPlayer] = 1;
+                StartSuperBlastOff(CurrentTime);
+                CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
+                RPU_SetDisplayBallInPlay(CurrentBallInPlay);
+            } else if (NumberOfCenterSpins[CurrentPlayer] < 1) {
+                NumberOfCenterSpins[CurrentPlayer] = 1;
+            } else {
+                RPU_SetDisplayBallInPlay( NumberOfCenterSpins[CurrentPlayer]);
+            }
         }
 
         if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
@@ -2927,15 +2928,6 @@ void HandleGamePlaySwitches(byte switchHit) {
             PlaySoundEffect(SOUND_EFFECT_SPINNERCENTER);
             CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
         } else {
-            if (NumberOfCenterSpins[CurrentPlayer] > 200) {
-                NumberOfCenterSpins[CurrentPlayer] = 1;
-                SuperBlastOffEndTime = CurrentTime + SUPER_BLASTOFF_DURATION;
-                RPU_SetDisplayBallInPlay(CurrentBallInPlay);
-            } else if (NumberOfCenterSpins[CurrentPlayer] < 1) {
-                NumberOfCenterSpins[CurrentPlayer] = 1;
-            } else {
-                RPU_SetDisplayBallInPlay(NumberOfCenterSpins[CurrentPlayer]);
-            }
             if (RPU_ReadLampState(LAMP_CR_WHENLIT)) {
                 NumberOfCenterSpins[CurrentPlayer] += 1;
                 if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 41) {
@@ -3034,7 +3026,18 @@ void HandleGamePlaySwitches(byte switchHit) {
                 CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER0)*PlayfieldMultiplier[CurrentPlayer];
                 PlaySoundEffect(SOUND_EFFECT_SPINNER100);
             }
+
+            if (NumberOfCenterSpins[CurrentPlayer] >= 200) {
+                NumberOfCenterSpins[CurrentPlayer] = 1;
+                StartSuperBlastOff(CurrentTime);
+                RPU_SetDisplayBallInPlay(CurrentBallInPlay);
+            } else if (NumberOfCenterSpins[CurrentPlayer] < 1) {
+                NumberOfCenterSpins[CurrentPlayer] = 1;
+            } else {
+                RPU_SetDisplayBallInPlay(NumberOfCenterSpins[CurrentPlayer]);
+            }
         }
+
         if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
 
         break;
