@@ -31,6 +31,13 @@ bool IsSuperSpinnerActive(unsigned long curTime) {
     return curTime < modeStates.superSpinner.endTime;
 }
 
+unsigned long SuperSpinnerRemainingTime(unsigned long curTime) {
+    if (IsSuperSpinnerActive(curTime)) {
+        return modeStates.superSpinner.endTime - curTime;
+    }
+    return 0; // Mode is not active
+}
+
 void StartSuperBlastOff(unsigned long curTime) {
     modeStates.superBlastOff.startTime = curTime;
     modeStates.superBlastOff.endTime = curTime + SUPER_BLASTOFF_DURATION;
@@ -40,6 +47,13 @@ bool IsSuperSuperBlastOffActive(unsigned long curTime) {
     return curTime < modeStates.superBlastOff.endTime;
 }
 
+unsigned long SuperBlastOffRemainingTime(unsigned long curTime) {
+    if (IsSuperSuperBlastOffActive(curTime)) {
+        return modeStates.superBlastOff.endTime - curTime;
+    }
+    return 0; // Mode is not active
+}
+
 void StartSuperPops(unsigned long curTime) {
     modeStates.superPops.startTime = curTime;
     modeStates.superPops.endTime = curTime + SUPER_POP_DURATION;
@@ -47,4 +61,11 @@ void StartSuperPops(unsigned long curTime) {
 
 bool IsSuperPopsActive(unsigned long curTime) {
     return curTime < modeStates.superPops.endTime;
+}
+
+unsigned long SuperPopsRemainingTime(unsigned long curTime) {
+    if (IsSuperPopsActive(curTime)) {
+        return modeStates.superPops.endTime - curTime;
+    }
+    return 0; // Mode is not active
 }
