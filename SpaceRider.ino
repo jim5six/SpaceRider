@@ -526,30 +526,43 @@ void ShowBonusLamps() {
     if (bonus > MAX_DISPLAY_BONUS) bonus = MAX_DISPLAY_BONUS;
     byte cap = 9;
 
-    if (bonus > cap) {
+    if (bonus >= 40) {
+      RPU_SetLampState(LAMP_BONUS_400, 1, 0, 100);
+      bonus -= 40;
+    } 
+    else {
+        RPU_SetLampState(LAMP_BONUS_400, 0, 0, 100);
+    }
+
+    if (bonus >= 30) {
+        RPU_SetLampState(LAMP_BONUS_300, 1, 0, 100);
+        bonus -= 30;
+    }
+    else {
+        RPU_SetLampState(LAMP_BONUS_300, 0, 0, 100);
+    }
+
+    if (bonus >= 20) {
+        RPU_SetLampState(LAMP_BONUS_200, 1, 0, 100);
+        bonus -= 20;
+    }
+    else {
+        RPU_SetLampState(LAMP_BONUS_200, 0, 0, 100);
+    }
+
+    if (bonus >= 10) {
         RPU_SetLampState(LAMP_BONUS_100, 1, 0, 100);
-        //      bonus -= cap;
-        //      cap -= 1;
+        bonus -= 10;
     }
-    if (cap == 0) {
-        bonus = 0;
+    else {
+        RPU_SetLampState(LAMP_BONUS_100, 0, 0, 100);
     }
-
-    if (bonus == 0) {
-        for (byte count = 1; count <= cap; count++)
-            RPU_SetLampState(LAMP_BONUS_10 + (count - 1), 0, 0, 0);
-        return;
-    }
-
-    byte bottom;
-    for (bottom = 0; bottom < bonus; bottom++) {
-        RPU_SetLampState(LAMP_BONUS_10 + (bottom - 1), 1, 0);
-    }
-
-    if (bottom <= cap) {
-        RPU_SetLampState(LAMP_BONUS_10 + (bottom - 1), 1, 0);
-        for (byte count = (bottom + 1); count <= cap; count++) {
-            RPU_SetLampState(LAMP_BONUS_10 + (count - 1), 0);
+    for (byte count = 0; count < 9; count++) {
+        if (bonus > 0) {
+            RPU_SetLampState(LAMP_BONUS_10 + count, 1, 0, 100);
+            bonus -= 10;
+        } else {
+            RPU_SetLampState(LAMP_BONUS_10 + count, 0, 0, 100);
         }
     }
 }
