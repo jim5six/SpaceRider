@@ -18,7 +18,7 @@ void StartSuperSpinner(unsigned long curTime);
 bool IsSuperSpinnerActive(unsigned long curTime);
 
 // Returns the remaining time for Super Spinner mode
-unsigned long SuperSpinnerRemainingTime(void);
+unsigned long SuperSpinnerRemainingTime(unsigned long curTime);
 
 // Start Super Blast Off mode
 void StartSuperBlastOff(unsigned long curTime);
@@ -27,7 +27,7 @@ void StartSuperBlastOff(unsigned long curTime);
 bool IsSuperSuperBlastOffActive(unsigned long curTime);
 
 // Returns the remaining time for Super Blast Off mode
-unsigned long SuperBlastOffRemainingTime(void);
+unsigned long SuperBlastOffRemainingTime(unsigned long curTime);
 
 // Start Super Pops mode
 void StartSuperPops(unsigned long curTime);
@@ -36,6 +36,6 @@ void StartSuperPops(unsigned long curTime);
 bool IsSuperPopsActive(unsigned long curTime);
 
 // Returns the remaining time for Super Pops mode
-unsigned long SuperPopsRemainingTime(void);
+unsigned long SuperPopsRemainingTime(unsigned long curTime);
 
 #endif

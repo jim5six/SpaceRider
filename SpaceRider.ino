@@ -2663,7 +2663,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             PlaySoundEffect(SOUND_EFFECT_SPINNERCENTER);
             CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
         } else {
-            if (CenterSpinnerStatus == CENTER_LEFT_SPINNER_LIT)) { 
+            if (CenterSpinnerStatus == CENTER_LEFT_SPINNER_LIT) { 
                 NumberOfCenterSpins[CurrentPlayer] += 1;
                 if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 41) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
@@ -2757,9 +2757,6 @@ void HandleGamePlaySwitches(byte switchHit) {
                     RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 100);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER1000);
                 }
-            } else {
-                CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER0)*PlayfieldMultiplier[CurrentPlayer];
-                PlaySoundEffect(SOUND_EFFECT_SPINNER100); //TODO: Correct sound?
             }
 
             if (NumberOfCenterSpins[CurrentPlayer] >= 200) {
@@ -2876,9 +2873,6 @@ void HandleGamePlaySwitches(byte switchHit) {
                     RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 100);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER1000);
                 }
-            } else {
-                CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER0)*PlayfieldMultiplier[CurrentPlayer];
-                PlaySoundEffect(SOUND_EFFECT_SPINNER100);
             }
 
             if (NumberOfCenterSpins[CurrentPlayer] >= 200) {
@@ -2922,7 +2916,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 HOLD_PLAYFIELDX[CurrentPlayer] = 1;
                 RPU_SetLampState(LAMP_LOWER_E, 1, 0, 500);
             }
-        } else if (IsSuperSuperBlastOffActive()) {
+        } else if (IsSuperSuperBlastOffActive(CurrentTime)) {
             // Super Blast off was achieved, mark goal complete
             PlaySoundEffect(SOUND_EFFECT_BLASTOFF_GOAL);
             RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
