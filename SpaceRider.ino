@@ -189,7 +189,7 @@ unsigned short SelfTestStateToCalloutMap[34] = {134, 135, 133, 136, 137, 138, 13
 #define SOUND_EFFECT_DIAG_PROBLEM_PIA_5 1913
 #define SOUND_EFFECT_DIAG_STARTING_DIAGNOSTICS 1914
 
-#define MAX_DISPLAY_BONUS 10
+#define MAX_DISPLAY_BONUS 40 + 30 + 20 + 10 + 9 // 109
 #define TILT_WARNING_DEBOUNCE_TIME 1000
 
 /*********************************************************************
@@ -211,8 +211,8 @@ byte TotalBallsLoaded = 1;
 byte TimeRequiredToResetGame = 1;
 byte NumberOfBallsInPlay = 0;
 byte NumberOfBallsLocked = 0;
-byte NumberOfSpins[4];
-byte NumberOfCenterSpins[4];
+byte NumberOfSpins[4]; // Left spinner spins
+byte NumberOfCenterSpins[4]; // Center spinner spins
 byte NumberOfHits[4];
 byte PlayfieldX[4];
 byte Goals[4] = {0, 0, 0, 0};
@@ -244,7 +244,6 @@ byte CurrentPlayer = 0;
 byte CurrentBallInPlay = 1;
 byte CurrentNumPlayers = 0;
 byte Bonus[4];
-byte CurrentBonus;
 byte BonusX[4];
 byte PlayfieldMultiplier[4];
 byte GameMode = GAME_MODE_SKILL_SHOT;
@@ -257,11 +256,11 @@ byte A_GoalComplete[4];
 byte C_GoalComplete[4];
 byte E_GoalComplete[4];
 byte AwardPhase;
-byte HOLD_SPINNER_PROGRESS[4];  //"S"
-byte HOLD_POP_PROGRESS[4];      //"P"
-byte HOLD_BLASTOFF_PROGRESS[4]; //"A"
-byte HOLD_BONUS[4];             //"C"
-byte HOLD_PLAYFIELDX[4];        //"E"
+bool HOLD_SPINNER_PROGRESS[4];  //"S"
+bool HOLD_POP_PROGRESS[4];      //"P"
+bool HOLD_BLASTOFF_PROGRESS[4]; //"A"
+bool HOLD_BONUS[4];             //"C"
+bool HOLD_PLAYFIELDX[4];        //"E"
 
 boolean SamePlayerShootsAgain = false;
 boolean BallSaveUsed = false;
@@ -522,45 +521,44 @@ void ShowLockLamps() {
 }
 
 void ShowBonusLamps() {
-    byte bonus = CurrentBonus;
+    byte bonus = Bonus[CurrentPlayer];
     if (bonus > MAX_DISPLAY_BONUS) bonus = MAX_DISPLAY_BONUS;
-    byte cap = 9;
 
     if (bonus >= 40) {
-      RPU_SetLampState(LAMP_BONUS_400, 1, 0, 100);
+      RPU_SetLampState(LAMP_BONUS_400, 1, 0, 0);
       bonus -= 40;
     } 
     else {
-        RPU_SetLampState(LAMP_BONUS_400, 0, 0, 100);
+        RPU_SetLampState(LAMP_BONUS_400, 0, 0, 0);
     }
 
     if (bonus >= 30) {
-        RPU_SetLampState(LAMP_BONUS_300, 1, 0, 100);
+        RPU_SetLampState(LAMP_BONUS_300, 1, 0, 0);
         bonus -= 30;
     }
     else {
-        RPU_SetLampState(LAMP_BONUS_300, 0, 0, 100);
+        RPU_SetLampState(LAMP_BONUS_300, 0, 0, 0);
     }
 
     if (bonus >= 20) {
-        RPU_SetLampState(LAMP_BONUS_200, 1, 0, 100);
+        RPU_SetLampState(LAMP_BONUS_200, 1, 0, 0);
         bonus -= 20;
     }
     else {
-        RPU_SetLampState(LAMP_BONUS_200, 0, 0, 100);
+        RPU_SetLampState(LAMP_BONUS_200, 0, 0, 0);
     }
 
     if (bonus >= 10) {
-        RPU_SetLampState(LAMP_BONUS_100, 1, 0, 100);
+        RPU_SetLampState(LAMP_BONUS_100, 1, 0, 0);
         bonus -= 10;
     }
     else {
-        RPU_SetLampState(LAMP_BONUS_100, 0, 0, 100);
+        RPU_SetLampState(LAMP_BONUS_100, 0, 0, 0);
     }
+
     for (byte count = 0; count < 9; count++) {
-        if (bonus > 0) {
+        if (bonus == count) {
             RPU_SetLampState(LAMP_BONUS_10 + count, 1, 0, 100);
-            bonus -= 10;
         } else {
             RPU_SetLampState(LAMP_BONUS_10 + count, 0, 0, 100);
         }
@@ -622,6 +620,34 @@ void ShowShootAgainLamps() {
     } else {
         RPU_SetLampState(LAMP_SHOOT_AGAIN, SamePlayerShootsAgain);
         RPU_SetLampState(LAMP_HEAD_SAME_PLAYER_SHOOTS_AGAIN, SamePlayerShootsAgain);
+    }
+}
+
+void ShowSpaceProgressLamps() {
+    if (S_GoalComplete[CurrentPlayer] == 1) {
+        RPU_SetLampState(LAMP_LOWER_S, 1, 0, 0);
+    } else {
+        RPU_SetLampState(LAMP_LOWER_S, 0, 0, 0);
+    }
+    if (P_GoalComplete[CurrentPlayer] == 1) {
+        RPU_SetLampState(LAMP_LOWER_P, 1, 0, 0);
+    } else {
+        RPU_SetLampState(LAMP_LOWER_P, 0, 0, 0);
+    }
+    if (A_GoalComplete[CurrentPlayer] == 1) {
+        RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
+    } else {
+        RPU_SetLampState(LAMP_LOWER_A, 0, 0, 0);
+    }
+    if (C_GoalComplete[CurrentPlayer] == 1) {
+        RPU_SetLampState(LAMP_LOWER_C, 1, 0, 0);
+    } else {
+        RPU_SetLampState(LAMP_LOWER_C, 0, 0, 0);
+    }
+    if (E_GoalComplete[CurrentPlayer] == 1) {
+        RPU_SetLampState(LAMP_LOWER_E, 1, 0, 0);
+    } else {
+        RPU_SetLampState(LAMP_LOWER_E, 0, 0, 0);
     }
 }
 
@@ -1685,9 +1711,9 @@ byte CountBallsInTrough() {
 }
 
 void AddToBonus(byte amountToAdd = 1) {
-    CurrentBonus += amountToAdd;
-    if (CurrentBonus > MAX_DISPLAY_BONUS) {
-        CurrentBonus = MAX_DISPLAY_BONUS;
+    Bonus[CurrentPlayer] += amountToAdd;
+    if (Bonus[CurrentPlayer] > MAX_DISPLAY_BONUS) {
+        Bonus[CurrentPlayer] = MAX_DISPLAY_BONUS;
     } else {
         BonusChanged = CurrentTime;
     }
@@ -1783,11 +1809,11 @@ int InitGamePlay(boolean curStateChanged) {
         A_GoalComplete[count] = 0;
         C_GoalComplete[count] = 0;
         E_GoalComplete[count] = 0;
-        HOLD_SPINNER_PROGRESS[count] = 0;
-        HOLD_POP_PROGRESS[count] = 0;
-        HOLD_BLASTOFF_PROGRESS[count] = 0;
-        HOLD_BONUS[count] = 0;
-        HOLD_PLAYFIELDX[count] = 0;
+        HOLD_SPINNER_PROGRESS[count] = false;
+        HOLD_POP_PROGRESS[count] = false;
+        HOLD_BLASTOFF_PROGRESS[count] = false;
+        HOLD_BONUS[count] = false;
+        HOLD_PLAYFIELDX[count] = false;
         PlayfieldMultiplier[count] = 1;
     }
     memset(CurrentScores, 0, 4 * sizeof(unsigned long));
@@ -1802,6 +1828,32 @@ int InitGamePlay(boolean curStateChanged) {
     ShowPlayerScores(0xFF, false, false);
 
     return MACHINE_STATE_INIT_NEW_BALL;
+}
+
+void HandleHoldoverAwards() {
+    // If the player has a holdover award, then we need to
+    //  set the current bonus to that value
+    if (HOLD_BONUS[CurrentPlayer] == false) {
+        Bonus[CurrentPlayer] = 0;
+    }
+    if (HOLD_PLAYFIELDX[CurrentPlayer] == false) {
+        PlayfieldMultiplier[CurrentPlayer] = 0;
+    }
+    if (HOLD_BLASTOFF_PROGRESS[CurrentPlayer] == true) {
+        NumberOfCenterSpins[CurrentPlayer] = 0;
+    }
+    if (HOLD_SPINNER_PROGRESS[CurrentPlayer] == true) {
+        NumberOfSpins[CurrentPlayer] = 0;
+    }
+    if (HOLD_POP_PROGRESS[CurrentPlayer] == true) {
+        NumberOfHits[CurrentPlayer] = 0;
+    }
+
+    HOLD_BONUS[CurrentPlayer] = false;
+    HOLD_PLAYFIELDX[CurrentPlayer] = false;
+    HOLD_BLASTOFF_PROGRESS[CurrentPlayer] = false;
+    HOLD_SPINNER_PROGRESS[CurrentPlayer] = false;
+    HOLD_POP_PROGRESS[CurrentPlayer] = false;
 }
 
 int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
@@ -1844,7 +1896,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         //    Bonus[CurrentPlayer] = 0;
         PlayfieldMultiplier[CurrentPlayer] = 1;
         BallSaveEndTime = 0;
-        CurrentBonus = Bonus[CurrentPlayer];
+        Bonus[CurrentPlayer] = Bonus[CurrentPlayer];
         for (int count = 0; count < 4; count++) {
             //      NumberOfSpins[count] = 1;
             //      NumberOfCenterSpins[count] = 1;
@@ -1863,38 +1915,8 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         GateOpen = true; // Unpowered gate is open, gate open when true
         GateOpenTime = 0;
 
-        // Reset progress unless holdover awards
-        if ((HOLD_BONUS[CurrentPlayer] == 0)) Bonus[CurrentPlayer] = 0;
-        if ((HOLD_PLAYFIELDX[CurrentPlayer] == 0)) PlayfieldMultiplier[CurrentPlayer] = 1;
-        if ((HOLD_BLASTOFF_PROGRESS[CurrentPlayer] == 0)) NumberOfCenterSpins[CurrentPlayer] = 1;
-        if ((HOLD_SPINNER_PROGRESS[CurrentPlayer] == 0)) NumberOfSpins[CurrentPlayer] = 1;
-        if ((HOLD_POP_PROGRESS[CurrentPlayer] == 0)) NumberOfHits[CurrentPlayer] = 0;
-
-        if (S_GoalComplete[CurrentPlayer] == 1) {
-            RPU_SetLampState(LAMP_LOWER_S, 1, 0, 0);
-        } else {
-            RPU_SetLampState(LAMP_LOWER_S, 0, 0, 0);
-        }
-        if (P_GoalComplete[CurrentPlayer] == 1) {
-            RPU_SetLampState(LAMP_LOWER_P, 1, 0, 0);
-        } else {
-            RPU_SetLampState(LAMP_LOWER_P, 0, 0, 0);
-        }
-        if (A_GoalComplete[CurrentPlayer] == 1) {
-            RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
-        } else {
-            RPU_SetLampState(LAMP_LOWER_A, 0, 0, 0);
-        }
-        if (C_GoalComplete[CurrentPlayer] == 1) {
-            RPU_SetLampState(LAMP_LOWER_C, 1, 0, 0);
-        } else {
-            RPU_SetLampState(LAMP_LOWER_C, 0, 0, 0);
-        }
-        if (E_GoalComplete[CurrentPlayer] == 1) {
-            RPU_SetLampState(LAMP_LOWER_E, 1, 0, 0);
-        } else {
-            RPU_SetLampState(LAMP_LOWER_E, 0, 0, 0);
-        }
+        HandleHoldoverAwards();
+        ShowSpaceProgressLamps();
 
         if (CurrentPlayer == 0) {
             // Only change skill shot on first ball of round.
@@ -2247,13 +2269,13 @@ int CountdownBonus(boolean curStateChanged) {
     // If this is the first time through the countdown loop
     if (curStateChanged) {
 
-        Bonus[CurrentPlayer] = CurrentBonus;
+        Bonus[CurrentPlayer] = Bonus[CurrentPlayer];
         CountdownStartTime = CurrentTime;
         LastCountdownReportTime = CurrentTime;
         ShowBonusLamps();
         IncrementingBonusXCounter = 1;
-        DecrementingBonusCounter = CurrentBonus;
-        TotalBonus = CurrentBonus;
+        DecrementingBonusCounter = Bonus[CurrentPlayer];
+        TotalBonus = Bonus[CurrentPlayer];
         CountdownBonusHurryUp = false;
 
         BonusCountDownEndTime = 0xFFFFFFFF;
@@ -2278,20 +2300,20 @@ int CountdownBonus(boolean curStateChanged) {
             }
 
             DecrementingBonusCounter -= 1;
-            CurrentBonus = DecrementingBonusCounter;
+            Bonus[CurrentPlayer] = DecrementingBonusCounter;
             ShowBonusLamps();
 
         } else if (BonusCountDownEndTime == 0xFFFFFFFF) {
             IncrementingBonusXCounter += 1;
             if (BonusX[CurrentPlayer] > 1) {
                 DecrementingBonusCounter = TotalBonus;
-                CurrentBonus = TotalBonus;
+                Bonus[CurrentPlayer] = TotalBonus;
                 ShowBonusLamps();
                 BonusX[CurrentPlayer] -= 1;
                 if (BonusX[CurrentPlayer] == 9) BonusX[CurrentPlayer] = 8;
             } else {
                 BonusX[CurrentPlayer] = TotalBonusX;
-                CurrentBonus = TotalBonus;
+                Bonus[CurrentPlayer] = TotalBonus;
                 BonusCountDownEndTime = CurrentTime + 1000;
             }
         }
@@ -2910,23 +2932,23 @@ void HandleGamePlaySwitches(byte switchHit) {
             SkillShotHit = true;
             if (RPU_ReadLampState(LAMP_TOP_S)) {
                 QueueNotification(SOUND_EFFECT_SPINNER_HELD, 1);
-                HOLD_SPINNER_PROGRESS[CurrentPlayer] = 1;
+                HOLD_SPINNER_PROGRESS[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_LOWER_S, 1, 0, 500);
             } else if (RPU_ReadLampState(LAMP_TOP_P)) {
                 QueueNotification(SOUND_EFFECT_POP_HELD, 1);
-                HOLD_POP_PROGRESS[CurrentPlayer] = 1;
+                HOLD_POP_PROGRESS[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_LOWER_P, 1, 0, 500);
             } else if (RPU_ReadLampState(LAMP_TOP_A)) {
                 QueueNotification(SOUND_EFFECT_BLASTOFF_HELD, 1);
-                HOLD_BLASTOFF_PROGRESS[CurrentPlayer] = 1;
+                HOLD_BLASTOFF_PROGRESS[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_LOWER_A, 1, 0, 500);
             } else if (RPU_ReadLampState(LAMP_TOP_C)) {
                 QueueNotification(SOUND_EFFECT_BONUS_HELD, 1);
-                HOLD_BONUS[CurrentPlayer] = 1;
+                HOLD_BONUS[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_LOWER_C, 1, 0, 500);
             } else if (RPU_ReadLampState(LAMP_TOP_E)) {
                 QueueNotification(SOUND_EFFECT_PLAYFIELDX_HELD, 1);
-                HOLD_PLAYFIELDX[CurrentPlayer] = 1;
+                HOLD_PLAYFIELDX[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_LOWER_E, 1, 0, 500);
             }
         } else if (IsSuperSuperBlastOffActive(CurrentTime)) {
