@@ -78,41 +78,41 @@ boolean MachineStateChanged = true;
 #define EEPROM_SPECIAL_SCORE_UL 144
 
 // Sound Effects
-#define SOUND_EFFECT_NONE 0
-#define SOUND_EFFECT_BONUS_COUNT_1k 2
-#define SOUND_EFFECT_ROLL_OVER 3
-#define SOUND_EFFECT_OUTLANE 4
-#define SOUND_EFFECT_ALARM 5
-#define SOUND_EFFECT_SLINGSHOT 6
-#define SOUND_EFFECT_POPBUMPER 7
-#define SOUND_EFFECT_DROPTARGET 9
-#define SOUND_EFFECT_ADDCREDIT 10
-#define SOUND_EFFECT_BALL_OVER 19
-#define SOUND_EFFECT_GAME_OVER 20
-#define SOUND_EFFECT_BACKGROUND1 21
-#define SOUND_EFFECT_BACKGROUND2 22
-#define SOUND_EFFECT_BACKGROUND3 23
-#define SOUND_EFFECT_BACKGROUND4 24
-#define SOUND_EFFECT_SWITCHHIT 26
-#define SOUND_EFFECT_TILT_WARNING 28
-#define SOUND_EFFECT_MATCH_SPIN 30
-#define SOUND_EFFECT_SPINNER100 32
-#define SOUND_EFFECT_SPINNER200 33
-#define SOUND_EFFECT_SPINNER1000 34
-#define SOUND_EFFECT_SPINNERFRENZY 35
-#define SOUND_EFFECT_SPINNER2000 36
-#define SOUND_EFFECT_SPINNERCENTER 37
-#define SOUND_EFFECT_ROCKET_BLAST 44
-#define SOUND_EFFECT_BASS_RUMBLE 45
-#define SOUND_EFFECT_HURRY_UP 46
-#define SOUND_EFFECT_SONARBG 47
-#define SOUND_EFFECT_BONUS_COUNT_2k 48
-#define SOUND_EFFECT_BONUS_COUNT_3k 49
-#define SOUND_EFFECT_RUBBER 50
+#define SOUND_EFFECT_NONE               0
+#define SOUND_EFFECT_BONUS_COUNT_1k     2
+#define SOUND_EFFECT_ROLL_OVER          3
+#define SOUND_EFFECT_OUTLANE            4
+#define SOUND_EFFECT_ALARM              5
+#define SOUND_EFFECT_SLINGSHOT          6
+#define SOUND_EFFECT_POPBUMPER          7
+#define SOUND_EFFECT_DROPTARGET         9
+#define SOUND_EFFECT_ADDCREDIT          10
+#define SOUND_EFFECT_BALL_OVER          19
+#define SOUND_EFFECT_GAME_OVER          20
+#define SOUND_EFFECT_BACKGROUND1        21
+#define SOUND_EFFECT_BACKGROUND2        22
+#define SOUND_EFFECT_BACKGROUND3        23
+#define SOUND_EFFECT_BACKGROUND4        24
+#define SOUND_EFFECT_SWITCHHIT          26
+#define SOUND_EFFECT_TILT_WARNING       28
+#define SOUND_EFFECT_MATCH_SPIN         30
+#define SOUND_EFFECT_SPINNER100         32
+#define SOUND_EFFECT_SPINNER200         33
+#define SOUND_EFFECT_SPINNER1000        34
+#define SOUND_EFFECT_SPINNERFRENZY      35
+#define SOUND_EFFECT_SPINNER2000        36
+#define SOUND_EFFECT_SPINNERCENTER      37
+#define SOUND_EFFECT_ROCKET_BLAST       44
+#define SOUND_EFFECT_BOING              45
+#define SOUND_EFFECT_HURRY_UP           46
+#define SOUND_EFFECT_BACKGROUND5        47
+#define SOUND_EFFECT_BONUS_COUNT_2k     48
+#define SOUND_EFFECT_BONUS_COUNT_3k     49
+#define SOUND_EFFECT_RUBBER             50
 
-#define SOUND_EFFECT_TILT 61
+#define SOUND_EFFECT_TILT               61
 
-#if (RPU_MPU_ARCHITECTURE < 10) && !defined(RPU_OS_DISABLE_CPC_FOR_SPACE)
+#if (RPU_MPU_ARCHITECTURE<10) && !defined(RPU_OS_DISABLE_CPC_FOR_SPACE)
 // This array maps the self-test modes to audio callouts
 unsigned short SelfTestStateToCalloutMap[34] = {136, 137, 135, 134, 133, 140, 141, 142, 139, 143, 144, 145, 146, 147, 148, 149, 138, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166};
 #elif (RPU_MPU_ARCHITECTURE < 10) && defined(RPU_OS_DISABLE_CPC_FOR_SPACE)
@@ -1568,8 +1568,9 @@ byte AttractLastLadderBonus = 0;
 unsigned long AttractDisplayRampStart = 0;
 byte AttractLastHeadMode = 255;
 byte AttractLastPlayfieldMode = 255;
-byte InAttractMode = false;
+byte InAttractMode = true;
 unsigned long ShowLampTimeOffset = 0;
+unsigned long AttractModeStartTime = 0;
 
 byte LastSolPhase = 0;
 
@@ -1651,26 +1652,23 @@ int RunAttractMode(int curState, boolean curStateChanged) {
         AttractLastLadderBonus = 1;
         AttractLastLadderTime = CurrentTime;
     }
-
-    unsigned long AttractModeStartTime = 0;
-
-    unsigned long animationTime = (CurrentTime - AttractModeStartTime);
-    if (animationTime < 1000) {
-        ShowLampAnimation(0, 36, animationTime, 11, false, false);
-    } else if (animationTime < 2000) {
-        ShowLampAnimation(0, 36, animationTime, 11, false, true);
-    } else if (animationTime < 3000) {
-        ShowLampAnimation(1, 64, animationTime, 11, false, false);
-    } else if (animationTime < 5000) {
-        ShowLampAnimation(2, 36, animationTime, 11, false, false);
-    } else if (animationTime < 6000) {
-        ShowLampAnimation(2, 36, animationTime, 11, false, true);
+  
+  unsigned long animationTime = (CurrentTime - AttractModeStartTime);
+    if (animationTime<1000) {
+      ShowLampAnimation(0, 635, animationTime, 2, false, false);
+    } else if (animationTime<2000) {
+      ShowLampAnimation(0, 63, animationTime, 2, false, true);
+    } else if (animationTime<3000) {
+      ShowLampAnimation(2, 63, animationTime, 2, false, false);
+    } else if (animationTime<4000) {
+      ShowLampAnimation(2, 63, animationTime, 2, false, true);
+    } else if (animationTime<5000) {
+      ShowLampAnimation(2, 63, animationTime, 2, false, false);
+    } else if (animationTime<6000) {
+      ShowLampAnimation(2, 63, animationTime, 2, false, true);
     } else {
-        AttractModeStartTime = CurrentTime;
+      AttractModeStartTime = CurrentTime;
     }
-
-    //  ShowLampAnimation(0, 40, CurrentTime, 14, false, false);
-    //  ShowLampAnimation(0, 40, CurrentTime, 14, false, false);
 
     byte switchHit;
     while ((switchHit = RPU_PullFirstFromSwitchStack()) != SWITCH_STACK_EMPTY) {
@@ -1936,20 +1934,20 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         } else if (rand == 3) {
             PlayBackgroundSong(SOUND_EFFECT_BACKGROUND4);
         } else {
-            PlayBackgroundSong(SOUND_EFFECT_SONARBG);
+            PlayBackgroundSong(SOUND_EFFECT_BACKGROUND5);
         }
     }
 
-    // We should only consider the ball initialized when
-    // the ball is no longer triggering the SW_OUTHOLE
-    if (CountBallsInTrough() == (TotalBallsLoaded - NumberOfBallsLocked)) {
-        return MACHINE_STATE_INIT_NEW_BALL;
-    } else {
-        return MACHINE_STATE_NORMAL_GAMEPLAY;
-    }
+        // We should only consider the ball initialized when
+        // the ball is no longer triggering the SW_OUTHOLE
+        if (CountBallsInTrough() == (TotalBallsLoaded - NumberOfBallsLocked)) {
+            return MACHINE_STATE_INIT_NEW_BALL;
+        } else {
+            return MACHINE_STATE_NORMAL_GAMEPLAY;
+        }
 
-    LastTimeThroughLoop = CurrentTime;
-}
+        LastTimeThroughLoop = CurrentTime;
+    }
 
 /*
 boolean AddABall(boolean ballLocked = false, boolean ballSave = true) {
@@ -2582,14 +2580,14 @@ void HandleGamePlaySwitches(byte switchHit) {
         if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
         break;
     case SW_DROP_4:
-        CurrentScores[CurrentPlayer] += 4000 * PlayfieldMultiplier[CurrentPlayer];
-        AddToBonus(1);
-        PlaySoundEffect(SOUND_EFFECT_BASS_RUMBLE);
-        SpinnerToggle();
-        RPU_SetLampState(LAMP_DROP_TARGET, 1, 0, 500);
-        LastSwitchHitTime = CurrentTime;
-        if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
-        break;
+      CurrentScores[CurrentPlayer] += 4000 * PlayfieldMultiplier[CurrentPlayer];
+      AddToBonus(1);
+      PlaySoundEffect(SOUND_EFFECT_BOING);
+      SpinnerToggle();
+      RPU_SetLampState(LAMP_DROP_TARGET, 1, 0, 500);
+      LastSwitchHitTime = CurrentTime;
+      if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
+      break;
 
     case SW_L_SPINNER:
         if (IsSuperSpinnerActive(CurrentTime)) {
