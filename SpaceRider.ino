@@ -230,6 +230,21 @@ AudioHandler Audio;
     Game State
 
 *********************************************************************/
+struct GameGoals {
+    bool S_Complete; // Spinner
+    bool P_Complete; // Pop bumpers
+    bool A_Complete // Blast Off
+    bool C_Complete; // Bonus X
+    bool E_Complete; // Playfield X
+}
+
+PlayerGoalProgress[4] = {
+    {false, false, false, false, false}, // Player 1
+    {false, false, false, false, false}, // Player 2
+    {false, false, false, false, false}, // Player 3
+    {false, false, false, false, false}  // Player 4
+};
+
 byte CurrentPlayer = 0;
 byte CurrentBallInPlay = 1;
 byte CurrentNumPlayers = 0;
@@ -239,11 +254,6 @@ byte PlayfieldMultiplier[4];
 byte MaxTiltWarnings = 2;
 byte NumTiltWarnings = 0;
 byte HoldoverGoals[4];
-byte S_GoalComplete[4];
-byte P_GoalComplete[4];
-byte A_GoalComplete[4];
-byte C_GoalComplete[4];
-byte E_GoalComplete[4];
 byte AwardPhase;
 bool SkillShotActive = false;
 bool HOLD_SPINNER_PROGRESS[4];  //"S"
@@ -645,27 +655,27 @@ void ShowShootAgainLamps() {
 }
 
 void ShowSpaceProgressLamps() {
-    if (S_GoalComplete[CurrentPlayer] == 1) {
+    if (PlayerGoalProgress[CurrentPlayer].S_Complete == true) {
         RPU_SetLampState(LAMP_LOWER_S, 1, 0, 0);
     } else {
         RPU_SetLampState(LAMP_LOWER_S, 0, 0, 0);
     }
-    if (P_GoalComplete[CurrentPlayer] == 1) {
+    if (PlayerGoalProgress[CurrentPlayer].P_Complete == true) {
         RPU_SetLampState(LAMP_LOWER_P, 1, 0, 0);
     } else {
         RPU_SetLampState(LAMP_LOWER_P, 0, 0, 0);
     }
-    if (A_GoalComplete[CurrentPlayer] == 1) {
+    if (PlayerGoalProgress[CurrentPlayer].A_Complete == true) {
         RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
     } else {
         RPU_SetLampState(LAMP_LOWER_A, 0, 0, 0);
     }
-    if (C_GoalComplete[CurrentPlayer] == 1) {
+    if (PlayerGoalProgress[CurrentPlayer].C_Complete == true) {
         RPU_SetLampState(LAMP_LOWER_C, 1, 0, 0);
     } else {
         RPU_SetLampState(LAMP_LOWER_C, 0, 0, 0);
     }
-    if (E_GoalComplete[CurrentPlayer] == 1) {
+    if (PlayerGoalProgress[CurrentPlayer.E_Complete == true) {
         RPU_SetLampState(LAMP_LOWER_E, 1, 0, 0);
     } else {
         RPU_SetLampState(LAMP_LOWER_E, 0, 0, 0);
@@ -850,17 +860,14 @@ void ShowPlayerScores(byte displayToUpdate, boolean flashCurrent, boolean dashCu
             }
 
         } else {
-            boolean showingCurrentGoals = false;
             // No override, update scores designated by displayToUpdate
             if (allScoresShowValue == 0) {
                 displayScore = CurrentScores[scoreCount];
-                displayScore += (Goals[scoreCount] % 10);
-                if (Goals[scoreCount]) showingCurrentGoals = true;
             } else
                 displayScore = allScoresShowValue;
 
             // If we're updating all displays, or the one currently matching the loop, or if we have to scroll
-            if (displayToUpdate == 0xFF || displayToUpdate == scoreCount || displayScore > RPU_OS_MAX_DISPLAY_SCORE || showingCurrentGoals) {
+            if (displayToUpdate == 0xFF || displayToUpdate == scoreCount || displayScore > RPU_OS_MAX_DISPLAY_SCORE) {
 
                 // Don't show this score if it's not a current player score (even if it's scrollable)
                 if (displayToUpdate == 0xFF && (scoreCount >= CurrentNumPlayers && CurrentNumPlayers != 0) && allScoresShowValue == 0) {
@@ -874,9 +881,6 @@ void ShowPlayerScores(byte displayToUpdate, boolean flashCurrent, boolean dashCu
                         // show score for four seconds after change
                         RPU_SetDisplay(scoreCount, displayScore % (RPU_OS_MAX_DISPLAY_SCORE + 1), false);
                         byte blank = RPU_OS_ALL_DIGITS_MASK;
-                        if (showingCurrentGoals && (CurrentTime / 200) % 2) {
-                            blank &= ~(0x01 << (RPU_OS_NUM_DIGITS - 1));
-                        }
                         RPU_SetDisplayBlank(scoreCount, blank);
                     } else {
                         // Scores are scrolled 10 digits and then we wait for 6
@@ -947,9 +951,6 @@ void ShowPlayerScores(byte displayToUpdate, boolean flashCurrent, boolean dashCu
                     } else {
                         byte blank;
                         blank = RPU_SetDisplay(scoreCount, displayScore, false, 2);
-                        if (showingCurrentGoals && (CurrentTime / 200) % 2) {
-                            blank &= ~(0x01 << (RPU_OS_NUM_DIGITS - 1));
-                        }
                         RPU_SetDisplayBlank(scoreCount, blank);
                     }
                 }
@@ -1163,7 +1164,7 @@ void IncreasePlayfieldMultiplier() {
         RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
         QueueNotification(SOUND_EFFECT_MULTI_GOAL, 1);
         RPU_SetLampState(LAMP_LOWER_E, 1, 0, 0);
-        E_GoalComplete[CurrentPlayer] = 1;
+        PlayerGoalProgress[CurrentPlayer].E_Complete = true;
     } else if (PlayfieldMultiplier[CurrentPlayer] > 4) {
         QueueNotification(SOUND_EFFECT_DROPTARGET, 1);
     }
@@ -1728,8 +1729,9 @@ byte CountBallsInTrough() {
 
 void AddToBonus(byte amountToAdd = 1) {
     Bonus[CurrentPlayer] += amountToAdd;
-    if (Bonus[CurrentPlayer] > MAX_DISPLAY_BONUS) {
+    if (Bonus[CurrentPlayer] >= MAX_DISPLAY_BONUS) {
         Bonus[CurrentPlayer] = MAX_DISPLAY_BONUS;
+        PlayerGoalProgress[CurrentPlayer].C_Complete = true;
     } else {
         BonusChanged = CurrentTime;
     }
@@ -1820,11 +1822,7 @@ int InitGamePlay(boolean curStateChanged) {
         Bonus[count] = 0;
         HoldoverGoals[count] = 0;
         TargetBankComplete[count] = 0;
-        S_GoalComplete[count] = 0;
-        P_GoalComplete[count] = 0;
-        A_GoalComplete[count] = 0;
-        C_GoalComplete[count] = 0;
-        E_GoalComplete[count] = 0;
+        PlayerGoalProgress[count] = 0;
         HOLD_SPINNER_PROGRESS[count] = false;
         HOLD_POP_PROGRESS[count] = false;
         HOLD_BLASTOFF_PROGRESS[count] = false;
@@ -1846,7 +1844,7 @@ int InitGamePlay(boolean curStateChanged) {
     return MACHINE_STATE_INIT_NEW_BALL;
 }
 
-void HandleHoldoverAwards() {
+void NewBallHoldoverAwards() {
     // If the player has a holdover award, then we need to
     //  set the current bonus to that value
     if (HOLD_BONUS[CurrentPlayer] == false) {
@@ -1930,7 +1928,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         GateOpen = true; // Unpowered gate is open, gate open when true
         GateOpenTime = 0;
 
-        HandleHoldoverAwards();
+        NewBallHoldoverAwards();
         ShowSpaceProgressLamps();
 
         // Reset Drop Targets
@@ -2544,7 +2542,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 NumberOfHits[CurrentPlayer] = 0;
                 RPU_SetDisplayCredits(Credits);
                 QueueNotification(SOUND_EFFECT_SUPERPOP_GOAL, 1);
-                P_GoalComplete[CurrentPlayer] = 1;
+                PlayerGoalProgress[CurrentPlayer].P_Complete = true;
                 StartSuperPops(CurrentTime);
             } else {
                 RPU_SetDisplayCredits(NumberOfHits[CurrentPlayer]);
@@ -2604,7 +2602,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 NumberOfSpins[CurrentPlayer] = 1;
                 StartSuperSpinner(CurrentTime);
                 RPU_SetLampState(LAMP_TOP_S, 0, 0, 0);
-                S_GoalComplete[CurrentPlayer] = 1;
+                PlayerGoalProgress[CurrentPlayer].S_Complete = true;
                 RPU_SetDisplayCredits(Credits);
                 QueueNotification(SOUND_EFFECT_SUPERSPINNER_GOAL, 1);
                 PlayBackgroundSong(SOUND_EFFECT_HURRY_UP);
@@ -2893,11 +2891,11 @@ void HandleGamePlaySwitches(byte switchHit) {
             // Super Blast off was achieved, mark goal complete
             PlaySoundEffect(SOUND_EFFECT_BLASTOFF_GOAL);
             RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
-            A_GoalComplete[CurrentPlayer] = 1;
+            PlayerGoalProgress[CurrentPlayer].A_Complete = 1;
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
             ShowPlayerScores(0xFF, false, false);
 
-            // Turn all the spinner and upper SPACE lamps ogg
+            // Turn all the spinner and upper SPACE lamps off
             RPU_SetLampState(LAMP_TOP_S, 0, 0, 0);
             RPU_SetLampState(LAMP_TOP_P, 0, 0, 0);
             RPU_SetLampState(LAMP_TOP_A, 0, 0, 0);
