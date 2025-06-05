@@ -253,7 +253,6 @@ byte BonusX[4];
 byte PlayfieldMultiplier[4];
 byte MaxTiltWarnings = 2;
 byte NumTiltWarnings = 0;
-byte HoldoverGoals[4];
 byte AwardPhase;
 bool SkillShotActive = false;
 bool HOLD_SPINNER_PROGRESS[4];  //"S"
@@ -1806,7 +1805,6 @@ int InitGamePlay(boolean curStateChanged) {
         NumberOfCenterSpins[count] = 0;
         NumberOfHits[count] = 0;
         Bonus[count] = 0;
-        HoldoverGoals[count] = 0;
         TargetBankComplete[count] = 0;
         PlayerGoalProgress[count].S_Complete = 0;
         PlayerGoalProgress[count].P_Complete = 0;
@@ -3191,7 +3189,7 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
 
 unsigned long CountGoalsCompleted(byte player) {
     unsigned long result = 0;
-    
+
     if (PlayerGoalProgress[player].S_Complete) result += 1;
     if (PlayerGoalProgress[player].P_Complete) result += 1;
     if (PlayerGoalProgress[player].A_Complete) result += 1;
