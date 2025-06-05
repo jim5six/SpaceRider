@@ -279,8 +279,6 @@ EnumCenterSpinnerStatus CenterSpinnerStatus = CENTER_LEFT_SPINNER_LIT; // Whethe
 unsigned long CurrentScores[4];
 unsigned long BallFirstSwitchHitTime = 0;
 unsigned long BallTimeInTrough = 0;
-unsigned long GameModeStartTime = 0;
-unsigned long GameModeEndTime = 0;
 unsigned long LastTiltWarningTime = 0;
 unsigned long ScoreAdditionAnimation;
 unsigned long ScoreAdditionAnimationStartTime;
@@ -1843,7 +1841,7 @@ void NewBallHoldoverAwards() {
         Bonus[CurrentPlayer] = 0;
     }
     if (HOLD_PLAYFIELDX[CurrentPlayer] == false) {
-        PlayfieldMultiplier[CurrentPlayer] = 0;
+        PlayfieldMultiplier[CurrentPlayer] = 1;
     }
     if (HOLD_BLASTOFF_PROGRESS[CurrentPlayer] == true) {
         NumberOfCenterSpins[CurrentPlayer] = 0;
@@ -1891,8 +1889,6 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         LastTiltWarningTime = 0;
 
         // Initialize game-specific start-of-ball lights & variables
-        GameModeStartTime = 0;
-        GameModeEndTime = 0;
         ExtraBallCollected = false;
         SpecialCollected = false;
         ScoreAdditionAnimation = 0;
@@ -2000,17 +1996,19 @@ int ManageGameMode() {
         TimersPaused = false;
 
     if (SkillShotActive == true) {
-        ShowLampAnimation(3, 200, CurrentTime, 14, false, false, 4);
-        SetGeneralIlluminationOn(false);
-        // The switch handler will award the skill shot
-        // (when applicable) and this mode will move
-        // to unstructured play when any valid switch is
-        // recorded
-
         if (BallFirstSwitchHitTime != 0) {
+            // The switch handler will award the skill shot
+            // (when applicable) and this mode will move
+            // to unstructured play when any valid switch is
+            // recorded
             SetGeneralIlluminationOn(true);
             SkillShotActive = false;
         }
+        else {
+            ShowLampAnimation(3, 200, CurrentTime, 14, false, false, 4);
+            SetGeneralIlluminationOn(false);
+        }
+
     }
 
 
