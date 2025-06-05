@@ -2073,10 +2073,10 @@ int ManageGameMode() {
         GateOpenTime = 0;
     }
 
-    if ((BallFirstSwitchHitTime == 0) && GoalsDisplayValue(Goals[CurrentPlayer])) { // If ball not in play and if any goals have been reached
+    if ((BallFirstSwitchHitTime == 0) && CountGoalsCompleted(CurrentPlayer)) { // If ball not in play and if any goals have been reached
         for (byte count = 0; count < 4; count++) {
             if (count != CurrentPlayer) {
-                OverrideScoreDisplay(count, GoalsDisplayValue(Goals[CurrentPlayer]), false); // Show achieved goals
+                OverrideScoreDisplay(count, CountGoalsCompleted(CurrentPlayer), false); // Show achieved goals
             }
         }
         GoalsDisplayToggle = true;
@@ -3189,42 +3189,16 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
     return returnState;
 }
 
-unsigned long GoalsDisplayValue(byte currentgoals) {
-    unsigned long Result = 0;
-    for (int i = 0; i < 6; i++) { // Filter lower 5 goals
-        Result = Result * 10;
-        if (Goals[CurrentPlayer] & (0b100000 >> i)) {
-            Result += 1;
-        }
-    }
-    return Result;
-}
+unsigned long CountGoalsCompleted(byte player) {
+    unsigned long result = 0;
+    
+    if (PlayerGoalProgress[player].S_Complete) result += 1;
+    if (PlayerGoalProgress[player].P_Complete) result += 1;
+    if (PlayerGoalProgress[player].A_Complete) result += 1;
+    if (PlayerGoalProgress[player].C_Complete) result += 1;
+    if (PlayerGoalProgress[player].E_Complete) result += 1;
 
-//  SetGoals
-//
-// Bit 1 - SuperSpinner Achieved
-// Bit 2 - SuperPop Achieved
-// Bit 3 - Blast Off Achieved
-// Bit 4 - Playfield 5x Achieved
-// Bit 5 - SPACE Achieved
-// Bit 6 - 3 Goals achieved
-// Bit 7 - 5 Goals achieved
-
-void SetGoals(byte goalnum) { // Set goal flag and update display score
-
-    Goals[CurrentPlayer] = (Goals[CurrentPlayer] | (0b1 << (goalnum - 1))); // Raise flag
-
-    // Count how many goals are met and update display
-    unsigned int countOnes = Goals[CurrentPlayer];
-    byte numOnes = 0;
-    for (int count = 0; count < 6; count++) {
-        if ((countOnes & 0b1) == 1) {
-            numOnes++;
-        }
-        countOnes >>= 1;
-    }
-
-    CurrentScores[CurrentPlayer] = (CurrentScores[CurrentPlayer] / 10 * 10 + numOnes);
+    return result;
 }
 
 #if (RPU_MPU_ARCHITECTURE >= 10)
