@@ -288,18 +288,6 @@ unsigned long LastRemainingAnimatedScoreShown;
 unsigned long LastTimeThroughLoop;
 unsigned long LastSwitchHitTime;
 unsigned long BallSaveEndTime;
-unsigned long SuperSpinnerStartTime = 0;
-unsigned long SuperSpinnerEndTime = 0;
-unsigned long SuperSpinnerOverStartTime = 0;
-unsigned long SuperSpinnerOverEndTime = 0;
-unsigned long SuperBlastOffStartTime = 0;
-unsigned long SuperBlastOffOverStartTime = 0;
-unsigned long SuperBlastOffOverEndTime = 0;
-unsigned long SuperBlastOffEndTime = 0;
-unsigned long SuperPopStartTime = 0;
-unsigned long SuperPopEndTime = 0;
-unsigned long SuperPopOverStartTime = 0;
-unsigned long SuperPopOverEndTime = 0;
 
 #define BALL_SAVE_GRACE_PERIOD 2000
 
@@ -1921,9 +1909,6 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
             Goals[count] = 0;
             TargetBankComplete[count] = 0;
         }
-        SuperSpinnerEndTime = 0;
-        SuperPopEndTime = 0;
-        SuperBlastOffEndTime = 0;
         TargetBank();
         ResetModes();
         RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
