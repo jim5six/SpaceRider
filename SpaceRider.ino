@@ -111,9 +111,9 @@ boolean MachineStateChanged = true;
 #define SOUND_EFFECT_SPINNER2000        36
 #define SOUND_EFFECT_SPINNERCENTER      37
 #define SOUND_EFFECT_ROCKET_BLAST       44
-#define SOUND_EFFECT_BASS_RUMBLE        45
+#define SOUND_EFFECT_BOING              45
 #define SOUND_EFFECT_HURRY_UP           46
-#define SOUND_EFFECT_SONARBG            47
+#define SOUND_EFFECT_BACKGROUND5        47
 #define SOUND_EFFECT_BONUS_COUNT_2k     48
 #define SOUND_EFFECT_BONUS_COUNT_3k     49
 #define SOUND_EFFECT_RUBBER             50
@@ -1608,12 +1608,16 @@ int RunAttractMode(int curState, boolean curStateChanged) {
   
   unsigned long animationTime = (CurrentTime - AttractModeStartTime);
     if (animationTime<1000) {
-      ShowLampAnimation(0, 63, animationTime, 2, false, false);
+      ShowLampAnimation(0, 635, animationTime, 2, false, false);
     } else if (animationTime<2000) {
       ShowLampAnimation(0, 63, animationTime, 2, false, true);
     } else if (animationTime<3000) {
       ShowLampAnimation(2, 63, animationTime, 2, false, false);
     } else if (animationTime<4000) {
+      ShowLampAnimation(2, 63, animationTime, 2, false, true);
+    } else if (animationTime<5000) {
+      ShowLampAnimation(2, 63, animationTime, 2, false, false);
+    } else if (animationTime<6000) {
       ShowLampAnimation(2, 63, animationTime, 2, false, true);
     } else {
       AttractModeStartTime = CurrentTime;
@@ -1910,7 +1914,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
     } else if (rand == 3) {
       PlayBackgroundSong(SOUND_EFFECT_BACKGROUND4);
     } else {
-      PlayBackgroundSong(SOUND_EFFECT_SONARBG);
+      PlayBackgroundSong(SOUND_EFFECT_BACKGROUND5);
     }
 
   }
@@ -2784,7 +2788,7 @@ void HandleGamePlaySwitches(byte switchHit) {
     case SW_DROP_4:
       CurrentScores[CurrentPlayer] += 4000 * PlayfieldMultiplier[CurrentPlayer];
       AddToBonus(1);
-      PlaySoundEffect(SOUND_EFFECT_BASS_RUMBLE);
+      PlaySoundEffect(SOUND_EFFECT_BOING);
       SpinnerToggle();
       RPU_SetLampState(LAMP_DROP_TARGET, 1, 0, 500);
       LastSwitchHitTime = CurrentTime;
