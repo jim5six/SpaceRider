@@ -233,12 +233,12 @@ AudioHandler Audio;
 struct GameGoals {
     bool S_Complete; // Spinner
     bool P_Complete; // Pop bumpers
-    bool A_Complete // Blast Off
+    bool A_Complete; // Blast Off
     bool C_Complete; // Bonus X
     bool E_Complete; // Playfield X
-}
+};
 
-PlayerGoalProgress[4] = {
+GameGoals PlayerGoalProgress[4] = {
     {false, false, false, false, false}, // Player 1
     {false, false, false, false, false}, // Player 2
     {false, false, false, false, false}, // Player 3
@@ -675,7 +675,7 @@ void ShowSpaceProgressLamps() {
     } else {
         RPU_SetLampState(LAMP_LOWER_C, 0, 0, 0);
     }
-    if (PlayerGoalProgress[CurrentPlayer.E_Complete == true) {
+    if (PlayerGoalProgress[CurrentPlayer].E_Complete == true) {
         RPU_SetLampState(LAMP_LOWER_E, 1, 0, 0);
     } else {
         RPU_SetLampState(LAMP_LOWER_E, 0, 0, 0);
@@ -1822,7 +1822,11 @@ int InitGamePlay(boolean curStateChanged) {
         Bonus[count] = 0;
         HoldoverGoals[count] = 0;
         TargetBankComplete[count] = 0;
-        PlayerGoalProgress[count] = 0;
+        PlayerGoalProgress[count].S_Complete = 0;
+        PlayerGoalProgress[count].P_Complete = 0;
+        PlayerGoalProgress[count].A_Complete = 0;
+        PlayerGoalProgress[count].C_Complete = 0;
+        PlayerGoalProgress[count].E_Complete = 0;
         HOLD_SPINNER_PROGRESS[count] = false;
         HOLD_POP_PROGRESS[count] = false;
         HOLD_BLASTOFF_PROGRESS[count] = false;
@@ -2891,7 +2895,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             // Super Blast off was achieved, mark goal complete
             PlaySoundEffect(SOUND_EFFECT_BLASTOFF_GOAL);
             RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
-            PlayerGoalProgress[CurrentPlayer].A_Complete = 1;
+            PlayerGoalProgress[CurrentPlayer].A_Complete = true;
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
             ShowPlayerScores(0xFF, false, false);
 
