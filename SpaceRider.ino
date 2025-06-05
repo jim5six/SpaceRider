@@ -2016,9 +2016,12 @@ int ManageGameMode() {
         // RPU_SetLampState(LAMP_LOWER_S, 1, 0, 0);
         unsigned long SuperSpinnerTimeLeft = SuperSpinnerRemainingTime(CurrentTime);
         
-        for (byte count = 0; count < 4; count++) {
-            if (count != CurrentPlayer) OverrideScoreDisplay(count, SuperSpinnerTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
-        }
+        byte displayToUse = (CurrentPlayer == 0) ? 1 : 0; // Show spinner time on first available display
+        OverrideScoreDisplay(displayToUse, SuperSpinnerTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
+
+        //for (byte count = 0; count < 4; count++) {
+        //    if (count != CurrentPlayer) OverrideScoreDisplay(count, SuperSpinnerTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
+        //}
     }
 
     if (IsSuperPopsActive(CurrentTime)) {
@@ -2028,9 +2031,12 @@ int ManageGameMode() {
 
         unsigned long SuperPopTimeLeft = SuperPopsRemainingTime(CurrentTime);
 
-        for (byte count = 0; count < 4; count++) {
-            if (count != CurrentPlayer) OverrideScoreDisplay(count, SuperPopTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
-        }
+        byte displayToUse = (CurrentPlayer == 0 || CurrentPlayer == 1) ? 2 : 1; // Show spinner time on first available display
+        OverrideScoreDisplay(displayToUse, SuperPopTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
+
+        //for (byte count = 0; count < 4; count++) {
+        //    if (count != CurrentPlayer) OverrideScoreDisplay(count, SuperPopTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
+        //}
     } else {
         RPU_SetLampState(LAMP_LR_POP, 1, 0, 0);
         RPU_SetLampState(LAMP_C_POP, 1, 0, 0);
@@ -2050,9 +2056,12 @@ int ManageGameMode() {
 
         unsigned long SuperBlastOffTimeLeft = SuperBlastOffRemainingTime(CurrentTime);
 
-        for (byte count = 0; count < 4; count++) {
-            if (count != CurrentPlayer) OverrideScoreDisplay(count, SuperBlastOffTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
-        }
+        byte displayToUse = (CurrentPlayer == 3) ? 2 : 3; // Show spinner time on first available display
+        OverrideScoreDisplay(displayToUse, SuperBlastOffTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
+
+        //for (byte count = 0; count < 4; count++) {
+        //    if (count != CurrentPlayer) OverrideScoreDisplay(count, SuperBlastOffTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
+        //}
     }
 
     if (!IsSuperSpinnerActive(CurrentTime) && !(IsSuperPopsActive(CurrentTime) && !IsSuperSuperBlastOffActive(CurrentTime))) {
