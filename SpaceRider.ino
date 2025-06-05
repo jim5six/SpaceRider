@@ -820,6 +820,12 @@ void ShowAnimatedValue(byte displayNum, unsigned long displayScore, byte animati
     }
 }
 
+// ShowPlayerScores
+// This function is used to show the player scores on the displays.
+// Inputs: Display to update (0-3 for a specific display, 0xFF to show all)
+//         flashCurrent - if true, the current player's score will flash
+//         dashCurrent - if true, the current player's score will dash
+//         allScoresShowValue - if non-zero, this value will be shown on all displays
 void ShowPlayerScores(byte displayToUpdate, boolean flashCurrent, boolean dashCurrent, unsigned long allScoresShowValue = 0) {
 
     if (displayToUpdate == 0xFF) ScoreOverrideStatus = 0;
@@ -2217,29 +2223,28 @@ int ManageGameMode() {
     return returnState;
 }
 
-unsigned long CountdownStartTime = 0;
-unsigned long LastCountdownReportTime = 0;
-unsigned long BonusCountDownEndTime = 0;
-byte DecrementingBonusCounter;
-byte IncrementingBonusXCounter;
-byte TotalBonus = 0;
-byte TotalBonusX = 0;
-boolean CountdownBonusHurryUp = false;
-
 int CountDownDelayTimes[] = {175, 130, 105, 90, 80, 70, 60, 40, 30, 20};
 
 int CountdownBonus(boolean curStateChanged) {
+    unsigned long CountdownStartTime = 0;
+    unsigned long LastCountdownReportTime = 0;
+    unsigned long BonusCountDownEndTime = 0;
+    byte DecrementingBonusCounter;
+    byte IncrementingBonusXCounter;
+    byte TotalBonus = 0;
+    byte TotalBonusX = 0;
+    boolean CountdownBonusHurryUp = false;
 
     // If this is the first time through the countdown loop
     if (curStateChanged) {
 
-        Bonus[CurrentPlayer] = Bonus[CurrentPlayer];
         CountdownStartTime = CurrentTime;
         LastCountdownReportTime = CurrentTime;
         ShowBonusLamps();
         IncrementingBonusXCounter = 1;
         DecrementingBonusCounter = Bonus[CurrentPlayer];
         TotalBonus = Bonus[CurrentPlayer];
+        TotalBonusX = BonusX[CurrentPlayer];
         CountdownBonusHurryUp = false;
 
         BonusCountDownEndTime = 0xFFFFFFFF;
