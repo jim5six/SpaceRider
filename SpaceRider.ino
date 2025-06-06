@@ -2243,7 +2243,7 @@ unsigned long CountdownStartTime = 0;
 unsigned long LastCountdownReportTime = 0;
 unsigned long BonusCountDownEndTime = 0;
 byte DecrementingBonusCounter;
-byte IncrementingBonuCountdownBonusHurryUpsXCounter;
+byte IncrementingBonusXCounter;
 byte TotalBonus = 0;
 byte TotalBonusX = 0;
 boolean CountdownBonusHurryUp = false;
