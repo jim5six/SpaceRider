@@ -2223,16 +2223,16 @@ int ManageGameMode() {
 
 int CountDownDelayTimes[] = {175, 130, 105, 90, 80, 70, 60, 40, 30, 20};
 
-int CountdownBonus(boolean curStateChanged) {
-    unsigned long CountdownStartTime = 0;
-    unsigned long LastCountdownReportTime = 0;
-    unsigned long BonusCountDownEndTime = 0;
-    byte DecrementingBonusCounter;
-    byte IncrementingBonusXCounter;
-    byte TotalBonus = 0;
-    byte TotalBonusX = 0;
-    boolean CountdownBonusHurryUp = false;
+unsigned long CountdownStartTime = 0;
+unsigned long LastCountdownReportTime = 0;
+unsigned long BonusCountDownEndTime = 0;
+byte DecrementingBonusCounter;
+byte IncrementingBonusXCounter;
+byte TotalBonus = 0;
+byte TotalBonusX = 0;
+boolean CountdownBonusHurryUp = false;
 
+int CountdownBonus(boolean curStateChanged) {
     // If this is the first time through the countdown loop
     if (curStateChanged) {
 
