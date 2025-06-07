@@ -286,6 +286,7 @@ unsigned long LastRemainingAnimatedScoreShown;
 unsigned long LastTimeThroughLoop;
 unsigned long LastSwitchHitTime;
 unsigned long BallSaveEndTime;
+unsigned long SuperBlastOffCollectedHoldTime = 0;
 
 #define BALL_SAVE_GRACE_PERIOD 2000
 
@@ -1869,13 +1870,13 @@ void NewBallHoldoverAwards() {
     if (HOLD_PLAYFIELDX[CurrentPlayer] == false) {
         PlayfieldMultiplier[CurrentPlayer] = 1;
     }
-    if (HOLD_BLASTOFF_PROGRESS[CurrentPlayer] == true) {
+    if (HOLD_BLASTOFF_PROGRESS[CurrentPlayer] == false) {
         NumberOfCenterSpins[CurrentPlayer] = 0;
     }
-    if (HOLD_SPINNER_PROGRESS[CurrentPlayer] == true) {
+    if (HOLD_SPINNER_PROGRESS[CurrentPlayer] == false) {
         NumberOfSpins[CurrentPlayer] = 0;
     }
-    if (HOLD_POP_PROGRESS[CurrentPlayer] == true) {
+    if (HOLD_POP_PROGRESS[CurrentPlayer] == false) {
         NumberOfHits[CurrentPlayer] = 0;
     }
 
@@ -1934,6 +1935,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         }
         TargetBank();
         ResetModes();
+        SpinnerToggle();
         RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
 
         PlayRandomBackgroundSong();
@@ -2909,6 +2911,8 @@ void HandleGamePlaySwitches(byte switchHit) {
                 RPU_SetLampState(LAMP_TOP_E, 1, 0, 500);
             }
         } else if (IsSuperSuperBlastOffActive(CurrentTime)) {
+            StopSuperBlastOff();
+            SuperBlastOffCollectedHoldTime = CurrentTime + 3200;
             // Super Blast off was achieved, mark goal complete
             PlaySoundEffect(SOUND_EFFECT_BLASTOFF_GOAL);
             RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
@@ -2928,9 +2932,11 @@ void HandleGamePlaySwitches(byte switchHit) {
             RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
             RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
         } else {
-            CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
-            PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
-            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 500, true);
+            if (CurrentTime >= SuperBlastOffCollectedHoldTime) {
+                CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
+                PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
+                RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 500, true);
+            }
         }
 
         LastSwitchHitTime = CurrentTime;

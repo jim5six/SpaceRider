@@ -43,6 +43,10 @@ void StartSuperBlastOff(unsigned long curTime) {
     modeStates.superBlastOff.endTime = curTime + SUPER_BLASTOFF_DURATION;
 }
 
+void StopSuperBlastOff() {
+    modeStates.superBlastOff.endTime = 0;
+}
+
 bool IsSuperSuperBlastOffActive(unsigned long curTime) {
     return curTime < modeStates.superBlastOff.endTime;
 }
@@ -68,4 +72,10 @@ unsigned long SuperPopsRemainingTime(unsigned long curTime) {
         return modeStates.superPops.endTime - curTime;
     }
     return 0; // Mode is not active
+}
+
+void StopAllModes() {
+    modeStates.superSpinner.endTime = 0;
+    modeStates.superBlastOff.endTime = 0;
+    modeStates.superPops.endTime = 0;
 }
