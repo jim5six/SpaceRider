@@ -1655,7 +1655,7 @@ int RunAttractMode(int curState, boolean curStateChanged) {
   
   unsigned long animationTime = (CurrentTime - AttractModeStartTime);
     if (animationTime<1000) {
-      ShowLampAnimation(0, 635, animationTime, 2, false, false);
+      ShowLampAnimation(0, 63, animationTime, 2, false, false);
     } else if (animationTime<2000) {
       ShowLampAnimation(0, 63, animationTime, 2, false, true);
     } else if (animationTime<3000) {
