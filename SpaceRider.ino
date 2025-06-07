@@ -250,7 +250,7 @@ byte CurrentBallInPlay = 1;
 byte CurrentNumPlayers = 0;
 byte Bonus[4];
 byte BonusX[4];
-byte PlayfieldMultiplier[4];
+unsigned long PlayfieldMultiplier[4];
 byte MaxTiltWarnings = 2;
 byte NumTiltWarnings = 0;
 byte AwardPhase;
@@ -383,7 +383,7 @@ void setup() {
     if (DEBUG_MESSAGES) {
         // If debug is on, set up the Serial port for communication
         Serial.begin(115200);
-        Serial.write("Starting\n");
+        Serial.println("Starting");
     }
 
     // Set up the Audio handler in order to play boot messages
@@ -1140,10 +1140,15 @@ void TargetBank() {
 }
 
 void IncreasePlayfieldMultiplier() {
-    PlayfieldMultiplier[CurrentPlayer] += 1;
+    if (PlayfieldMultiplier[CurrentPlayer] <= 5) {
+        PlayfieldMultiplier[CurrentPlayer] += 1;
+    }
     //  if (PlayfieldMultiplier[CurrentPlayer] > 4) {
     //    PlayfieldMultiplier[CurrentPlayer] = 4;
     //  }
+    if (PlayfieldMultiplier[CurrentPlayer] == 4) {
+        PlayfieldMultiplier[CurrentPlayer] += 1;
+    }
     if (PlayfieldMultiplier[CurrentPlayer] == 2) {
         RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 0);
         QueueNotification(SOUND_EFFECT_MULTI_2X, 1);
@@ -1153,11 +1158,12 @@ void IncreasePlayfieldMultiplier() {
         QueueNotification(SOUND_EFFECT_MULTI_3X, 1);
     } else if (PlayfieldMultiplier[CurrentPlayer] == 5) {   //Jim - How do I jump 4 and go straigt to 5 for this?
         RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
-        RPU_SetLampState(LAMP_BONUS_5X, 1, 0, 500);
+        RPU_SetLampState(LAMP_BONUS_5X, 1, 0, 0);
         QueueNotification(SOUND_EFFECT_MULTI_GOAL, 1);
         RPU_SetLampState(LAMP_LOWER_E, 1, 0, 0);
         PlayerGoalProgress[CurrentPlayer].E_Complete = true;
     } else if (PlayfieldMultiplier[CurrentPlayer] > 5) {
+        // Should not currently be able to happen
         QueueNotification(SOUND_EFFECT_DROPTARGET, 1);
     }
 }
@@ -2938,6 +2944,7 @@ void HandleGamePlaySwitches(byte switchHit) {
         IncreasePlayfieldMultiplier[CurrentPlayer]();
         RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
         LastSwitchHitTime = CurrentTime;
+        Serial.write("R Saucer Hit\n\r");
         break;
 
     case SW_R_TARGET:
