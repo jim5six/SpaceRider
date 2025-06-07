@@ -2623,7 +2623,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             if (NumberOfSpins[CurrentPlayer] > 200) {
                 NumberOfSpins[CurrentPlayer] = 1;
                 StartSuperSpinner(CurrentTime);
-                RPU_SetLampState(LAMP_TOP_S, 0, 0, 0);
+                RPU_SetLampState(LAMP_LOWER_S, 1, 0, 0);
                 PlayerGoalProgress[CurrentPlayer].S_Complete = true;
                 RPU_SetDisplayCredits(Credits);
                 QueueNotification(SOUND_EFFECT_SUPERSPINNER_GOAL, 1);
