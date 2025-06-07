@@ -179,7 +179,7 @@ unsigned short SelfTestStateToCalloutMap[34] = {134, 135, 133, 136, 137, 138, 13
 #define SOUND_EFFECT_DIAG_PROBLEM_PIA_5 1913
 #define SOUND_EFFECT_DIAG_STARTING_DIAGNOSTICS 1914
 
-#define MAX_DISPLAY_BONUS 40 + 30 + 20 + 10 + 9 // 109
+#define MAX_DISPLAY_BONUS 40
 #define TILT_WARNING_DEBOUNCE_TIME 1000
 
 /*********************************************************************
@@ -543,11 +543,11 @@ void ShowBonusLamps() {
         RPU_SetLampState(LAMP_BONUS_100, 0, 0, 0);
     }
 
-    for (byte count = 0; count < 9; count++) {
+    for (byte count = 1; count < 10; count++) {
         if (bonus == count) {
-            RPU_SetLampState(LAMP_BONUS_10 + count, 1, 0, 100);
+            RPU_SetLampState(LAMP_BONUS_10 + (count - 1), 1, 0, 100);
         } else {
-            RPU_SetLampState(LAMP_BONUS_10 + count, 0, 0, 100);
+            RPU_SetLampState(LAMP_BONUS_10 + (count - 1), 0, 0, 100);
         }
     }
 }
@@ -1729,6 +1729,7 @@ void AddToBonus(byte amountToAdd = 1) {
     if (Bonus[CurrentPlayer] >= MAX_DISPLAY_BONUS) {
         Bonus[CurrentPlayer] = MAX_DISPLAY_BONUS;
         PlayerGoalProgress[CurrentPlayer].C_Complete = true;
+        RPU_SetLampState(LAMP_LOWER_C, 1, 0, 0);
     } else {
         BonusChanged = CurrentTime;
     }
