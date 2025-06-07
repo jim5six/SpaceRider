@@ -255,6 +255,7 @@ byte MaxTiltWarnings = 2;
 byte NumTiltWarnings = 0;
 byte AwardPhase;
 bool SkillShotActive = false;
+bool IsAnyModeActive = false;
 bool HOLD_SPINNER_PROGRESS[4];  //"S"
 bool HOLD_POP_PROGRESS[4];      //"P"
 bool HOLD_BLASTOFF_PROGRESS[4]; //"A"
@@ -1836,6 +1837,23 @@ int InitGamePlay(boolean curStateChanged) {
     return MACHINE_STATE_INIT_NEW_BALL;
 }
 
+void PlayRandomBackgroundSong() {
+    if (MusicVolume == 0) return;
+
+    int rand = random(0, 5);
+    if (rand == 0) {
+        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND1);
+    } else if (rand == 1) {
+        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND2);
+    } else if (rand == 2) {
+        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND3);
+    } else if (rand == 3) {
+        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND4);
+    } else {
+        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND5);
+    }
+}
+
 void NewBallHoldoverAwards() {
     // If the player has a holdover award, then we need to
     //  set the current bonus to that value
@@ -1885,6 +1903,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         }
 
         SkillShotActive = true;
+        IsAnyModeActive = false;
         BallSaveUsed = false;
         BallTimeInTrough = 0;
         NumTiltWarnings = 0;
@@ -1911,6 +1930,8 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         ResetModes();
         RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
 
+        PlayRandomBackgroundSong();
+
         // Reset gate
         GateOpen = true; // Unpowered gate is open, gate open when true
         GateOpenTime = 0;
@@ -1923,19 +1944,6 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
 
         RPU_PushToTimedSolenoidStack(SOL_OUTHOLE, 16, CurrentTime + 1000);
         NumberOfBallsInPlay = 1;
-        //    QueueNotification(SOUND_EFFECT_GAME_START, 1);
-        int rand = random() % 5;
-        if (rand == 0) {
-            PlayBackgroundSong(SOUND_EFFECT_BACKGROUND1);
-        } else if (rand == 1) {
-            PlayBackgroundSong(SOUND_EFFECT_BACKGROUND2);
-        } else if (rand == 2) {
-            PlayBackgroundSong(SOUND_EFFECT_BACKGROUND3);
-        } else if (rand == 3) {
-            PlayBackgroundSong(SOUND_EFFECT_BACKGROUND4);
-        } else {
-            PlayBackgroundSong(SOUND_EFFECT_BACKGROUND5);
-        }
     }
 
         // We should only consider the ball initialized when
@@ -2013,7 +2021,6 @@ int ManageGameMode() {
 
     }
 
-
     if (IsSuperSpinnerActive(CurrentTime)) {
         // RPU_SetLampState(LAMP_LOWER_S, 1, 0, 0);
         unsigned long SuperSpinnerTimeLeft = SuperSpinnerRemainingTime(CurrentTime);
@@ -2021,6 +2028,7 @@ int ManageGameMode() {
         byte displayToUse = (CurrentPlayer == 0) ? 1 : 0; // Show spinner time on first available display
         OverrideScoreDisplay(displayToUse, SuperSpinnerTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
 
+        IsAnyModeActive = true;
         //for (byte count = 0; count < 4; count++) {
         //    if (count != CurrentPlayer) OverrideScoreDisplay(count, SuperSpinnerTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
         //}
@@ -2036,6 +2044,7 @@ int ManageGameMode() {
         byte displayToUse = (CurrentPlayer == 0 || CurrentPlayer == 1) ? 2 : 1; // Show spinner time on first available display
         OverrideScoreDisplay(displayToUse, SuperPopTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
 
+        IsAnyModeActive = true;
         //for (byte count = 0; count < 4; count++) {
         //    if (count != CurrentPlayer) OverrideScoreDisplay(count, SuperPopTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
         //}
@@ -2061,6 +2070,7 @@ int ManageGameMode() {
         byte displayToUse = (CurrentPlayer == 3) ? 2 : 3; // Show spinner time on first available display
         OverrideScoreDisplay(displayToUse, SuperBlastOffTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
 
+        IsAnyModeActive = true;
         //for (byte count = 0; count < 4; count++) {
         //    if (count != CurrentPlayer) OverrideScoreDisplay(count, SuperBlastOffTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
         //}
@@ -2068,6 +2078,12 @@ int ManageGameMode() {
 
     if (!IsSuperSpinnerActive(CurrentTime) && !(IsSuperPopsActive(CurrentTime) && !IsSuperSuperBlastOffActive(CurrentTime))) {
         ShowPlayerScores(0xFF, false, false);
+
+        if (IsAnyModeActive == true) {
+            // Some hurry up mode was active but now it's over
+            IsAnyModeActive = false;
+            PlayRandomBackgroundSong();
+        }
     }
 
     if ((GateOpenTime != 0) && ((CurrentTime - GateOpenTime) > 1000)) {
@@ -2223,16 +2239,16 @@ int ManageGameMode() {
 
 int CountDownDelayTimes[] = {175, 130, 105, 90, 80, 70, 60, 40, 30, 20};
 
-int CountdownBonus(boolean curStateChanged) {
-    unsigned long CountdownStartTime = 0;
-    unsigned long LastCountdownReportTime = 0;
-    unsigned long BonusCountDownEndTime = 0;
-    byte DecrementingBonusCounter;
-    byte IncrementingBonusXCounter;
-    byte TotalBonus = 0;
-    byte TotalBonusX = 0;
-    boolean CountdownBonusHurryUp = false;
+unsigned long CountdownStartTime = 0;
+unsigned long LastCountdownReportTime = 0;
+unsigned long BonusCountDownEndTime = 0;
+byte DecrementingBonusCounter;
+byte IncrementingBonusXCounter;
+byte TotalBonus = 0;
+byte TotalBonusX = 0;
+boolean CountdownBonusHurryUp = false;
 
+int CountdownBonus(boolean curStateChanged) {
     // If this is the first time through the countdown loop
     if (curStateChanged) {
 
@@ -2532,6 +2548,7 @@ void HandleGamePlaySwitches(byte switchHit) {
         if (IsSuperPopsActive(CurrentTime)) {
             PlaySoundEffect(SOUND_EFFECT_POPBUMPER);
             CurrentScores[CurrentPlayer] += (SCORE_POPFRENZY)*PlayfieldMultiplier[CurrentPlayer];
+            PlayBackgroundSong(SOUND_EFFECT_HURRY_UP);
         } else {
             // Super pops are not active
             NumberOfHits[CurrentPlayer] += 1;
@@ -2733,6 +2750,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 StartSuperBlastOff(CurrentTime);
                 CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
                 RPU_SetDisplayBallInPlay(CurrentBallInPlay);
+                PlayBackgroundSong(SOUND_EFFECT_HURRY_UP);
             } else if (NumberOfCenterSpins[CurrentPlayer] < 1) {
                 NumberOfCenterSpins[CurrentPlayer] = 1;
             } else {
