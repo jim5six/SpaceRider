@@ -1135,7 +1135,7 @@ void TargetBank() {
         RPU_SetLampState(LAMP_BONUS_300, 0, 0, 0);
         RPU_SetLampState(LAMP_BONUS_400, 1, 0, 0);
     } else if (TargetBankComplete[CurrentPlayer] > 3) {
-        TargetBankComplete[CurrentPlayer] == 4;
+        TargetBankComplete[CurrentPlayer] == 0;
     }
 }
 
@@ -1151,13 +1151,13 @@ void IncreasePlayfieldMultiplier() {
         RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
         RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
         QueueNotification(SOUND_EFFECT_MULTI_3X, 1);
-    } else if (PlayfieldMultiplier[CurrentPlayer] == 4) {
-        RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 0);
-        RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
+    } else if (PlayfieldMultiplier[CurrentPlayer] == 5) {   //Jim - How do I jump 4 and go straigt to 5 for this?
+        RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_5X, 1, 0, 500);
         QueueNotification(SOUND_EFFECT_MULTI_GOAL, 1);
         RPU_SetLampState(LAMP_LOWER_E, 1, 0, 0);
         PlayerGoalProgress[CurrentPlayer].E_Complete = true;
-    } else if (PlayfieldMultiplier[CurrentPlayer] > 4) {
+    } else if (PlayfieldMultiplier[CurrentPlayer] > 5) {
         QueueNotification(SOUND_EFFECT_DROPTARGET, 1);
     }
 }
@@ -2884,23 +2884,23 @@ void HandleGamePlaySwitches(byte switchHit) {
             if (RPU_ReadLampState(LAMP_TOP_S)) {
                 QueueNotification(SOUND_EFFECT_SPINNER_HELD, 1);
                 HOLD_SPINNER_PROGRESS[CurrentPlayer] = true;
-                RPU_SetLampState(LAMP_LOWER_S, 1, 0, 500);
+                RPU_SetLampState(LAMP_TOP_S, 1, 0, 500);
             } else if (RPU_ReadLampState(LAMP_TOP_P)) {
                 QueueNotification(SOUND_EFFECT_POP_HELD, 1);
                 HOLD_POP_PROGRESS[CurrentPlayer] = true;
-                RPU_SetLampState(LAMP_LOWER_P, 1, 0, 500);
+                RPU_SetLampState(LAMP_TOP_P, 1, 0, 500);
             } else if (RPU_ReadLampState(LAMP_TOP_A)) {
                 QueueNotification(SOUND_EFFECT_BLASTOFF_HELD, 1);
                 HOLD_BLASTOFF_PROGRESS[CurrentPlayer] = true;
-                RPU_SetLampState(LAMP_LOWER_A, 1, 0, 500);
+                RPU_SetLampState(LAMP_TOP_A, 1, 0, 500);
             } else if (RPU_ReadLampState(LAMP_TOP_C)) {
                 QueueNotification(SOUND_EFFECT_BONUS_HELD, 1);
                 HOLD_BONUS[CurrentPlayer] = true;
-                RPU_SetLampState(LAMP_LOWER_C, 1, 0, 500);
+                RPU_SetLampState(LAMP_TOP_C, 1, 0, 500);
             } else if (RPU_ReadLampState(LAMP_TOP_E)) {
                 QueueNotification(SOUND_EFFECT_PLAYFIELDX_HELD, 1);
                 HOLD_PLAYFIELDX[CurrentPlayer] = true;
-                RPU_SetLampState(LAMP_LOWER_E, 1, 0, 500);
+                RPU_SetLampState(LAMP_TOP_E, 1, 0, 500);
             }
         } else if (IsSuperSuperBlastOffActive(CurrentTime)) {
             // Super Blast off was achieved, mark goal complete
