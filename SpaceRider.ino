@@ -512,8 +512,22 @@ void ShowBonusLamps() {
     if (bonus > MAX_DISPLAY_BONUS) bonus = MAX_DISPLAY_BONUS;
 
     if (bonus >= 40) {
-      RPU_SetLampState(LAMP_BONUS_400, 1, 0, 0);
-      bonus -= 40;
+        RPU_SetLampState(LAMP_BONUS_400, 1, 0, 0);
+        bonus -= 40;
+
+        // Flash all other bonus lamps
+        RPU_SetLampState(LAMP_BONUS_10, 1, 0, 500);
+        RPU_SetLampState(LAMP_BONUS_20, 1, 0, 500);
+        RPU_SetLampState(LAMP_BONUS_30, 1, 0, 500);
+        RPU_SetLampState(LAMP_BONUS_40, 1, 0, 500);
+        RPU_SetLampState(LAMP_BONUS_50, 1, 0, 500);
+        RPU_SetLampState(LAMP_BONUS_60, 1, 0, 500);
+        RPU_SetLampState(LAMP_BONUS_70, 1, 0, 500);
+        RPU_SetLampState(LAMP_BONUS_80, 1, 0, 500);
+        RPU_SetLampState(LAMP_BONUS_90, 1, 0, 500);
+        RPU_SetLampState(LAMP_BONUS_100, 1, 0, 500);
+        RPU_SetLampState(LAMP_BONUS_200, 1, 0, 500);
+        RPU_SetLampState(LAMP_BONUS_300, 1, 0, 500);
     } 
     else {
         RPU_SetLampState(LAMP_BONUS_400, 0, 0, 0);
