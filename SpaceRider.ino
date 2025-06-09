@@ -14,6 +14,7 @@
 #include "AudioHandler.h"
 #include "GameModeManager.h"
 #include "LampAnimations.h"
+#include "TrevorLampAnimations.h"
 #include "SelfTestAndAudit.h"
 #include "SpaceRider.h"
 #include <EEPROM.h>
