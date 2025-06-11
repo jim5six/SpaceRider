@@ -515,7 +515,6 @@ void ShowBonusLamps() {
 
     if (bonus >= 40) {
         RPU_SetLampState(LAMP_BONUS_400, 1, 0, 0);
-        bonus -= 40;
 
         // Flash all other bonus lamps
         RPU_SetLampState(LAMP_BONUS_10, 1, 0, 500);
@@ -533,37 +532,37 @@ void ShowBonusLamps() {
     } 
     else {
         RPU_SetLampState(LAMP_BONUS_400, 0, 0, 0);
-    }
 
-    if (bonus >= 30) {
-        RPU_SetLampState(LAMP_BONUS_300, 1, 0, 0);
-        bonus -= 30;
-    }
-    else {
-        RPU_SetLampState(LAMP_BONUS_300, 0, 0, 0);
-    }
+        if (bonus >= 30) {
+            RPU_SetLampState(LAMP_BONUS_300, 1, 0, 0);
+            bonus -= 30;
+        }
+        else {
+            RPU_SetLampState(LAMP_BONUS_300, 0, 0, 0);
+        }
 
-    if (bonus >= 20) {
-        RPU_SetLampState(LAMP_BONUS_200, 1, 0, 0);
-        bonus -= 20;
-    }
-    else {
-        RPU_SetLampState(LAMP_BONUS_200, 0, 0, 0);
-    }
+        if (bonus >= 20) {
+            RPU_SetLampState(LAMP_BONUS_200, 1, 0, 0);
+            bonus -= 20;
+        }
+        else {
+            RPU_SetLampState(LAMP_BONUS_200, 0, 0, 0);
+        }
 
-    if (bonus >= 10) {
-        RPU_SetLampState(LAMP_BONUS_100, 1, 0, 0);
-        bonus -= 10;
-    }
-    else {
-        RPU_SetLampState(LAMP_BONUS_100, 0, 0, 0);
-    }
+        if (bonus >= 10) {
+            RPU_SetLampState(LAMP_BONUS_100, 1, 0, 0);
+            bonus -= 10;
+        }
+        else {
+            RPU_SetLampState(LAMP_BONUS_100, 0, 0, 0);
+        }
 
-    for (byte count = 1; count < 10; count++) {
-        if (bonus == count) {
-            RPU_SetLampState(LAMP_BONUS_10 + (count - 1), 1, 0, 100);
-        } else {
-            RPU_SetLampState(LAMP_BONUS_10 + (count - 1), 0, 0, 100);
+        for (byte count = 1; count < 10; count++) {
+            if (bonus == count) {
+                RPU_SetLampState(LAMP_BONUS_10 + (count - 1), 1, 0, 100);
+            } else {
+                RPU_SetLampState(LAMP_BONUS_10 + (count - 1), 0, 0, 100);
+            }
         }
     }
 }
@@ -606,7 +605,7 @@ void ShowLowerSpaceLamps() {
 
 void ShowLeftSpinnerLamps(void) {
     if (IsSuperSpinnerActive(CurrentTime)) {
-        //ShowLampAnimation(4, 120, CurrentTime, 4, false, false);
+        //ShowLampAnimation(5, 120, CurrentTime, 4, false, false);
         ShowLampAnimation2(ANIMATION_SPINNER_ROLLING, 120, CurrentTime, 4);
     } else {
         if (NumberOfSpins[CurrentPlayer] > 0 && NumberOfSpins[CurrentPlayer] < 51) {
@@ -1677,20 +1676,14 @@ int RunAttractMode(int curState, boolean curStateChanged) {
         AttractLastLadderBonus = 1;
         AttractLastLadderTime = CurrentTime;
     }
+
+//    ShowLampAnimation(2, 48, CurrentTime, 23, false, false);
   
   unsigned long animationTime = (CurrentTime - AttractModeStartTime);
-    if (animationTime<1000) {
-      ShowLampAnimation(0, 63, animationTime, 2, false, false);
-    } else if (animationTime<2000) {
-      ShowLampAnimation(0, 63, animationTime, 2, false, true);
-    } else if (animationTime<3000) {
-      ShowLampAnimation(2, 63, animationTime, 2, false, false);
-    } else if (animationTime<4000) {
-      ShowLampAnimation(2, 63, animationTime, 2, false, true);
-    } else if (animationTime<5000) {
-      ShowLampAnimation(2, 63, animationTime, 2, false, false);
+    if (animationTime<4000) {
+      ShowLampAnimation(0, 84, animationTime, 23, false, false);
     } else if (animationTime<6000) {
-      ShowLampAnimation(2, 63, animationTime, 2, false, true);
+      ShowLampAnimation(2, 42, animationTime, 23, false, false);
     } else {
       AttractModeStartTime = CurrentTime;
     }
@@ -2046,7 +2039,7 @@ int ManageGameMode() {
             SkillShotActive = false;
         }
         else {
-            //ShowLampAnimation(3, 200, CurrentTime, 14, false, false, 4);
+            //ShowLampAnimation(4, 200, CurrentTime, 14, false, false, 4);
             ShowLampAnimation2(ANIMATION_TOP_SPACE_ROTATE, 200, CurrentTime, 1);
             SetGeneralIlluminationOn(false);
         }
@@ -2729,7 +2722,9 @@ void HandleGamePlaySwitches(byte switchHit) {
                     PlaySoundEffect(SOUND_EFFECT_SPINNER1000);
                 }
             } else {
-                NumberOfCenterSpins[CurrentPlayer] -= 1;
+                if (NumberOfCenterSpins[CurrentPlayer] > 0) {
+                    NumberOfCenterSpins[CurrentPlayer] -= 1;
+                }
                 if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 41) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
                     RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
