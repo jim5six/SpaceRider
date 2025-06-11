@@ -257,7 +257,7 @@ byte MaxTiltWarnings = 2;
 byte NumTiltWarnings = 0;
 byte AwardPhase;
 bool SkillShotActive = false;
-bool SkillShotCelebrationBlinkEndTime = 0;
+unsigned long SkillShotCelebrationBlinkEndTime = 0;
 bool IsAnyModeActive = false;
 bool HOLD_SPINNER_PROGRESS[4];  //"S"
 bool HOLD_POP_PROGRESS[4];      //"P"
@@ -468,7 +468,7 @@ void setup() {
     //  DropTargets.DefineSwitch(1, SW_DROP_3);
     //  DropTargets.DefineSwitch(0, SW_DROP_4);
     //  DropTargets.DefineResetSolenoid(0, SOL_DROP_TARGET_RESET);
-    RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime, true);
+    //RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime, true);
 
     Audio.SetMusicDuckingGain(12);
     Audio.QueueSound(SOUND_EFFECT_GAME_START, AUDIO_PLAY_TYPE_WAV_TRIGGER, CurrentTime + 1200);
@@ -1963,10 +1963,13 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         // Reset Drop Targets
         if (!FirstGame) {
             // Only reset the drop targets if this is not the first game, since game start would have already reset them
-            RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime, true);
+            //RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime, true);
         } else {
             FirstGame = false;
         }
+
+        // Always reset because we don't reset on game start (for now)
+        RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime, true);
 
         RPU_PushToTimedSolenoidStack(SOL_OUTHOLE, 16, CurrentTime + 1000);
         NumberOfBallsInPlay = 1;
@@ -2111,6 +2114,14 @@ int ManageGameMode() {
             IsAnyModeActive = false;
             PlayRandomBackgroundSong();
         }
+    }
+
+    if (!SkillShotActive && SkillShotCelebrationBlinkEndTime != 0 && CurrentTime >= SkillShotCelebrationBlinkEndTime) {
+        RPU_SetLampState(LAMP_TOP_S, 0, 0, 0);
+        RPU_SetLampState(LAMP_TOP_P, 0, 0, 0);
+        RPU_SetLampState(LAMP_TOP_A, 0, 0, 0);
+        RPU_SetLampState(LAMP_TOP_C, 0, 0, 0);
+        RPU_SetLampState(LAMP_TOP_E, 0, 0, 0);
     }
 
     if ((GateOpenTime != 0) && ((CurrentTime - GateOpenTime) > 1000)) {
@@ -2843,7 +2854,9 @@ void HandleGamePlaySwitches(byte switchHit) {
                     PlaySoundEffect(SOUND_EFFECT_SPINNER1000);
                 }
             } else if (RPU_ReadLampState(LAMP_CL_WHENLIT)) {
-                NumberOfCenterSpins[CurrentPlayer] -= 1;
+                if (NumberOfCenterSpins[CurrentPlayer] > 0) {
+                    NumberOfCenterSpins[CurrentPlayer] -= 1;
+                }
                 if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 41) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
                     RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
@@ -2913,31 +2926,26 @@ void HandleGamePlaySwitches(byte switchHit) {
                 QueueNotification(SOUND_EFFECT_SPINNER_HELD, 1);
                 HOLD_SPINNER_PROGRESS[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_TOP_S, 1, 0, 500);
-                SkillShotCelebrationBlinkEndTime = CurrentTime + 10000;
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else if (RPU_ReadLampState(LAMP_TOP_P)) {
                 QueueNotification(SOUND_EFFECT_POP_HELD, 1);
                 HOLD_POP_PROGRESS[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_TOP_P, 1, 0, 500);
-                SkillShotCelebrationBlinkEndTime = CurrentTime + 10000;
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else if (RPU_ReadLampState(LAMP_TOP_A)) {
                 QueueNotification(SOUND_EFFECT_BLASTOFF_HELD, 1);
                 HOLD_BLASTOFF_PROGRESS[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_TOP_A, 1, 0, 500);
-                SkillShotCelebrationBlinkEndTime = CurrentTime + 10000;
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else if (RPU_ReadLampState(LAMP_TOP_C)) {
                 QueueNotification(SOUND_EFFECT_BONUS_HELD, 1);
                 HOLD_BONUS[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_TOP_C, 1, 0, 500);
-                SkillShotCelebrationBlinkEndTime = CurrentTime + 10000;
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else if (RPU_ReadLampState(LAMP_TOP_E)) {
                 QueueNotification(SOUND_EFFECT_PLAYFIELDX_HELD, 1);
                 HOLD_PLAYFIELDX[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_TOP_E, 1, 0, 500);
-                SkillShotCelebrationBlinkEndTime = CurrentTime + 10000;
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else {
                 // Missed skill shot, only awars base saucer score
@@ -2969,13 +2977,6 @@ void HandleGamePlaySwitches(byte switchHit) {
                 CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
                 PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
                 RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 500, false);
-            }
-            if (CurrentTime >= SkillShotCelebrationBlinkEndTime) {
-                RPU_SetLampState(LAMP_TOP_S, 0, 0, 0);
-                RPU_SetLampState(LAMP_TOP_P, 0, 0, 0);
-                RPU_SetLampState(LAMP_TOP_A, 0, 0, 0);
-                RPU_SetLampState(LAMP_TOP_C, 0, 0, 0);
-                RPU_SetLampState(LAMP_TOP_E, 0, 0, 0);
             }
         }
 
