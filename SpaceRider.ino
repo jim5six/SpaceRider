@@ -605,7 +605,8 @@ void ShowLowerSpaceLamps() {
 
 void ShowLeftSpinnerLamps(void) {
     if (IsSuperSpinnerActive(CurrentTime)) {
-        ShowLampAnimation(4, 120, CurrentTime, 4, false, false);
+        //ShowLampAnimation(4, 120, CurrentTime, 4, false, false);
+        ShowLampAnimation2(ANIMATION_SPINNER_ROLLING, 120, CurrentTime, 4);
     } else {
         if (NumberOfSpins[CurrentPlayer] > 0 && NumberOfSpins[CurrentPlayer] < 51) {
             RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
@@ -2039,7 +2040,8 @@ int ManageGameMode() {
             SkillShotActive = false;
         }
         else {
-            ShowLampAnimation(3, 200, CurrentTime, 14, false, false, 4);
+            //ShowLampAnimation(3, 200, CurrentTime, 14, false, false, 4);
+            ShowLampAnimation2(ANIMATION_TOP_SPACE_ROTATE, 200, CurrentTime, 1);
             SetGeneralIlluminationOn(false);
         }
 

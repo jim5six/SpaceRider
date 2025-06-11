@@ -46,7 +46,7 @@ void ShowLampAnimation2(AnimationType animation, unsigned long holdTimePerStep, 
     {
         unsigned int turn_on_step_num = (currentTime / holdTimePerStep) % anim_to_play.numSteps;
         
-        // TODO: Should step delat actually be reversed (numSteps - delay)?
+        // TODO: Should step delay actually be reversed (numSteps - delay)?
         turnOffStepDelay = turnOffStepDelay % anim_to_play.numSteps;
         unsigned int turn_off_step_num = ((currentTime / holdTimePerStep) + turnOffStepDelay) % anim_to_play.numSteps;
     
