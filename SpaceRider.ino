@@ -2926,26 +2926,31 @@ void HandleGamePlaySwitches(byte switchHit) {
                 QueueNotification(SOUND_EFFECT_SPINNER_HELD, 1);
                 HOLD_SPINNER_PROGRESS[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_TOP_S, 1, 0, 500);
+                SkillShotCelebrationBlinkEndTime = CurrentTime + 10000U;
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else if (RPU_ReadLampState(LAMP_TOP_P)) {
                 QueueNotification(SOUND_EFFECT_POP_HELD, 1);
                 HOLD_POP_PROGRESS[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_TOP_P, 1, 0, 500);
+                SkillShotCelebrationBlinkEndTime = CurrentTime + 10000U;
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else if (RPU_ReadLampState(LAMP_TOP_A)) {
                 QueueNotification(SOUND_EFFECT_BLASTOFF_HELD, 1);
                 HOLD_BLASTOFF_PROGRESS[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_TOP_A, 1, 0, 500);
+                SkillShotCelebrationBlinkEndTime = CurrentTime + 10000U;
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else if (RPU_ReadLampState(LAMP_TOP_C)) {
                 QueueNotification(SOUND_EFFECT_BONUS_HELD, 1);
                 HOLD_BONUS[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_TOP_C, 1, 0, 500);
+                SkillShotCelebrationBlinkEndTime = CurrentTime + 10000U;
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else if (RPU_ReadLampState(LAMP_TOP_E)) {
                 QueueNotification(SOUND_EFFECT_PLAYFIELDX_HELD, 1);
                 HOLD_PLAYFIELDX[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_TOP_E, 1, 0, 500);
+                SkillShotCelebrationBlinkEndTime = CurrentTime + 10000U;
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else {
                 // Missed skill shot, only awars base saucer score
