@@ -36,6 +36,7 @@
 //  positive - game play
 char MachineState = 0;
 boolean MachineStateChanged = true;
+boolean FirstGame = true;
 #define MACHINE_STATE_ATTRACT 0
 #define MACHINE_STATE_INIT_GAMEPLAY 1
 #define MACHINE_STATE_INIT_NEW_BALL 2
@@ -1965,7 +1966,12 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         ShowSpaceProgressLamps();
 
         // Reset Drop Targets
-        RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime, true);
+        if (!FirstGame) {
+            // Only reset the drop targets if this is not the first game, since game start would have already reset them
+            RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime, true);
+        } else {
+            FirstGame = false;
+        }
 
         RPU_PushToTimedSolenoidStack(SOL_OUTHOLE, 16, CurrentTime + 1000);
         NumberOfBallsInPlay = 1;

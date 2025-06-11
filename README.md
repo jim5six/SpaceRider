@@ -20,4 +20,5 @@ ToDo list:
 * Skill shot SPACE letter holds on any switch hit
 * What to do with the SPACE letters after skill shot phase?
 * Hurry up music ends randomly if you start multiple modes
+* Flash bonus lamps when at max bonus (DONE)
 
