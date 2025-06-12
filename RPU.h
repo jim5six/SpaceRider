@@ -24,6 +24,11 @@
 #define RPU_OS_MAJOR_VERSION  5
 #define RPU_OS_MINOR_VERSION  8
 
+// TJS: RPU uses the byte and boolean types which can sometimes cause compiler issues
+// on newer Arduino IDE versions. Make them explicitly use "legal" types here
+#define byte unsigned char
+#define boolean bool
+
 struct PlayfieldAndCabinetSwitch {
   byte switchNum;
   byte solenoid;
