@@ -606,7 +606,7 @@ void ShowLowerSpaceLamps() {
 
 void ShowLeftSpinnerLamps(void) {
     if (IsSuperSpinnerActive(CurrentTime)) {
-        ShowLampAnimation(5, 120, CurrentTime, 4, false, false);
+        ShowLampAnimation(5, 240, CurrentTime, 23, false, false);
         //ShowLampAnimation2(ANIMATION_SPINNER_ROLLING, 120, CurrentTime, 4);
     } else {
         if (NumberOfSpins[CurrentPlayer] > 0 && NumberOfSpins[CurrentPlayer] < 51) {
@@ -1136,24 +1136,9 @@ void SpinnerToggle() {
 }
 
 void TargetBank() {
-    if (TargetBankComplete[CurrentPlayer] == 0) {
-        RPU_SetLampState(LAMP_BONUS_200, 0, 0, 0);
-        RPU_SetLampState(LAMP_BONUS_300, 0, 0, 0);
-        RPU_SetLampState(LAMP_BONUS_400, 0, 0, 0);
-    } else if (TargetBankComplete[CurrentPlayer] == 1) {
-        RPU_SetLampState(LAMP_BONUS_200, 1, 0, 0);
-        RPU_SetLampState(LAMP_BONUS_300, 0, 0, 0);
-        RPU_SetLampState(LAMP_BONUS_400, 0, 0, 0);
-    } else if (TargetBankComplete[CurrentPlayer] == 2) {
-        RPU_SetLampState(LAMP_BONUS_200, 0, 0, 0);
-        RPU_SetLampState(LAMP_BONUS_300, 1, 0, 0);
-        RPU_SetLampState(LAMP_BONUS_400, 0, 0, 0);
-    } else if (TargetBankComplete[CurrentPlayer] == 3) {
-        RPU_SetLampState(LAMP_BONUS_200, 0, 0, 0);
-        RPU_SetLampState(LAMP_BONUS_300, 0, 0, 0);
-        RPU_SetLampState(LAMP_BONUS_400, 1, 0, 0);
-    } else if (TargetBankComplete[CurrentPlayer] > 3) {
-        TargetBankComplete[CurrentPlayer] == 0;
+    if (TargetBankComplete[CurrentPlayer] == 2) {
+        RPU_SetLampState(LAMP_EXTRABALL, 1, 0, 500);
+        QueueNotification(SOUND_EFFECT_EXTRABALL_LIT, 1);
     }
 }
 
@@ -1681,9 +1666,9 @@ int RunAttractMode(int curState, boolean curStateChanged) {
 //    ShowLampAnimation(2, 48, CurrentTime, 23, false, false);
   
   unsigned long animationTime = (CurrentTime - AttractModeStartTime);
-    if (animationTime<4000) {
+    if (animationTime<4600) {
       ShowLampAnimation(0, 96, animationTime, 23, false, false);
-    } else if (animationTime<6000) {
+    } else if (animationTime<6900) {
       ShowLampAnimation(2, 48, animationTime, 23, false, false);
     } else {
       AttractModeStartTime = CurrentTime;
@@ -2044,7 +2029,7 @@ int ManageGameMode() {
             SkillShotActive = false;
         }
         else {
-            ShowLampAnimation(4, 200, CurrentTime, 5, false, false, 4);
+            ShowLampAnimation(4, 480, CurrentTime, 5, false, false, 4);
             //ShowLampAnimation2(ANIMATION_TOP_SPACE_ROTATE, 200, CurrentTime, 1);
             SetGeneralIlluminationOn(false);
         }
@@ -3012,14 +2997,14 @@ void HandleGamePlaySwitches(byte switchHit) {
             RPU_SetLampState(LAMP_TARGET_5, 0, 0, 0);
         }
         if (RPU_ReadLampState(LAMP_OPENGATE)) {
-            CurrentScores[CurrentPlayer] += 100 * PlayfieldMultiplier[CurrentPlayer];
+            CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
             QueueNotification(SOUND_EFFECT_GATEOPEN, 1);
             RPU_SetDisableGate(true);
             GateOpen = false;
             RPU_SetLampState(LAMP_R_OUTLANE, 1, 0, 500);
             RPU_SetLampState(LAMP_OPENGATE, 0, 0, 0);
         } else if (RPU_ReadLampState(LAMP_EXTRABALL)) {
-            CurrentScores[CurrentPlayer] += 100 * PlayfieldMultiplier[CurrentPlayer];
+            CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
             AwardExtraBall();
             RPU_SetLampState(LAMP_EXTRABALL, 0, 0, 0);
             RPU_SetLampState(LAMP_5000, 1, 0, 0);
@@ -3042,7 +3027,7 @@ void HandleGamePlaySwitches(byte switchHit) {
         }
         CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
         AddToBonus(1);
-        PlaySoundEffect(SOUND_EFFECT_OUTLANE);
+        PlaySoundEffect(SOUND_EFFECT_SWITCHHIT);
         RPU_SetLampState(LAMP_TARGET_1, 1, 0, 0);
         SpinnerToggle();
         LastSwitchHitTime = CurrentTime;
@@ -3056,7 +3041,7 @@ void HandleGamePlaySwitches(byte switchHit) {
         }
         CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
         AddToBonus(1);
-        PlaySoundEffect(SOUND_EFFECT_OUTLANE);
+        PlaySoundEffect(SOUND_EFFECT_SWITCHHIT);
         RPU_SetLampState(LAMP_TARGET_2, 1, 0, 0);
         SpinnerToggle();
         LastSwitchHitTime = CurrentTime;
@@ -3070,7 +3055,7 @@ void HandleGamePlaySwitches(byte switchHit) {
         }
         CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
         AddToBonus(1);
-        PlaySoundEffect(SOUND_EFFECT_OUTLANE);
+        PlaySoundEffect(SOUND_EFFECT_SWITCHHIT);
         RPU_SetLampState(LAMP_TARGET_3, 1, 0, 0);
         SpinnerToggle();
         LastSwitchHitTime = CurrentTime;
@@ -3084,7 +3069,7 @@ void HandleGamePlaySwitches(byte switchHit) {
         }
         CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
         AddToBonus(1);
-        PlaySoundEffect(SOUND_EFFECT_OUTLANE);
+        PlaySoundEffect(SOUND_EFFECT_SWITCHHIT);
         RPU_SetLampState(LAMP_TARGET_4, 1, 0, 0);
         SpinnerToggle();
         LastSwitchHitTime = CurrentTime;
@@ -3098,7 +3083,7 @@ void HandleGamePlaySwitches(byte switchHit) {
         }
         CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
         AddToBonus(1);
-        PlaySoundEffect(SOUND_EFFECT_OUTLANE);
+        PlaySoundEffect(SOUND_EFFECT_SWITCHHIT);
         RPU_SetLampState(LAMP_TARGET_5, 1, 0, 0);
         SpinnerToggle();
         LastSwitchHitTime = CurrentTime;
