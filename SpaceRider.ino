@@ -1682,9 +1682,9 @@ int RunAttractMode(int curState, boolean curStateChanged) {
   
   unsigned long animationTime = (CurrentTime - AttractModeStartTime);
     if (animationTime<4000) {
-      ShowLampAnimation(0, 84, animationTime, 23, false, false);
+      ShowLampAnimation(0, 96, animationTime, 23, false, false);
     } else if (animationTime<6000) {
-      ShowLampAnimation(2, 42, animationTime, 23, false, false);
+      ShowLampAnimation(2, 48, animationTime, 23, false, false);
     } else {
       AttractModeStartTime = CurrentTime;
     }
@@ -2084,16 +2084,17 @@ int ManageGameMode() {
     }
     
     if (IsSuperSuperBlastOffActive(CurrentTime)){
-        RPU_SetLampState(LAMP_TOP_S, 1, 0, 500);
-        RPU_SetLampState(LAMP_TOP_P, 1, 0, 500);
-        RPU_SetLampState(LAMP_TOP_A, 1, 0, 500);
-        RPU_SetLampState(LAMP_TOP_C, 1, 0, 500);
-        RPU_SetLampState(LAMP_TOP_E, 1, 0, 500);
-        RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 500);
-        RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 500);
-        RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 500);
-        RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 500);
-        RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 500);
+          ShowLampAnimation(3, 144, CurrentTime, 23, false, false);  
+//        RPU_SetLampState(LAMP_TOP_S, 1, 0, 500);
+//        RPU_SetLampState(LAMP_TOP_P, 1, 0, 500);
+//        RPU_SetLampState(LAMP_TOP_A, 1, 0, 500);
+//        RPU_SetLampState(LAMP_TOP_C, 1, 0, 500);
+//        RPU_SetLampState(LAMP_TOP_E, 1, 0, 500);
+//        RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 500);
+//        RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 500);
+//        RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 500);
+//        RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 500);
+//        RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 500);
 
         unsigned long SuperBlastOffTimeLeft = SuperBlastOffRemainingTime(CurrentTime);
 
@@ -2960,23 +2961,24 @@ void HandleGamePlaySwitches(byte switchHit) {
             StopSuperBlastOff();
             SuperBlastOffCollectedHoldTime = CurrentTime + 3200;
             // Super Blast off was achieved, mark goal complete
+            ShowLampAnimation(3, 48, CurrentTime, 23, false, false);
             PlaySoundEffect(SOUND_EFFECT_BLASTOFF_GOAL);
             RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
             PlayerGoalProgress[CurrentPlayer].A_Complete = true;
-            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
+            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 6000, true);
             ShowPlayerScores(0xFF, false, false);
 
             // Turn all the spinner and upper SPACE lamps off
-            RPU_SetLampState(LAMP_TOP_S, 0, 0, 0);
-            RPU_SetLampState(LAMP_TOP_P, 0, 0, 0);
-            RPU_SetLampState(LAMP_TOP_A, 0, 0, 0);
-            RPU_SetLampState(LAMP_TOP_C, 0, 0, 0);
-            RPU_SetLampState(LAMP_TOP_E, 0, 0, 0);
-            RPU_SetLampState(LAMP_C_SPINNER_1, 0, 0, 0);
-            RPU_SetLampState(LAMP_C_SPINNER_2, 0, 0, 0);
-            RPU_SetLampState(LAMP_C_SPINNER_3, 0, 0, 0);
-            RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
-            RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
+//            RPU_SetLampState(LAMP_TOP_S, 0, 0, 0);
+//            RPU_SetLampState(LAMP_TOP_P, 0, 0, 0);
+//            RPU_SetLampState(LAMP_TOP_A, 0, 0, 0);
+//            RPU_SetLampState(LAMP_TOP_C, 0, 0, 0);
+//            RPU_SetLampState(LAMP_TOP_E, 0, 0, 0);
+//            RPU_SetLampState(LAMP_C_SPINNER_1, 0, 0, 0);
+//            RPU_SetLampState(LAMP_C_SPINNER_2, 0, 0, 0);
+//            RPU_SetLampState(LAMP_C_SPINNER_3, 0, 0, 0);
+//            RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
+//            RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
         } else {
             if (CurrentTime >= SuperBlastOffCollectedHoldTime) {
                 CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
