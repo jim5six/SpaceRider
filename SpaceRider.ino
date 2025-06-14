@@ -112,8 +112,6 @@ boolean FirstGame = true;
 #define SOUND_EFFECT_BONUS_COUNT_3k     49
 #define SOUND_EFFECT_RUBBER             50
 
-#define SOUND_EFFECT_TILT               61
-
 #if (RPU_MPU_ARCHITECTURE<10) && !defined(RPU_OS_DISABLE_CPC_FOR_SPACE)
 // This array maps the self-test modes to audio callouts
 unsigned short SelfTestStateToCalloutMap[34] = {136, 137, 135, 134, 133, 140, 141, 142, 139, 143, 144, 145, 146, 147, 148, 149, 138, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166};
@@ -131,7 +129,7 @@ unsigned short SelfTestStateToCalloutMap[34] = {134, 135, 133, 136, 137, 138, 13
 #define SOUND_EFFECT_SELF_TEST_AUDIO_OPTIONS_START 190
 
 // Game play status callouts
-#define NUM_VOICE_NOTIFICATIONS 46
+#define NUM_VOICE_NOTIFICATIONS 49
 
 #define SOUND_EFFECT_BALL_SAVE 300
 #define SOUND_EFFECT_EXTRABALL 301
@@ -142,7 +140,7 @@ unsigned short SelfTestStateToCalloutMap[34] = {134, 135, 133, 136, 137, 138, 13
 #define SOUND_EFFECT_SUPERSPINNER_GOAL 306
 #define SOUND_EFFECT_BLASTOFF_GOAL 307
 #define SOUND_EFFECT_SPINNER_HELD 308
-#define SOUND_EFFECT_PLAYFIELD_MULTI 309 // Add differnt call outs for the multiplyer value
+#define SOUND_EFFECT_SKILLSHOT_MISSED 309
 #define SOUND_EFFECT_BLASTOFF_HELD 310
 #define SOUND_EFFECT_POP_HELD 311
 #define SOUND_EFFECT_SUPERPOP_GOAL 312
@@ -163,6 +161,9 @@ unsigned short SelfTestStateToCalloutMap[34] = {134, 135, 133, 136, 137, 138, 13
 #define SOUND_EFFECT_MULTI_GOAL 327
 #define SOUND_EFFECT_SPACE_GOAL 328
 #define SOUND_EFFECT_BONUS_HELD 329
+#define SOUND_EFFECT_SPECIAL 330
+#define SOUND_EFFECT_WIZARD_MODE_START 331
+#define SOUND_EFFECT_WIZARD_MODE_END 332
 
 #define SOUND_EFFECT_DIAG_START 1900
 #define SOUND_EFFECT_DIAG_CREDIT_RESET_BUTTON 1900
@@ -1176,69 +1177,10 @@ void IncreasePlayfieldMultiplier() {
         PlayerGoalProgress[CurrentPlayer].E_Complete = true;
     } else if (PlayfieldMultiplier[CurrentPlayer] > 5) {
         // Should not currently be able to happen
-        QueueNotification(SOUND_EFFECT_DROPTARGET, 1);
+        PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
     }
 }
 
-/*
-
-// Some example lock functionality
-unsigned long UpperLockSwitchDownTime[3] = {0, 0, 0};
-unsigned long UpperLockSwitchUpTime[3] = {0, 0, 0};
-boolean UpperLockSwitchState[3] = {false, false, false};
-
-void UpdateLockStatus() {
-  boolean lockSwitchDownTransition;
-  boolean lockSwitchUpTransition;
-
-  for (byte count=0; count<3; count++) {
-    lockSwitchDownTransition = false;
-    lockSwitchUpTransition = false;
-
-    if (RPU_ReadSingleSwitchState(SW_LOCK_1+count)) {
-      UpperLockSwitchUpTime[count] = 0;
-      if (UpperLockSwitchDownTime[count]==0) {
-        UpperLockSwitchDownTime[count] = CurrentTime;
-      } else if (CurrentTime > (UpperLockSwitchDownTime[count] + 250)) {
-        lockSwitchDownTransition = true;
-      }
-    } else {
-      UpperLockSwitchDownTime[count] = 0;
-      if (UpperLockSwitchUpTime[count]==0) {
-        UpperLockSwitchUpTime[count] = CurrentTime;
-      } else if (CurrentTime > (UpperLockSwitchUpTime[count] + 250)) {
-        lockSwitchUpTransition = true;
-      }
-    }
-
-    if (lockSwitchUpTransition && UpperLockSwitchState[count]) {
-      // if we used to be down & now we're up
-      UpperLockSwitchState[count] = false;
-    } else if (lockSwitchDownTransition && !UpperLockSwitchState[count]) {
-      // if we used to be up & now we're down
-      UpperLockSwitchState[count] = true;
-      HandleLockSwitch(count);
-    }
-  }
-}
-
-byte InitializeMachineLocksBasedOnSwitches() {
-  byte returnLocks = 0;
-
-  if (RPU_ReadSingleSwitchState(SW_LOCK_1)) returnLocks |= LOCK_1_ENGAGED;
-  if (RPU_ReadSingleSwitchState(SW_LOCK_2)) returnLocks |= LOCK_2_ENGAGED;
-  if (RPU_ReadSingleSwitchState(SW_LOCK_3)) returnLocks |= LOCK_3_ENGAGED;
-
-  return returnLocks;
-}
-
-void LockBall(byte lockIndex) {
-  PlayerLockStatus[CurrentPlayer] &= ~(LOCK_1_AVAILABLE<<lockIndex);
-  PlayerLockStatus[CurrentPlayer] |= (LOCK_1_ENGAGED<<lockIndex);
-  MachineLocks |= (LOCK_1_ENGAGED<<lockIndex);
-  NumberOfBallsLocked = CountBits(MachineLocks & LOCKS_ENGAGED_MASK);
-}
-*/
 
 #define ADJ_TYPE_LIST 1
 #define ADJ_TYPE_MIN_MAX 2
@@ -2541,26 +2483,6 @@ int HandleSystemSwitches(int curState, byte switchHit) {
     return returnState;
 }
 
-// void HandleDropTarget(byte switchHit) {
-
-//   byte result;
-//   unsigned long numTargetsDown = 0;
-//   result = HandleDropTarget(switchHit);
-//   numTargetsDown = result;
-//     CurrentScores[CurrentPlayer] += PlayfieldMultiplier[CurrentPlayer] * numTargetsDown * 1000;
-
-//   boolean cleared = DropTargets.CheckIfBankCleared();
-//   if (cleared) {
-//     PlaySoundEffect(SOUND_EFFECT_ROCKET_BLAST);
-//     RPU_SetLampState(LAMP_DROP_TARGET, 1, 0, 500);
-//   } else if (numTargetsDown = 1) {
-//     RPU_SetLampState(LAMP_CL_WHENLIT, 1, 0, 0);
-//     PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
-//   } else {
-//     PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
-//   }
-// }
-
 void HandleGamePlaySwitches(byte switchHit) {
 
     switch (switchHit) {
@@ -2580,7 +2502,6 @@ void HandleGamePlaySwitches(byte switchHit) {
         if (IsSuperPopsActive(CurrentTime)) {
             PlaySoundEffect(SOUND_EFFECT_POPBUMPER);
             CurrentScores[CurrentPlayer] += (SCORE_POPFRENZY)*PlayfieldMultiplier[CurrentPlayer];
-            PlayBackgroundSong(SOUND_EFFECT_HURRY_UP);
         } else {
             // Super pops are not active
             NumberOfHits[CurrentPlayer] += 1;
@@ -2651,7 +2572,6 @@ void HandleGamePlaySwitches(byte switchHit) {
                 PlayerGoalProgress[CurrentPlayer].S_Complete = true;
                 RPU_SetDisplayCredits(Credits);
                 QueueNotification(SOUND_EFFECT_SUPERSPINNER_GOAL, 1);
-                PlayBackgroundSong(SOUND_EFFECT_HURRY_UP);
             } else {
                 RPU_SetDisplayCredits(0 + NumberOfSpins[CurrentPlayer]);
             }
@@ -2784,7 +2704,6 @@ void HandleGamePlaySwitches(byte switchHit) {
                 StartSuperBlastOff(CurrentTime);
                 CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
                 RPU_SetDisplayBallInPlay(CurrentBallInPlay);
-                PlayBackgroundSong(SOUND_EFFECT_HURRY_UP);
             } else if (NumberOfCenterSpins[CurrentPlayer] < 1) {
                 NumberOfCenterSpins[CurrentPlayer] = 1;
             } else {
@@ -2901,11 +2820,12 @@ void HandleGamePlaySwitches(byte switchHit) {
             if (NumberOfCenterSpins[CurrentPlayer] >= 200) {
                 NumberOfCenterSpins[CurrentPlayer] = 1;
                 StartSuperBlastOff(CurrentTime);
+                CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
                 RPU_SetDisplayBallInPlay(CurrentBallInPlay);
             } else if (NumberOfCenterSpins[CurrentPlayer] < 1) {
                 NumberOfCenterSpins[CurrentPlayer] = 1;
             } else {
-                RPU_SetDisplayBallInPlay(NumberOfCenterSpins[CurrentPlayer]);
+                RPU_SetDisplayBallInPlay( NumberOfCenterSpins[CurrentPlayer]);
             }
         }
 
@@ -2948,14 +2868,14 @@ void HandleGamePlaySwitches(byte switchHit) {
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else {
                 // Missed skill shot, only awars base saucer score
+                QueueNotification(SOUND_EFFECT_SKILLSHOT_MISSED, 1);
                 CurrentScores[CurrentPlayer] += 1000;
             }
         } else if (IsSuperSuperBlastOffActive(CurrentTime)) {
             StopSuperBlastOff();
             SuperBlastOffCollectedHoldTime = CurrentTime + 3200;
             // Super Blast off was achieved, mark goal complete
-            ShowLampAnimation(3, 48, CurrentTime, 23, false, false);
-            PlaySoundEffect(SOUND_EFFECT_BLASTOFF_GOAL);
+            QueueNotification(SOUND_EFFECT_BLASTOFF_GOAL, 1);
             RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
             PlayerGoalProgress[CurrentPlayer].A_Complete = true;
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 6000, true);

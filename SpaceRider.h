@@ -137,7 +137,7 @@
 #define SCORE_POPFRENZY             5000
 #define SCORE_BLASTOFF_COLLECT      50000
 #define SCORE_SKILL_SHOT            25000
-#define EXTRA_BALL_TOURN            25000
+#define EXTRA_BALL_TOURN            50000
 #define SPECIAL_TOURN               50000
 
 #if (RPU_MPU_ARCHITECTURE<10)
