@@ -111,6 +111,7 @@ boolean FirstGame = true;
 #define SOUND_EFFECT_BONUS_COUNT_2k     48
 #define SOUND_EFFECT_BONUS_COUNT_3k     49
 #define SOUND_EFFECT_RUBBER             50
+#define SOUND_EFFECT_BACKGROUND6        51
 
 #if (RPU_MPU_ARCHITECTURE<10) && !defined(RPU_OS_DISABLE_CPC_FOR_SPACE)
 // This array maps the self-test modes to audio callouts
@@ -279,6 +280,13 @@ enum EnumCenterSpinnerStatus {
 };
 
 EnumCenterSpinnerStatus CenterSpinnerStatus = CENTER_LEFT_SPINNER_LIT; // Whether the right spinner is lit for blast off count
+
+enum EnumSpaceStatus {
+    SPACE_LIT = 0,
+    SPACE_UNLIT
+};
+
+EnumSpaceStatus SpaceStatus = SPACE_LIT;
 
 unsigned long CurrentScores[4];
 unsigned long BallFirstSwitchHitTime = 0;
@@ -1136,6 +1144,24 @@ void SpinnerToggle() {
     }
 }
 
+void SpaceToggle() {
+    if (SpaceStatus == SPACE_LIT) {
+        RPU_SetLampState(LAMP_TOP_S, 1);
+        RPU_SetLampState(LAMP_TOP_P, 1);
+        RPU_SetLampState(LAMP_TOP_A, 1);
+        RPU_SetLampState(LAMP_TOP_C, 1);
+        RPU_SetLampState(LAMP_TOP_E, 1);
+        SpaceStatus = SPACE_UNLIT;
+    } else {
+        RPU_SetLampState(LAMP_TOP_S, 0);
+        RPU_SetLampState(LAMP_TOP_P, 0);
+        RPU_SetLampState(LAMP_TOP_A, 0);
+        RPU_SetLampState(LAMP_TOP_C, 0);
+        RPU_SetLampState(LAMP_TOP_E, 0);
+        SpaceStatus = SPACE_LIT;
+    }
+}
+
 void TargetBank() {
     if (RPU_ReadLampState(LAMP_TARGET_1) && RPU_ReadLampState(LAMP_TARGET_2) && RPU_ReadLampState(LAMP_TARGET_3) &&
             RPU_ReadLampState(LAMP_TARGET_4) && RPU_ReadLampState(LAMP_TARGET_5)) {
@@ -1795,17 +1821,19 @@ int InitGamePlay(boolean curStateChanged) {
 void PlayRandomBackgroundSong() {
     if (MusicVolume == 0) return;
 
-    int rand = random(0, 5);
-    if (rand == 0) {
+    int rand = random()%6+1;
+    if (rand == 1) {
         PlayBackgroundSong(SOUND_EFFECT_BACKGROUND1);
-    } else if (rand == 1) {
-        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND2);
     } else if (rand == 2) {
-        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND3);
+        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND2);
     } else if (rand == 3) {
+        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND3);
+    } else if (rand == 4) {
         PlayBackgroundSong(SOUND_EFFECT_BACKGROUND4);
-    } else {
+    } else if (rand == 5) {
         PlayBackgroundSong(SOUND_EFFECT_BACKGROUND5);
+    } else {
+        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND6);
     }
 }
 
@@ -1977,6 +2005,7 @@ int ManageGameMode() {
             // recorded
             SetGeneralIlluminationOn(true);
             SkillShotActive = false;
+            SpaceToggle();
         }
         else {
             ShowLampAnimation(4, 480, CurrentTime, 5, false, false, 4);
@@ -2492,6 +2521,7 @@ void HandleGamePlaySwitches(byte switchHit) {
         CurrentScores[CurrentPlayer] += 150 * PlayfieldMultiplier[CurrentPlayer];
         PlaySoundEffect(SOUND_EFFECT_SLINGSHOT);
         SpinnerToggle();
+        SpaceToggle();
         LastSwitchHitTime = CurrentTime;
         if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
         break;
@@ -2517,7 +2547,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             CurrentScores[CurrentPlayer] += 100 * PlayfieldMultiplier[CurrentPlayer];
             PlaySoundEffect(SOUND_EFFECT_POPBUMPER);
         }
-
+        SpaceToggle();
         LastSwitchHitTime = CurrentTime;
         if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
         break;
@@ -2894,10 +2924,17 @@ void HandleGamePlaySwitches(byte switchHit) {
 //            RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
         } else {
             if (CurrentTime >= SuperBlastOffCollectedHoldTime) {
-                CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
-                PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
-                RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 500, false);
-            }
+                if (RPU_ReadLampState(LAMP_TOP_S) && RPU_ReadLampState(LAMP_TOP_P) && RPU_ReadLampState(LAMP_TOP_A) && RPU_ReadLampState(LAMP_TOP_C) &&
+                RPU_ReadLampState(LAMP_TOP_E)){
+                    CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
+                    PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
+                    RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 500, false);
+                } else {
+                    CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
+                    PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
+                    RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 500, false);
+                }
+            }    
         }
         LastSwitchHitTime = CurrentTime;
         if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
