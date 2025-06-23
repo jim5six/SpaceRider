@@ -104,7 +104,6 @@ boolean FirstGame = true;
 #define SOUND_EFFECT_SPINNERFRENZY      35
 #define SOUND_EFFECT_SPINNER2000        36
 #define SOUND_EFFECT_SPINNERCENTER      37
-#define SOUND_EFFECT_ROCKET_BLAST       44
 #define SOUND_EFFECT_BOING              45
 #define SOUND_EFFECT_HURRY_UP           46
 #define SOUND_EFFECT_BACKGROUND5        47
@@ -615,7 +614,7 @@ void ShowLowerSpaceLamps() {
 
 void ShowLeftSpinnerLamps(void) {
     if (IsSuperSpinnerActive(CurrentTime)) {
-        ShowLampAnimation(5, 240, CurrentTime, 23, false, false);
+        ShowLampAnimation(4, 240, CurrentTime, 23, false, false);
         //ShowLampAnimation2(ANIMATION_SPINNER_ROLLING, 120, CurrentTime, 4);
     } else {
         if (NumberOfSpins[CurrentPlayer] > 0 && NumberOfSpins[CurrentPlayer] < 51) {
@@ -1646,7 +1645,7 @@ int RunAttractMode(int curState, boolean curStateChanged) {
     if (animationTime<4600) {
       ShowLampAnimation(0, 96, animationTime, 23, false, false);
     } else if (animationTime<6900) {
-      ShowLampAnimation(2, 48, animationTime, 23, false, false);
+      ShowLampAnimation(1, 48, animationTime, 23, false, false);
     } else {
       AttractModeStartTime = CurrentTime;
     }
@@ -2008,7 +2007,7 @@ int ManageGameMode() {
             SpaceToggle();
         }
         else {
-            ShowLampAnimation(4, 480, CurrentTime, 5, false, false, 4);
+            ShowLampAnimation(3, 480, CurrentTime, 5, false, false, 4);
             //ShowLampAnimation2(ANIMATION_TOP_SPACE_ROTATE, 200, CurrentTime, 1);
             SetGeneralIlluminationOn(false);
         }
@@ -2029,9 +2028,11 @@ int ManageGameMode() {
     }
 
     if (IsSuperPopsActive(CurrentTime)) {
-        RPU_SetLampState(LAMP_LOWER_P, 1, 0, 0);
-        RPU_SetLampState(LAMP_LR_POP, 1, 0, 100);
-        RPU_SetLampState(LAMP_C_POP, 1, 0, 100);
+          ShowLampAnimation(5, 48, CurrentTime, 23, false, false);
+//        RPU_SetLampState(LAMP_LOWER_P, 1, 0, 0);
+//        RPU_SetLampState(LAMP_LR_POP, 1, 0, 100);
+//        RPU_SetLampState(LAMP_C_POP, 1, 0, 100);
+
 
         unsigned long SuperPopTimeLeft = SuperPopsRemainingTime(CurrentTime);
 
@@ -2048,7 +2049,7 @@ int ManageGameMode() {
     }
     
     if (IsSuperSuperBlastOffActive(CurrentTime)){
-          ShowLampAnimation(3, 144, CurrentTime, 23, false, false);  
+          ShowLampAnimation(2, 144, CurrentTime, 23, false, false);  
 //        RPU_SetLampState(LAMP_TOP_S, 1, 0, 500);
 //        RPU_SetLampState(LAMP_TOP_P, 1, 0, 500);
 //        RPU_SetLampState(LAMP_TOP_A, 1, 0, 500);
@@ -2535,7 +2536,7 @@ void HandleGamePlaySwitches(byte switchHit) {
         } else {
             // Super pops are not active
             NumberOfHits[CurrentPlayer] += 1;
-            if (NumberOfHits[CurrentPlayer] >= 25) {
+            if (NumberOfHits[CurrentPlayer] >= 50) {
                 NumberOfHits[CurrentPlayer] = 0;
                 RPU_SetDisplayCredits(Credits);
                 QueueNotification(SOUND_EFFECT_SUPERPOP_GOAL, 1);
