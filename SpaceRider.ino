@@ -271,6 +271,7 @@ bool HOLD_BONUS[4];             //"C"
 bool HOLD_PLAYFIELDX[4];        //"E"
 
 boolean SamePlayerShootsAgain = false;
+boolean PreparingWizardMode = false;
 boolean BallSaveUsed = false;
 boolean ExtraBallCollected = false;
 boolean SpecialCollected = false;
@@ -1899,6 +1900,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         SkillShotCelebrationBlinkEndTime = 0;
         IsAnyModeActive = false;
         BallSaveUsed = false;
+        PreparingWizardMode = false;
         BallTimeInTrough = 0;
         NumTiltWarnings = 0;
         LastTiltWarningTime = 0;
@@ -1949,16 +1951,16 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         NumberOfBallsInPlay = 1;
     }
 
-        // We should only consider the ball initialized when
-        // the ball is no longer triggering the SW_OUTHOLE
-        if (CountBallsInTrough() == (TotalBallsLoaded - NumberOfBallsLocked)) {
-            return MACHINE_STATE_INIT_NEW_BALL;
-        } else {
-            return MACHINE_STATE_NORMAL_GAMEPLAY;
-        }
+    // We should only consider the ball initialized when
+    // the ball is no longer triggering the SW_OUTHOLE
+    if (CountBallsInTrough() == (TotalBallsLoaded - NumberOfBallsLocked)) {
+        return MACHINE_STATE_INIT_NEW_BALL;
+    } else {
+        return MACHINE_STATE_NORMAL_GAMEPLAY;
+    } 
 
         LastTimeThroughLoop = CurrentTime;
-    }
+}
 
 /*
 boolean AddABall(boolean ballLocked = false, boolean ballSave = true) {
@@ -2057,17 +2059,7 @@ int ManageGameMode() {
     }
     
     if (IsSuperSuperBlastOffActive(CurrentTime)){
-          ShowLampAnimation(2, 144, CurrentTime, 23, false, false);  
-//        RPU_SetLampState(LAMP_TOP_S, 1, 0, 500);
-//        RPU_SetLampState(LAMP_TOP_P, 1, 0, 500);
-//        RPU_SetLampState(LAMP_TOP_A, 1, 0, 500);
-//        RPU_SetLampState(LAMP_TOP_C, 1, 0, 500);
-//        RPU_SetLampState(LAMP_TOP_E, 1, 0, 500);
-//        RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 500);
-//        RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 500);
-//        RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 500);
-//        RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 500);
-//        RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 500);
+        ShowLampAnimation(2, 144, CurrentTime, 23, false, false);  
 
         unsigned long SuperBlastOffTimeLeft = SuperBlastOffRemainingTime(CurrentTime);
 
@@ -2122,6 +2114,22 @@ int ManageGameMode() {
         ShowShootAgainLamps();
         //    ShowPopBumpersLamps();
         //    ShowCenterSpinnerLamps();
+    }
+
+    // If the player has completed three goals, automatically award an extra ball
+    if (CountGoalsCompleted(CurrentPlayer) >= 3 && !ExtraBallCollected) {
+        AwardExtraBall();
+        ExtraBallCollected = true;
+    }
+    else if (CountGoalsCompleted(CurrentPlayer) >= 5 && !PreparingWizardMode)
+    {
+        // Kill the flippers and lights to let the ball drain and start wizard mode
+        PreparingWizardMode = true;
+        RPU_TurnOffAllLamps();
+        RPU_SetDisableFlippers(true);
+        RPU_SetDisableGate(true);
+        RPU_DisableSolenoidStack();
+        ResetModes();
     }
 
     // Three types of display modes are shown here:
@@ -2520,7 +2528,28 @@ int HandleSystemSwitches(int curState, byte switchHit) {
     return returnState;
 }
 
+// A function to handle only a small subset of switched during the "drain" phase to start wizard mode.
+// In this state the ball is still "in play" but we're just waiting for it to drain so we only care about
+// switches that need to be used to keep it from getting stuck.
+void HandleSwitchesMinimal(byte switchHit) {
+    switch (switchHit) {  
+    case SW_C_SAUCER:
+        RPU_PushToSolenoidStack(SOL_C_SAUCER, 16, true);
+        break;
+    case SW_R_SAUCER:
+        RPU_PushToSolenoidStack(SOL_R_SAUCER, 16, true);
+        break;
+    default:
+        break;
+    }   
+}
+
 void HandleGamePlaySwitches(byte switchHit) {
+    if (PreparingWizardMode == true)
+    {
+        HandleSwitchesMinimal(switchHit);
+        return;
+    }
 
     switch (switchHit) {
 
@@ -3208,7 +3237,7 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
     return returnState;
 }
 
-unsigned long CountGoalsCompleted(byte player) {
+unsigned long CountGoalsCompleted(unsigned char player) {
     unsigned long result = 0;
 
     if (PlayerGoalProgress[player].S_Complete) result += 1;
