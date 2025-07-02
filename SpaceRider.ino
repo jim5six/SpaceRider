@@ -523,6 +523,10 @@ void ShowLockLamps() {
 }
 
 void ShowBonusLamps() {
+    if (IsSuperSuperBlastOffActive(CurrentTime))
+    {
+        return;
+    }
     byte bonus = Bonus[CurrentPlayer];
     if (bonus > MAX_DISPLAY_BONUS) bonus = MAX_DISPLAY_BONUS;
 
@@ -1656,7 +1660,8 @@ int RunAttractMode(int curState, boolean curStateChanged) {
     if (animationTime<4600) {
       ShowLampAnimation(0, 96, animationTime, 23, false, false);
     } else if (animationTime<6900) {
-      ShowLampAnimation(1, 48, animationTime, 23, false, false);
+      ShowLampAnimation(6, 48, animationTime, 23, false, false);
+      //ShowLampAnimation(1, 48, animationTime, 23, false, false);
     } else {
       AttractModeStartTime = CurrentTime;
     }
@@ -1802,11 +1807,11 @@ int InitGamePlay(boolean curStateChanged) {
         NumberOfHits[count] = 0;
         Bonus[count] = 0;
         TargetBankComplete[count] = 0;
-        PlayerGoalProgress[count].S_Complete = 0;
-        PlayerGoalProgress[count].P_Complete = 0;
-        PlayerGoalProgress[count].A_Complete = 0;
-        PlayerGoalProgress[count].C_Complete = 0;
-        PlayerGoalProgress[count].E_Complete = 0;
+        PlayerGoalProgress[count].S_Complete = false;
+        PlayerGoalProgress[count].P_Complete = false;
+        PlayerGoalProgress[count].A_Complete = false;
+        PlayerGoalProgress[count].C_Complete = false;
+        PlayerGoalProgress[count].E_Complete = false;
         HOLD_SPINNER_PROGRESS[count] = false;
         HOLD_POP_PROGRESS[count] = false;
         HOLD_BLASTOFF_PROGRESS[count] = false;
@@ -1902,6 +1907,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         BallTimeInTrough = 0;
         NumTiltWarnings = 0;
         LastTiltWarningTime = 0;
+        SpaceStatus = SPACE_UNLIT;
 
         // Initialize game-specific start-of-ball lights & variables
         ExtraBallCollected = false;
@@ -1932,7 +1938,6 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         GateOpenTime = 0;
 
         NewBallHoldoverAwards();
-        ShowSpaceProgressLamps();
 
         // Reset Drop Targets
         if (!FirstGame) {
@@ -2003,6 +2008,9 @@ int ManageGameMode() {
     // Determine which spinner lights should be on
     ShowLeftSpinnerLamps();
 
+    // Show which goals have been achieved
+    ShowSpaceProgressLamps();
+
     if ((CurrentTime - LastSwitchHitTime) > 3000)
         TimersPaused = true;
     else
@@ -2016,13 +2024,13 @@ int ManageGameMode() {
             // recorded
             SetGeneralIlluminationOn(true);
             SkillShotActive = false;
-            SpaceToggle();
         }
         else {
             ShowLampAnimation(3, 480, CurrentTime, 5, false, false, 4);
             //ShowLampAnimation2(ANIMATION_TOP_SPACE_ROTATE, 200, CurrentTime, 1);
             SetGeneralIlluminationOn(false);
         }
+
 
     }
 
@@ -2096,6 +2104,7 @@ int ManageGameMode() {
         RPU_SetLampState(LAMP_TOP_A, 0, 0, 0);
         RPU_SetLampState(LAMP_TOP_C, 0, 0, 0);
         RPU_SetLampState(LAMP_TOP_E, 0, 0, 0);
+        SkillShotCelebrationBlinkEndTime = 0; // Reset this to 0 so we don't contantly turn off the SPACE lamps, let them toggle
     }
 
     if ((GateOpenTime != 0) && ((CurrentTime - GateOpenTime) > 1000)) {
@@ -2873,42 +2882,43 @@ void HandleGamePlaySwitches(byte switchHit) {
 
     case SW_C_SAUCER:
         if (SkillShotActive == true) {
-            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
+            unsigned int kickoutWaitTime = 3000;
+
             if (RPU_ReadLampState(LAMP_TOP_S)) {
                 QueueNotification(SOUND_EFFECT_SPINNER_HELD, 1);
                 HOLD_SPINNER_PROGRESS[CurrentPlayer] = true;
-                RPU_SetLampState(LAMP_TOP_S, 1, 0, 500);
-                SkillShotCelebrationBlinkEndTime = CurrentTime + 10000U;
+                RPU_SetLampState(LAMP_TOP_S, 1, 0, 250);
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else if (RPU_ReadLampState(LAMP_TOP_P)) {
                 QueueNotification(SOUND_EFFECT_POP_HELD, 1);
                 HOLD_POP_PROGRESS[CurrentPlayer] = true;
-                RPU_SetLampState(LAMP_TOP_P, 1, 0, 500);
-                SkillShotCelebrationBlinkEndTime = CurrentTime + 10000U;
+                RPU_SetLampState(LAMP_TOP_P, 1, 0, 250);
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else if (RPU_ReadLampState(LAMP_TOP_A)) {
                 QueueNotification(SOUND_EFFECT_BLASTOFF_HELD, 1);
                 HOLD_BLASTOFF_PROGRESS[CurrentPlayer] = true;
-                RPU_SetLampState(LAMP_TOP_A, 1, 0, 500);
-                SkillShotCelebrationBlinkEndTime = CurrentTime + 10000U;
+                RPU_SetLampState(LAMP_TOP_A, 1, 0, 250);
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else if (RPU_ReadLampState(LAMP_TOP_C)) {
                 QueueNotification(SOUND_EFFECT_BONUS_HELD, 1);
                 HOLD_BONUS[CurrentPlayer] = true;
-                RPU_SetLampState(LAMP_TOP_C, 1, 0, 500);
-                SkillShotCelebrationBlinkEndTime = CurrentTime + 10000U;
+                RPU_SetLampState(LAMP_TOP_C, 1, 0, 250);
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else if (RPU_ReadLampState(LAMP_TOP_E)) {
                 QueueNotification(SOUND_EFFECT_PLAYFIELDX_HELD, 1);
                 HOLD_PLAYFIELDX[CurrentPlayer] = true;
-                RPU_SetLampState(LAMP_TOP_E, 1, 0, 500);
-                SkillShotCelebrationBlinkEndTime = CurrentTime + 10000U;
+                RPU_SetLampState(LAMP_TOP_E, 1, 0, 250);
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else {
+                kickoutWaitTime = 2000;
                 // Missed skill shot, only awars base saucer score
                 QueueNotification(SOUND_EFFECT_SKILLSHOT_MISSED, 1);
                 CurrentScores[CurrentPlayer] += 1000;
             }
+
+            SkillShotCelebrationBlinkEndTime = CurrentTime + kickoutWaitTime;
+            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + kickoutWaitTime, true);
+
         } else if (IsSuperSuperBlastOffActive(CurrentTime)) {
             StopSuperBlastOff();
             SuperBlastOffCollectedHoldTime = CurrentTime + 3200;
@@ -2931,7 +2941,7 @@ void HandleGamePlaySwitches(byte switchHit) {
 //            RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
 //            RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
         } else {
-            if (CurrentTime >= SuperBlastOffCollectedHoldTime) {
+            if (CurrentTime >= SuperBlastOffCollectedHoldTime && CurrentTime >= SkillShotCelebrationBlinkEndTime) {
                 if (RPU_ReadLampState(LAMP_TOP_S) && RPU_ReadLampState(LAMP_TOP_P) && RPU_ReadLampState(LAMP_TOP_A) && RPU_ReadLampState(LAMP_TOP_C) &&
                 RPU_ReadLampState(LAMP_TOP_E)){
                     CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
