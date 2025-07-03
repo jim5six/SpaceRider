@@ -2041,7 +2041,6 @@ int ManageGameMode() {
     }
 
     if (IsSuperSpinnerActive(CurrentTime)) {
-        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND2);
         unsigned long SuperSpinnerTimeLeft = SuperSpinnerRemainingTime(CurrentTime);
         
         byte displayToUse = (CurrentPlayer == 0) ? 1 : 0; // Show spinner time on first available display
@@ -2635,13 +2634,15 @@ void HandleGamePlaySwitches(byte switchHit) {
             CurrentScores[CurrentPlayer] += (SCORE_SPINNERFRENZY)*PlayfieldMultiplier[CurrentPlayer];
         } else {
             NumberOfSpins[CurrentPlayer] += 1;
-            if (NumberOfSpins[CurrentPlayer] > 200) {
+            if (NumberOfSpins[CurrentPlayer] >= 200) {
                 NumberOfSpins[CurrentPlayer] = 1;
                 StartSuperSpinner(CurrentTime);
                 RPU_SetLampState(LAMP_LOWER_S, 1, 0, 0);
                 PlayerGoalProgress[CurrentPlayer].S_Complete = true;
                 RPU_SetDisplayCredits(Credits);
+                PlayBackgroundSong(SOUND_EFFECT_HURRY_UP);
                 QueueNotification(SOUND_EFFECT_SUPERSPINNER_GOAL, 1);
+                
             } else {
                 RPU_SetDisplayCredits(0 + NumberOfSpins[CurrentPlayer]);
             }
