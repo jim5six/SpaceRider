@@ -1,12 +1,7 @@
 # Space Rider (Harlem Globe trotters Gieger retheme)
 Early solid state pinball implementation
 ToDo list:
-* Fix display countdown timers (can they be assigned to individual displays so they dont fight each other?) Jim - 6/12 The Blast-off timer is still not showing on displays
-* Add hurry up background sound while timers are running. Jim- 6/12 Blast-off still an issue. I cannot find what is causing the wrong sound to be played, this one is strange)
 * If all goals are commpleted in a game ( (S)Super spinner, (P)Pop bumper Frenzy, (A)Blast off collect, (C)Max bonus (E)5x playfield). Drop out of game, kill coils and drain. Start Wizard mode. Turn on all the shot lights, Stand-up targets, top space letters, pop bumpers, all the spinner lights, Right target, and DRop targets light. The player has to hit every shot to turn out the lights. 5 Stand-up Targets one hit each, pops one hit each, Left Spinner 5 spins each light(20 spins), Center spinners 5 spins each light (25 spins), All 4 Drop Targets, Right Stand-up Target once. Hit Right Saucer to score big jackpot (250,000) and complete the Wizard Mode. Ends on drain, completion, or time expire (1 minute?) and resets game. This needs a wizard mode background song, "Start Wizard Mode" call out, and "End Wizard Mode" call out. If any 3 goals are completed light the extra ball at Right target, has light and sound call out is already there.
-* Figure out what to do with the standup targets complete. Jim - 6/12 if target bank is complete twice, light extra ball at right target and FLash the stand up targt lights for higher value.  DONE
-* Something to give an extra ball. Jim - 6/12 Any 3 goals completed, and complete target bank twice(original HGT code)
-* Only reset drop targets if you have to
-* Skill shot SPACE letter holds on any switch hit. Jim - 6/16 Below would fix this if we asign it a state at the start of unstructured play or end of skill shot mode. I did this and it overwrites the skillshot blink, which I expected, might have to choose which is more important?
-* What to do with the SPACE letters after skill shot phase? Jim - 6/16 created a space toggle that lites the SPACE letters ON/OFF and assign it to pops and slings (coil fires). If center scoop hit when lit 5000 points if scoop hit unlit 1000 points. DONE
-* Hurry up music ends randomly if you start multiple modes Jim 6/18 - I've removed all hurry up and alarm sound effects to try to fugure out the blast off issue.
+* Figure out what to do with the standup targets complete. Jim - 6/12 if target bank is complete twice, light extra ball at right target and FLash the stand up targt lights for higher value. Needs more... finesse. 
+* Only reset drop targets if you have to - I think this is right, needs testing.
+* If you miss the skilshot and miss the pops and the slings and the first thing you hit is anything else, the skillshot light will freeze on until the spacetoggle is activated by the pops or slings

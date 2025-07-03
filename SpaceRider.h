@@ -138,6 +138,7 @@
 #define SCORE_BLASTOFF_COLLECT      50000
 #define SCORE_SKILL_SHOT            25000
 #define EXTRA_BALL_TOURN            50000
+#define EXTRA_BALL_AGAIN            25000
 #define SPECIAL_TOURN               50000
 
 #if (RPU_MPU_ARCHITECTURE<10)
