@@ -675,6 +675,10 @@ void ShowShootAgainLamps() {
 }
 
 void ShowSpaceProgressLamps() {
+    if (IsSuperSuperBlastOffActive(CurrentTime))
+    {
+        return;
+    }
     if (PlayerGoalProgress[CurrentPlayer].S_Complete == true) {
         RPU_SetLampState(LAMP_LOWER_S, 1, 0, 0);
     } else {
@@ -2037,7 +2041,6 @@ int ManageGameMode() {
     }
 
     if (IsSuperSpinnerActive(CurrentTime)) {
-        // RPU_SetLampState(LAMP_LOWER_S, 1, 0, 0);
         PlayBackgroundSong(SOUND_EFFECT_BACKGROUND2);
         unsigned long SuperSpinnerTimeLeft = SuperSpinnerRemainingTime(CurrentTime);
         
@@ -2045,9 +2048,6 @@ int ManageGameMode() {
         OverrideScoreDisplay(displayToUse, SuperSpinnerTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
 
         IsAnyModeActive = true;
-        //for (byte count = 0; count < 4; count++) {
-        //    if (count != CurrentPlayer) OverrideScoreDisplay(count, SuperSpinnerTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
-        //}
     }
 
     if (IsSuperPopsActive(CurrentTime)) {
@@ -2058,9 +2058,6 @@ int ManageGameMode() {
         OverrideScoreDisplay(displayToUse, SuperPopTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
 
         IsAnyModeActive = true;
-        //for (byte count = 0; count < 4; count++) {
-        //    if (count != CurrentPlayer) OverrideScoreDisplay(count, SuperPopTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
-        //}
     } else {
         RPU_SetLampState(LAMP_LR_POP, 1, 0, 0);
         RPU_SetLampState(LAMP_C_POP, 1, 0, 0);
@@ -2075,12 +2072,9 @@ int ManageGameMode() {
         OverrideScoreDisplay(displayToUse, SuperBlastOffTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
 
         IsAnyModeActive = true;
-        //for (byte count = 0; count < 4; count++) {
-        //    if (count != CurrentPlayer) OverrideScoreDisplay(count, SuperBlastOffTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
-        //}
     }
 
-    if (!IsSuperSpinnerActive(CurrentTime) && !(IsSuperPopsActive(CurrentTime) && !IsSuperSuperBlastOffActive(CurrentTime))) {
+    if (!IsSuperSpinnerActive(CurrentTime) && !IsSuperPopsActive(CurrentTime) && !IsSuperSuperBlastOffActive(CurrentTime) && !SkillShotActive) {
         ShowPlayerScores(0xFF, false, false);
 
         if (IsAnyModeActive == true) {
@@ -2956,7 +2950,6 @@ void HandleGamePlaySwitches(byte switchHit) {
             RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
             PlayerGoalProgress[CurrentPlayer].A_Complete = true;
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 6000, true);
-            ShowPlayerScores(0xFF, false, false);
 
             // Turn all the spinner and upper SPACE lamps off
 //            RPU_SetLampState(LAMP_TOP_S, 0, 0, 0);
