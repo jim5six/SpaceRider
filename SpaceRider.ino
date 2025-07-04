@@ -520,9 +520,6 @@ void SetGeneralIlluminationOn(boolean setGIOn = true) {
     (void)setGIOn;
 }
 
-void ShowLockLamps() {
-}
-
 void ShowBonusLamps() {
     if (IsSuperSuperBlastOffActive(CurrentTime))
     {
@@ -585,9 +582,6 @@ void ShowBonusLamps() {
     }
 }
 
-void ShowBonusXLamps() {
-}
-
 void FlashStandupLamps() {
 
     RPU_SetLampState(LAMP_TARGET_1, 1, 0, 500);
@@ -605,20 +599,11 @@ void ShowPopBumpersLamps() {
 
 void ShowTopSpaceLamps() {
 
-    RPU_SetLampState(LAMP_TOP_S, 1, 0, 500);
-    RPU_SetLampState(LAMP_TOP_P, 1, 0, 500);
-    RPU_SetLampState(LAMP_TOP_A, 1, 0, 500);
-    RPU_SetLampState(LAMP_TOP_C, 1, 0, 500);
-    RPU_SetLampState(LAMP_TOP_E, 1, 0, 500);
-}
-
-void ShowLowerSpaceLamps() {
-
-    RPU_SetLampState(LAMP_LOWER_S, 1, 0, 500);
-    RPU_SetLampState(LAMP_LOWER_P, 1, 0, 500);
-    RPU_SetLampState(LAMP_LOWER_A, 1, 0, 500);
-    RPU_SetLampState(LAMP_LOWER_C, 1, 0, 500);
-    RPU_SetLampState(LAMP_LOWER_E, 1, 0, 500);
+    RPU_SetLampState(LAMP_TOP_S, 1, 0, 0);
+    RPU_SetLampState(LAMP_TOP_P, 1, 0, 0);
+    RPU_SetLampState(LAMP_TOP_A, 1, 0, 0);
+    RPU_SetLampState(LAMP_TOP_C, 1, 0, 0);
+    RPU_SetLampState(LAMP_TOP_E, 1, 0, 0);
 }
 
 void ShowLeftSpinnerLamps(void) {
@@ -652,14 +637,47 @@ void ShowLeftSpinnerLamps(void) {
     }
 }
 
-void ShowCenterSpinnerLamps() {
-
-    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 0);
-    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 0);
-    RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 0);
-    RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 0);
-    RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 0);
-}
+void ShowBlastOffLamps() {
+    if (IsSuperSuperBlastOffActive(CurrentTime)) {
+        ShowLampAnimation(2, 144, CurrentTime, 23, false, false);
+    } else {
+        if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 41) {
+            RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
+            RPU_SetLampState(LAMP_C_SPINNER_2, 0, 0, 0);
+            RPU_SetLampState(LAMP_C_SPINNER_3, 0, 0, 0);
+            RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
+            RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
+        }
+        if (NumberOfCenterSpins[CurrentPlayer] > 40 && NumberOfCenterSpins[CurrentPlayer] < 81) {
+            RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
+            RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
+            RPU_SetLampState(LAMP_C_SPINNER_3, 0, 0, 0);
+            RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
+            RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
+        }
+        if (NumberOfCenterSpins[CurrentPlayer] > 80 && NumberOfCenterSpins[CurrentPlayer] < 121) {
+            RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
+            RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
+            RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 100);
+            RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
+            RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
+        }
+        if (NumberOfCenterSpins[CurrentPlayer] > 120 && NumberOfCenterSpins[CurrentPlayer] < 161) {
+            RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
+            RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
+            RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 100);
+            RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 100);
+            RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
+        }
+        if (NumberOfCenterSpins[CurrentPlayer] > 160 && NumberOfCenterSpins[CurrentPlayer] < 200) {
+            RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
+            RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
+            RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 100);
+            RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 100);
+            RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 100);
+        }
+    }
+}    
 
 void ShowShootAgainLamps() {
 
@@ -672,6 +690,29 @@ void ShowShootAgainLamps() {
         RPU_SetLampState(LAMP_SHOOT_AGAIN, SamePlayerShootsAgain);
         RPU_SetLampState(LAMP_HEAD_SAME_PLAYER_SHOOTS_AGAIN, SamePlayerShootsAgain);
     }
+}
+
+void ShowPlayfieldXLamps() {
+    if (IsSuperSuperBlastOffActive(CurrentTime))
+    {
+        return;
+    }
+    if (PlayfieldMultiplier[CurrentPlayer] == 2) {
+        RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
+    }
+    if (PlayfieldMultiplier[CurrentPlayer] == 3) {
+        RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
+    }
+    if (PlayfieldMultiplier[CurrentPlayer] == 5) {
+        RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_5X, 1, 0, 0);
+    }
+
 }
 
 void ShowSpaceProgressLamps() {
@@ -1209,17 +1250,11 @@ void IncreasePlayfieldMultiplier() {
         PlayfieldMultiplier[CurrentPlayer] += 1;
     }
     if (PlayfieldMultiplier[CurrentPlayer] == 2) {
-        RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 0);
         QueueNotification(SOUND_EFFECT_MULTI_2X, 1);
     } else if (PlayfieldMultiplier[CurrentPlayer] == 3) {
-        RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
-        RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
         QueueNotification(SOUND_EFFECT_MULTI_3X, 1);
     } else if (PlayfieldMultiplier[CurrentPlayer] == 5) {
-        RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
-        RPU_SetLampState(LAMP_BONUS_5X, 1, 0, 0);
         QueueNotification(SOUND_EFFECT_MULTI_GOAL, 1);
-        RPU_SetLampState(LAMP_LOWER_E, 1, 0, 0);
         PlayerGoalProgress[CurrentPlayer].E_Complete = true;
     } else if (PlayfieldMultiplier[CurrentPlayer] > 5) {
         // Should not currently be able to happen
@@ -1660,9 +1695,7 @@ int RunAttractMode(int curState, boolean curStateChanged) {
         AttractLastLadderTime = CurrentTime;
     }
 
-//    ShowLampAnimation(2, 48, CurrentTime, 23, false, false);
-  
-  unsigned long animationTime = (CurrentTime - AttractModeStartTime);
+unsigned long animationTime = (CurrentTime - AttractModeStartTime);
     if (animationTime<4600) {
       ShowLampAnimation(0, 96, animationTime, 23, false, false);
     } else if (animationTime<6900) {
@@ -2013,9 +2046,13 @@ int ManageGameMode() {
 
     // Determine which spinner lights should be on
     ShowLeftSpinnerLamps();
-
+    // Should BlastOff lights be on?
+    ShowBlastOffLamps();
+    // Determine which PlayfieldX lights should be on
+    ShowPlayfieldXLamps();
     // Show which goals have been achieved
     ShowSpaceProgressLamps();
+
 
     if ((CurrentTime - LastSwitchHitTime) > 3000)
         TimersPaused = true;
@@ -2063,8 +2100,7 @@ int ManageGameMode() {
     }
     
     if (IsSuperSuperBlastOffActive(CurrentTime)){
-        ShowLampAnimation(2, 144, CurrentTime, 23, false, false);  
-
+        
         unsigned long SuperBlastOffTimeLeft = SuperBlastOffRemainingTime(CurrentTime);
 
         byte displayToUse = (CurrentPlayer == 3) ? 2 : 3; // Show spinner time on first available display
@@ -2111,11 +2147,9 @@ int ManageGameMode() {
 
     if (!specialAnimationRunning && NumTiltWarnings <= MaxTiltWarnings) {
         //    ShowTopSpaceLamps();
-        //    ShowLowerSpaceLamps();
         ShowBonusLamps();
         ShowShootAgainLamps();
         //    ShowPopBumpersLamps();
-        //    ShowCenterSpinnerLamps();
     }
 
     // If the player has completed three goals, automatically award an extra ball
@@ -2677,47 +2711,22 @@ void HandleGamePlaySwitches(byte switchHit) {
                 NumberOfCenterSpins[CurrentPlayer] += 1;
                 if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 41) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER100);
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 40 && NumberOfCenterSpins[CurrentPlayer] < 81) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER2)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER100);
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 80 && NumberOfCenterSpins[CurrentPlayer] < 121) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER3)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER200);
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 120 && NumberOfCenterSpins[CurrentPlayer] < 161) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER4)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER1000);
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 160 && NumberOfCenterSpins[CurrentPlayer] < 200) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER5)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 100);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER1000);
                 }
             } else {
@@ -2726,47 +2735,22 @@ void HandleGamePlaySwitches(byte switchHit) {
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 41) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER100);
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 40 && NumberOfCenterSpins[CurrentPlayer] < 81) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER2)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER100);
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 80 && NumberOfCenterSpins[CurrentPlayer] < 121) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER3)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER200);
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 120 && NumberOfCenterSpins[CurrentPlayer] < 161) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER4)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER1000);
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 160 && NumberOfCenterSpins[CurrentPlayer] < 200) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER5)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 100);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER1000);
                 }
             }
@@ -2796,47 +2780,22 @@ void HandleGamePlaySwitches(byte switchHit) {
                 NumberOfCenterSpins[CurrentPlayer] += 1;
                 if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 41) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER100);
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 40 && NumberOfCenterSpins[CurrentPlayer] < 81) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER2)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER100);
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 80 && NumberOfCenterSpins[CurrentPlayer] < 121) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER3)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER200);
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 120 && NumberOfCenterSpins[CurrentPlayer] < 161) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER4)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER1000);
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 160 && NumberOfCenterSpins[CurrentPlayer] < 200) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER5)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 100);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER1000);
                 }
             } else if (RPU_ReadLampState(LAMP_CL_WHENLIT)) {
@@ -2845,47 +2804,22 @@ void HandleGamePlaySwitches(byte switchHit) {
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 41) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER100);
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 40 && NumberOfCenterSpins[CurrentPlayer] < 81) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER2)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER100);
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 80 && NumberOfCenterSpins[CurrentPlayer] < 121) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER3)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER200);
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 120 && NumberOfCenterSpins[CurrentPlayer] < 161) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER4)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER1000);
                 }
                 if (NumberOfCenterSpins[CurrentPlayer] > 160 && NumberOfCenterSpins[CurrentPlayer] < 200) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER5)*PlayfieldMultiplier[CurrentPlayer];
-                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 100);
-                    RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 100);
                     PlaySoundEffect(SOUND_EFFECT_SPINNER1000);
                 }
             }
