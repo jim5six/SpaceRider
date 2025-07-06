@@ -274,6 +274,7 @@ boolean SamePlayerShootsAgain = false;
 boolean PreparingWizardMode = false;
 boolean BallSaveUsed = false;
 boolean ExtraBallCollected = false;
+boolean GoalExtraBallCollected = false;
 boolean SpecialCollected = false;
 boolean TimersPaused = true;
 boolean AllowResetAfterBallOne = true;
@@ -1077,7 +1078,7 @@ boolean AddPlayer(boolean resetNumPlayers = false) {
         RPU_SetCoinLockout(false);
     }
     if (CurrentNumPlayers == 1) Audio.StopAllAudio();
-    QueueNotification(SOUND_EFFECT_PLAYERADDED, 1);
+    QueueNotification(SOUND_EFFECT_GAME_START, 1);
 
     RPU_WriteULToEEProm(RPU_TOTAL_PLAYS_EEPROM_START_BYTE, RPU_ReadULFromEEProm(RPU_TOTAL_PLAYS_EEPROM_START_BYTE) + 1);
 
@@ -1173,7 +1174,20 @@ void AwardSpecial() {
 boolean AwardExtraBall() {
     if (ExtraBallCollected) return false;
         ExtraBallCollected = true;
-        CurrentScores[CurrentPlayer] += EXTRA_BALL_AGAIN * PlayfieldMultiplier[CurrentPlayer];
+    if (TournamentScoring) {
+        CurrentScores[CurrentPlayer] += ExtraBallValue * PlayfieldMultiplier[CurrentPlayer];
+    } else {
+        SamePlayerShootsAgain = true;
+        RPU_SetLampState(LAMP_SHOOT_AGAIN, SamePlayerShootsAgain);
+        RPU_SetLampState(LAMP_HEAD_SAME_PLAYER_SHOOTS_AGAIN, SamePlayerShootsAgain);
+        QueueNotification(SOUND_EFFECT_EXTRABALL, 1);
+    }
+    return true;
+}
+
+boolean AwardGoalExtraBall() {
+    if (GoalExtraBallCollected) return false;
+        GoalExtraBallCollected = true;
     if (TournamentScoring) {
         CurrentScores[CurrentPlayer] += ExtraBallValue * PlayfieldMultiplier[CurrentPlayer];
     } else {
@@ -1232,6 +1246,7 @@ void TargetBank() {
             RPU_SetLampState(LAMP_TARGET_4, 1, 0, 500);
             RPU_SetLampState(LAMP_TARGET_5, 1, 0, 500);
             QueueNotification(SOUND_EFFECT_EXTRABALL_LIT, 1);
+            TargetBankComplete[CurrentPlayer] += 1;
     }
     if  (TargetBankComplete[CurrentPlayer] >= 3) {
             RPU_SetLampState(LAMP_TARGET_1, 1, 0, 500);
@@ -2152,8 +2167,8 @@ int ManageGameMode() {
         //    ShowPopBumpersLamps();
     }
 
-    // If the player has completed three goals, automatically award an extra ball
-    if (CountGoalsCompleted(CurrentPlayer) == 3 && !ExtraBallCollected && !RPU_ReadLampState(LAMP_EXTRABALL)) {
+    // If the player has completed three goals, Light Extra Ball at Right Target
+    if (CountGoalsCompleted(CurrentPlayer) == 3 && !GoalExtraBallCollected && !RPU_ReadLampState(LAMP_EXTRABALL)) {
         RPU_SetLampState(LAMP_EXTRABALL, 1, 0, 0);
         QueueNotification(SOUND_EFFECT_EXTRABALL_LIT, 2);
     }
@@ -2938,13 +2953,23 @@ void HandleGamePlaySwitches(byte switchHit) {
             RPU_SetLampState(LAMP_OPENGATE, 0, 0, 0);
         } else if (RPU_ReadLampState(LAMP_EXTRABALL) && !RPU_ReadLampState(LAMP_5000)) {
             CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
-            AwardExtraBall();
-            ExtraBallCollected = true;
+            if (CountGoalsCompleted(CurrentPlayer) == 3 && !GoalExtraBallCollected){
+                AwardGoalExtraBall();
+                GoalExtraBallCollected = true;
+            } else if (TargetBankComplete[CurrentPlayer] >= 2){
+                AwardExtraBall();
+                ExtraBallCollected = true;
+            }
             RPU_SetLampState(LAMP_EXTRABALL, 0, 0, 0);
         } else if (RPU_ReadLampState(LAMP_EXTRABALL) && RPU_ReadLampState(LAMP_5000)) {
             CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
-            AwardExtraBall();
-            ExtraBallCollected = true;
+            if (CountGoalsCompleted(CurrentPlayer) == 3 && !GoalExtraBallCollected){
+                AwardGoalExtraBall();
+                GoalExtraBallCollected = true;
+            } else if (TargetBankComplete[CurrentPlayer] >= 2){
+                AwardExtraBall();
+                ExtraBallCollected = true;
+            }
             RPU_SetLampState(LAMP_EXTRABALL, 0, 0, 0);
         } else if (RPU_ReadLampState(LAMP_5000)) {
             CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
@@ -3171,6 +3196,8 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
                         AddSpecialCredit();
                     } else if (!ExtraBallCollected) {
                         AwardExtraBall();
+                    } else if (!GoalExtraBallCollected) {
+                        AwardGoalExtraBall();
                     }
                 }
             }
