@@ -1953,11 +1953,9 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
             RPU_SetLampState(LAMP_HEAD_SAME_PLAYER_SHOOTS_AGAIN, 1, 0, 500);
         }
 
-        SkillShotActive = true;
         SkillShotCelebrationBlinkEndTime = 0;
         IsAnyModeActive = false;
         BallSaveUsed = false;
-        PreparingWizardMode = false;
         BallTimeInTrough = 0;
         NumTiltWarnings = 0;
         LastTiltWarningTime = 0;
@@ -1985,13 +1983,24 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         TargetBank();
         RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
 
-        PlayRandomBackgroundSong();
 
         // Reset gate
         GateOpen = true; // Unpowered gate is open, gate open when true
         GateOpenTime = 0;
 
-        NewBallHoldoverAwards();
+        // Things that we only want to happen when Wizard mode is NOT active
+        if (!PreparingWizardMode)
+        {
+            SkillShotActive = true;
+            NewBallHoldoverAwards();
+            PlayRandomBackgroundSong();
+        }
+        else
+        {
+            // TODO: Start wizard mode song here
+        }
+
+        PreparingWizardMode = false;
 
         // Reset Drop Targets
         if (!FirstGame) {
@@ -2068,7 +2077,6 @@ int ManageGameMode() {
     // Show which goals have been achieved
     ShowSpaceProgressLamps();
 
-
     if ((CurrentTime - LastSwitchHitTime) > 3000)
         TimersPaused = true;
     else
@@ -2082,6 +2090,7 @@ int ManageGameMode() {
             // recorded
             SetGeneralIlluminationOn(true);
             SkillShotActive = false;
+            SpaceToggle(); // Start the toggle cycle since those lights are no longer needed for Skill Shot
         }
         else {
             ShowLampAnimation(3, 480, CurrentTime, 5, false, false, 4);
@@ -3113,8 +3122,11 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
         if (SamePlayerShootsAgain) {
             QueueNotification(SOUND_EFFECT_SHOOTAGAIN, 1);
             returnState = MACHINE_STATE_INIT_NEW_BALL;
+        } else if (PreparingWizardMode) {
+            // Ball drained because Wizard mode was triggered
+            // TODO: Queue a wizard mode notification?
+            returnState = MACHINE_STATE_INIT_NEW_BALL;
         } else {
-
             CurrentPlayer += 1;
             if (CurrentPlayer >= CurrentNumPlayers) {
                 CurrentPlayer = 0;
