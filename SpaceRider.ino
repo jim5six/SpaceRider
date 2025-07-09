@@ -1942,8 +1942,9 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         RPU_SetDisableFlippers(false);
         RPU_EnableSolenoidStack();
         RPU_SetDisplayCredits(Credits, !FreePlayMode);
-        if (CurrentNumPlayers > 1 && (ballNum != 1 || playerNum != 0) && !SamePlayerShootsAgain)
+        if (CurrentNumPlayers > 1 && (ballNum != 1 || playerNum != 0) && !SamePlayerShootsAgain && !PreparingWizardMode) {
             PlaySoundEffect(SOUND_EFFECT_RIDER1 + playerNum);
+        }
         SamePlayerShootsAgain = false;
 
         RPU_SetDisplayBallInPlay(CurrentBallInPlay);
@@ -1998,7 +1999,8 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         }
         else
         {
-            // TODO: Start wizard mode song here
+            QueueNotification(SOUND_EFFECT_WIZARD_MODE_INSTRUCT, 2); // Might want to move this to when the ball is loaded
+            PlayBackgroundSong(SOUND_EFFECT_WIZARD_BG);
         }
 
         PreparingWizardMode = false;
@@ -2186,11 +2188,17 @@ int ManageGameMode() {
     {
         // Kill the flippers and lights to let the ball drain and start wizard mode
         PreparingWizardMode = true;
+        BallSaveEndTime = 0;
         RPU_TurnOffAllLamps();
         RPU_SetDisableFlippers(true);
         RPU_SetDisableGate(true);
         RPU_DisableSolenoidStack();
         ResetModes();
+        PlayerGoalProgress[CurrentPlayer].S_Complete = false;
+        PlayerGoalProgress[CurrentPlayer].P_Complete = false;
+        PlayerGoalProgress[CurrentPlayer].A_Complete = false;
+        PlayerGoalProgress[CurrentPlayer].C_Complete = false;
+        PlayerGoalProgress[CurrentPlayer].E_Complete = false;
     }
 
     // Three types of display modes are shown here:
@@ -2627,6 +2635,14 @@ void HandleGamePlaySwitches(byte switchHit) {
     case SW_L_POP_BUMPER:
     case SW_C_POP_BUMPER:
     case SW_R_POP_BUMPER:
+        if (WIZARD_TEST_MODE) {
+            if (PlayerGoalProgress[CurrentPlayer].S_Complete == false) { PlayerGoalProgress[CurrentPlayer].S_Complete = true; }
+            else if (PlayerGoalProgress[CurrentPlayer].P_Complete == false) {  PlayerGoalProgress[CurrentPlayer].P_Complete = true; }
+            else if (PlayerGoalProgress[CurrentPlayer].A_Complete == false) {  PlayerGoalProgress[CurrentPlayer].A_Complete = true; }
+            else if (PlayerGoalProgress[CurrentPlayer].C_Complete == false) {  PlayerGoalProgress[CurrentPlayer].C_Complete = true; }
+            else if (PlayerGoalProgress[CurrentPlayer].E_Complete == false) {  PlayerGoalProgress[CurrentPlayer].E_Complete = true; }
+        }
+
         if (IsSuperPopsActive(CurrentTime)) {
             PlaySoundEffect(SOUND_EFFECT_POPBUMPER);
             CurrentScores[CurrentPlayer] += (SCORE_POPFRENZY)*PlayfieldMultiplier[CurrentPlayer];
@@ -3124,8 +3140,6 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
             QueueNotification(SOUND_EFFECT_SHOOTAGAIN, 1);
             returnState = MACHINE_STATE_INIT_NEW_BALL;
         } else if (PreparingWizardMode) {
-            // Ball drained because Wizard mode was triggered
-            // TODO: Queue a wizard mode notification?
             returnState = MACHINE_STATE_INIT_NEW_BALL;
         } else {
             CurrentPlayer += 1;
