@@ -19,6 +19,7 @@
 #include "SpaceRider.h"
 #include <EEPROM.h>
 
+#define WIZARD_TEST_MODE (true)
 
 #define GAME_MAJOR_VERSION 2024
 #define GAME_MINOR_VERSION 1
@@ -3208,9 +3209,7 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
                         AddSpecialCredit();
                     } else if (!ExtraBallCollected) {
                         AwardExtraBall();
-                    } else if (!GoalExtraBallCollected) {
-                        AwardGoalExtraBall();
-                    }
+                    } 
                 }
             }
         }
