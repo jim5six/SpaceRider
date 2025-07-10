@@ -19,7 +19,7 @@
 #include "SpaceRider.h"
 #include <EEPROM.h>
 
-#define WIZARD_TEST_MODE (true)
+#define WIZARD_TEST_MODE (false)
 
 #define GAME_MAJOR_VERSION 2024
 #define GAME_MINOR_VERSION 1
