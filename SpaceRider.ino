@@ -253,6 +253,18 @@ GameGoals PlayerGoalProgress[4] = {
     {false, false, false, false, false}  // Player 4
 };
 
+struct WizardModeTracker {
+    bool TopPopsHit = false;
+    bool BottomPopHit = false;
+    bool LeftSpinnerSpins = 0;
+    bool CenterSpinnerSpins = 0;
+    bool InlineTargetsCompleted = 0;
+    bool CenterSaucerHit = false;
+    bool RightTargetHit = false;
+};
+
+WizardModeTracker WizardModeProgress = {};
+
 byte CurrentPlayer = 0;
 byte CurrentBallInPlay = 1;
 byte CurrentNumPlayers = 0;
@@ -524,7 +536,7 @@ void SetGeneralIlluminationOn(boolean setGIOn = true) {
 }
 
 void ShowBonusLamps() {
-    if (IsSuperSuperBlastOffActive(CurrentTime))
+    if (IsSuperSuperBlastOffActive(CurrentTime) && WizardModeActive)
     {
         return;
     }
@@ -3197,6 +3209,11 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
             returnState = MACHINE_STATE_INIT_NEW_BALL;
         } else if (PreparingWizardMode) {
             returnState = MACHINE_STATE_INIT_NEW_BALL;
+        } else if (WizardModeActive) {
+            //TODO: Check if wizard mode was completed before saying this
+            QueueNotification(SOUND_EFFECT_WIZARD_MODE_FAILED, 1);
+            returnState = MACHINE_STATE_INIT_NEW_BALL;
+            WizardModeActive = false;
         } else {
             CurrentPlayer += 1;
             if (CurrentPlayer >= CurrentNumPlayers) {
