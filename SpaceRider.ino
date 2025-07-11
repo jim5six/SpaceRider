@@ -190,6 +190,11 @@ unsigned short SelfTestStateToCalloutMap[34] = {134, 135, 133, 136, 137, 138, 13
 #define MAX_DISPLAY_BONUS 40
 #define TILT_WARNING_DEBOUNCE_TIME 1000
 
+// Wizard mode goals
+#define WIZARD_MODE_LEFT_SPINS_REQUIRED (20)
+#define WIZARD_MODE_CENTER_SPINS_REQUIRED (20)
+#define WIZARD_MODE_GOAL_BLINK_PERIOD_MS (500)
+
 /*********************************************************************
 
     Machine state and options
@@ -597,33 +602,30 @@ void ShowBonusLamps() {
     }
 }
 
-void FlashStandupLamps() {
-
-    RPU_SetLampState(LAMP_TARGET_1, 1, 0, 500);
-    RPU_SetLampState(LAMP_TARGET_2, 1, 0, 500);
-    RPU_SetLampState(LAMP_TARGET_3, 1, 0, 500);
-    RPU_SetLampState(LAMP_TARGET_4, 1, 0, 500);
-    RPU_SetLampState(LAMP_TARGET_5, 1, 0, 500);
-}
-
-void ShowPopBumpersLamps() {
-
-    RPU_SetLampState(LAMP_LR_POP, 1, 0, 0);
-    RPU_SetLampState(LAMP_C_POP, 1, 0, 0);
-}
-
-void ShowTopSpaceLamps() {
-
-    RPU_SetLampState(LAMP_TOP_S, 1, 0, 0);
-    RPU_SetLampState(LAMP_TOP_P, 1, 0, 0);
-    RPU_SetLampState(LAMP_TOP_A, 1, 0, 0);
-    RPU_SetLampState(LAMP_TOP_C, 1, 0, 0);
-    RPU_SetLampState(LAMP_TOP_E, 1, 0, 0);
-}
-
 void ShowLeftSpinnerLamps(void) {
     if (IsSuperSpinnerActive(CurrentTime)) {
         ShowLampAnimation(4, 240, CurrentTime, 23, false, false);
+    } else if (WizardModeActive) {
+        if (WizardModeProgress.LeftSpinnerSpins >= WIZARD_MODE_LEFT_SPINS_REQUIRED / 4) {
+            RPU_SetLampState(LAMP_L_SPINNER_2000, 0, 0, 0);
+        } else {
+            RPU_SetLampState(LAMP_L_SPINNER_2000, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
+        }
+        if (WizardModeProgress.LeftSpinnerSpins >= WIZARD_MODE_LEFT_SPINS_REQUIRED / 2) {
+            RPU_SetLampState(LAMP_L_SPINNER_1000, 0, 0, 0);
+        } else {
+            RPU_SetLampState(LAMP_L_SPINNER_1000, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
+        }
+        if (WizardModeProgress.LeftSpinnerSpins >= WIZARD_MODE_LEFT_SPINS_REQUIRED * (3/4)) {
+            RPU_SetLampState(LAMP_L_SPINNER_200, 0, 0, 0);
+        } else {
+            RPU_SetLampState(LAMP_L_SPINNER_200, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
+        }
+        if (WizardModeProgress.LeftSpinnerSpins >= WIZARD_MODE_LEFT_SPINS_REQUIRED) {
+            RPU_SetLampState(LAMP_L_SPINNER_100, 0, 0, 0);
+        } else {
+            RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
+        }
     } else {
         if (NumberOfSpins[CurrentPlayer] > 0 && NumberOfSpins[CurrentPlayer] < 51) {
             RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
@@ -2748,7 +2750,12 @@ void HandleGamePlaySwitches(byte switchHit) {
             PlaySoundEffect(SOUND_EFFECT_SPINNERFRENZY);
             CurrentScores[CurrentPlayer] += (SCORE_SPINNERFRENZY)*PlayfieldMultiplier[CurrentPlayer];
         } else {
-            if (!WizardModeActive) {
+            if (WizardModeActive) {
+                WizardModeProgress.LeftSpinnerSpins += 1;
+                if (WizardModeProgress.LeftSpinnerSpins >= WIZARD_MODE_LEFT_SPINS_REQUIRED) {
+                    WizardModeProgress.LeftSpinnerSpins = WIZARD_MODE_LEFT_SPINS_REQUIRED;
+                }
+            } else {
                 NumberOfSpins[CurrentPlayer] += 1;
             }
             if (NumberOfSpins[CurrentPlayer] >= 200) {
