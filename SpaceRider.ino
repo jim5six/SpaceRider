@@ -191,6 +191,7 @@ unsigned short SelfTestStateToCalloutMap[34] = {134, 135, 133, 136, 137, 138, 13
 #define TILT_WARNING_DEBOUNCE_TIME 1000
 
 // Wizard mode goals
+#define WIZARD_MODE_COMPLETED_AWARD (250000)
 #define WIZARD_MODE_LEFT_SPINS_REQUIRED (20)
 #define WIZARD_MODE_CENTER_SPINS_REQUIRED (20)
 #define WIZARD_MODE_GOAL_BLINK_PERIOD_MS (500)
@@ -293,15 +294,16 @@ bool HOLD_BLASTOFF_PROGRESS[4]; //"A"
 bool HOLD_BONUS[4];             //"C"
 bool HOLD_PLAYFIELDX[4];        //"E"
 
-boolean SamePlayerShootsAgain = false;
-boolean PreparingWizardMode = false;
-boolean WizardModeActive = false;
-boolean BallSaveUsed = false;
-boolean ExtraBallCollected = false;
-boolean GoalExtraBallCollected = false;
-boolean SpecialCollected = false;
-boolean TimersPaused = true;
-boolean AllowResetAfterBallOne = true;
+bool SamePlayerShootsAgain = false;
+bool PreparingWizardMode = false;
+bool WizardModeActive = false;
+bool EndingWizardMode = false;
+bool BallSaveUsed = false;
+bool ExtraBallCollected = false;
+bool GoalExtraBallCollected = false;
+bool SpecialCollected = false;
+bool TimersPaused = true;
+bool AllowResetAfterBallOne = true;
 
 enum EnumCenterSpinnerStatus {
     CENTER_LEFT_SPINNER_LIT = 0,
@@ -659,9 +661,20 @@ void ShowLeftSpinnerLamps(void) {
     }
 }
 
-void ShowBlastOffLamps() {
+void ShowCenterSpinnerLamps() {
     if (IsSuperSuperBlastOffActive(CurrentTime)) {
         ShowLampAnimation(2, 144, CurrentTime, 23, false, false);
+    } else if (WizardModeActive) {
+         if (WizardModeProgress.CenterSpinnerSpins >= WIZARD_MODE_CENTER_SPINS_REQUIRED / 2) {
+            RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
+         } else {
+            RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, WIZARD_MODE_CENTER_SPINS_REQUIRED);
+         }
+         if (WizardModeProgress.CenterSpinnerSpins >= WIZARD_MODE_CENTER_SPINS_REQUIRED) {
+            RPU_SetLampState(MASK_LAMP_C_SPINNER_4, 0, 0, 0);
+         } else {
+            RPU_SetLampState(MASK_LAMP_C_SPINNER_4, 1, 0, WIZARD_MODE_CENTER_SPINS_REQUIRED);
+         }
     } else {
         if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 41) {
             RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
@@ -702,7 +715,6 @@ void ShowBlastOffLamps() {
 }    
 
 void ShowShootAgainLamps() {
-
     if ((BallFirstSwitchHitTime == 0 && BallSaveNumSeconds) || (BallSaveEndTime && CurrentTime < BallSaveEndTime)) {
         unsigned long msRemaining = 5000;
         if (BallSaveEndTime != 0) msRemaining = BallSaveEndTime - CurrentTime;
@@ -2013,20 +2025,18 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         WizardModeProgress = {};
 
         // Things that we only want to happen when Wizard mode is NOT active
-        if (!PreparingWizardMode)
-        {
+        if (!PreparingWizardMode) {
             SkillShotActive = true;
             NewBallHoldoverAwards();
             PlayRandomBackgroundSong();
-        }
-        else
-        {
+        } else {
             QueueNotification(SOUND_EFFECT_WIZARD_MODE_INSTRUCT, 2); // Might want to move this to when the ball is loaded
             PlayBackgroundSong(SOUND_EFFECT_WIZARD_BG);
             WizardModeActive = true;
         }
 
         PreparingWizardMode = false;
+        EndingWizardMode = false;
 
         // Reset Drop Targets
         if (!FirstGame) {
@@ -2097,13 +2107,14 @@ int ManageGameMode() {
     // Determine which spinner lights should be on
     ShowLeftSpinnerLamps();
     // Should BlastOff lights be on?
-    ShowBlastOffLamps();
+    ShowCenterSpinnerLamps();
     // Determine which PlayfieldX lights should be on
     ShowPlayfieldXLamps();
     // Show which goals have been achieved
     ShowSpaceProgressLamps();
 
     if (WizardModeActive) {
+        ShowLampAnimation(6, 48, CurrentTime, 23, false, false);
         ManageWizardMode();
     }
 
@@ -2127,10 +2138,6 @@ int ManageGameMode() {
             //ShowLampAnimation2(ANIMATION_TOP_SPACE_ROTATE, 200, CurrentTime, 1);
             SetGeneralIlluminationOn(false);
         }
-    }
-
-    if (WizardModeActive) {
-        ShowLampAnimation(6, 48, CurrentTime, 23, false, false);
     }
 
     if (IsSuperSpinnerActive(CurrentTime)) {
@@ -2356,6 +2363,7 @@ int ManageGameMode() {
 }
 
 void ManageWizardMode() {
+    // Pops lights
     if (WizardModeProgress.TopPopsHit) {
         RPU_SetLampState(LAMP_LR_POP, 0, 0, 0);
     } else {
@@ -2366,8 +2374,80 @@ void ManageWizardMode() {
     } else {
         RPU_SetLampState(LAMP_C_POP, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
     }
+
+    // Center Saucer Lights
+    if (WizardModeProgress.CenterSaucerHit) {
+        RPU_SetLampState(LAMP_TOP_S, 0, 0, 0);
+        RPU_SetLampState(LAMP_TOP_P, 0, 0, 0);
+        RPU_SetLampState(LAMP_TOP_A, 0, 0, 0);
+        RPU_SetLampState(LAMP_TOP_C, 0, 0, 0);
+        RPU_SetLampState(LAMP_TOP_E, 0, 0, 0);
+    } else {
+        RPU_SetLampState(LAMP_TOP_S, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
+        RPU_SetLampState(LAMP_TOP_P, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
+        RPU_SetLampState(LAMP_TOP_A, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
+        RPU_SetLampState(LAMP_TOP_C, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
+        RPU_SetLampState(LAMP_TOP_E, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
+    }
     
-    // L Spinner lights are managed in its own separate function
+    // L Spinner lights are managed in a separate function
+
+    // C Spinner lights are managed in a separate function
+
+    // Left target bank
+    if (WizardModeProgress.Target1Hit) {
+        RPU_SetLampState(LAMP_TARGET_1, 0, 0, 0);
+    } else {
+        RPU_SetLampState(LAMP_TARGET_1, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
+    }
+    if (WizardModeProgress.Target2Hit) {
+        RPU_SetLampState(LAMP_TARGET_2, 0, 0, 0);
+    } else {
+        RPU_SetLampState(LAMP_TARGET_2, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
+    }
+    if (WizardModeProgress.Target3Hit) {
+        RPU_SetLampState(LAMP_TARGET_3, 0, 0, 0);
+    } else {
+        RPU_SetLampState(LAMP_TARGET_3, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
+    }
+    if (WizardModeProgress.Target4Hit) {
+        RPU_SetLampState(LAMP_TARGET_4, 0, 0, 0);
+    } else {
+        RPU_SetLampState(LAMP_TARGET_4, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
+    }
+    if (WizardModeProgress.Target5Hit) {
+        RPU_SetLampState(LAMP_TARGET_5, 0, 0, 0);
+    } else {
+        RPU_SetLampState(LAMP_TARGET_5, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
+    }
+
+    // Inline targets
+    if (WizardModeProgress.InlineTargetsCompleted) {
+        RPU_SetLampState(LAMP_DROP_SPECIAL, 0, 0, 0);
+    } else {
+        RPU_SetLampState(LAMP_DROP_SPECIAL, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
+    }
+
+    // Right target
+    if (WizardModeProgress.RightTargetHit) {
+        RPU_SetLampState(LAMP_TARGET_SPECIAL, 0, 0, 0);
+    } else {
+        RPU_SetLampState(LAMP_TARGET_SPECIAL, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
+    }
+}
+
+bool AreWizardModeGoalsCompleted() {
+    if ((WizardModeProgress.BottomPopHit == true) &&
+        (WizardModeProgress.TopPopsHit == true) &&
+        (WizardModeProgress.CenterSaucerHit == true) &&
+        (WizardModeProgress.CenterSpinnerSpins >= WIZARD_MODE_CENTER_SPINS_REQUIRED) &&
+        (WizardModeProgress.InlineTargetsCompleted == true) &&
+        (WizardModeProgress.LeftSpinnerSpins >= WIZARD_MODE_LEFT_SPINS_REQUIRED) &&
+        (WizardModeProgress.RightTargetHit)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 int CountDownDelayTimes[] = {175, 130, 105, 90, 80, 70, 60, 40, 30, 20};
@@ -2659,7 +2739,7 @@ void HandleSwitchesMinimal(byte switchHit) {
 }
 
 void HandleGamePlaySwitches(byte switchHit) {
-    if (PreparingWizardMode == true)
+    if (PreparingWizardMode || EndingWizardMode)
     {
         HandleSwitchesMinimal(switchHit);
         return;
@@ -3063,12 +3143,27 @@ void HandleGamePlaySwitches(byte switchHit) {
         break;
 
     case SW_R_SAUCER:
-        CurrentScores[CurrentPlayer] += 25000 * PlayfieldMultiplier[CurrentPlayer];
-        RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
         if (!WizardModeActive){
+            CurrentScores[CurrentPlayer] += 25000 * PlayfieldMultiplier[CurrentPlayer];
             IncreasePlayfieldMultiplier[CurrentPlayer]();
             RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
+            RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
             RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
+        } else {
+            if (AreWizardModeGoalsCompleted()) {
+                // Wizard Mode fully Completed
+                CurrentScores[CurrentPlayer] += WIZARD_MODE_COMPLETED_AWARD;
+                RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
+                RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
+                QueueNotification(SOUND_EFFECT_WIZARD_MODE_COMPLETE, 1);
+
+                RPU_TurnOffAllLamps();
+                RPU_SetDisableFlippers(true);
+                RPU_SetDisableGate(true);
+                RPU_DisableSolenoidStack();
+                WizardModeActive = false;
+                EndingWizardMode = true;
+            }
         }
         LastSwitchHitTime = CurrentTime;
         break;
@@ -3277,6 +3372,10 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
             returnState = MACHINE_STATE_INIT_NEW_BALL;
         } else if (PreparingWizardMode) {
             returnState = MACHINE_STATE_INIT_NEW_BALL;
+        } else if (EndingWizardMode) {
+            QueueNotification(SOUND_EFFECT_SHOOTAGAIN, 1); //TODO: Different sound?
+            returnState = MACHINE_STATE_INIT_NEW_BALL;
+            EndingWizardMode = false;
         } else if (WizardModeActive) {
             //TODO: Check if wizard mode was completed before saying this
             QueueNotification(SOUND_EFFECT_WIZARD_MODE_FAILED, 1);
