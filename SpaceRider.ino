@@ -3172,7 +3172,7 @@ void HandleGamePlaySwitches(byte switchHit) {
         else {
             //Wizard mode is active
             WizardModeProgress.CenterSaucerHit = true;
-            CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
+            CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 2000, false);
             PlaySoundEffect(SOUND_EFFECT_WIZARDTARGET1);
         }
@@ -3188,6 +3188,9 @@ void HandleGamePlaySwitches(byte switchHit) {
             RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
             RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
             RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
+        } else if (WizardModeActive){
+            RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 2000, true);
+            PlaySoundEffect(SOUND_EFFECT_WIZARDTARGET1); //TODO "More Targets Required to Save Station" sound needed
         } else {
             if (AreWizardModeGoalsCompleted()) {
                 // Wizard Mode fully Completed
@@ -3248,6 +3251,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             // Wizard mode is active
             CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
             WizardModeProgress.RightTargetHit = true;
+            PlaySoundEffect(SOUND_EFFECT_WIZARDTARGET1);
         }
         
 
