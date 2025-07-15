@@ -2381,7 +2381,12 @@ int ManageGameMode() {
                         if (NumberOfBallsInPlay == 0) {
                             ShowPlayerScores(0xFF, false, false);
                             Audio.StopAllAudio();
-                            returnState = MACHINE_STATE_COUNTDOWN_BONUS;
+
+                            if (!PreparingWizardMode && !WizardModeActive) {
+                                returnState = MACHINE_STATE_COUNTDOWN_BONUS;
+                            } else {
+                                returnState = MACHINE_STATE_BALL_OVER;
+                            }
                         }
                     }
                 }
