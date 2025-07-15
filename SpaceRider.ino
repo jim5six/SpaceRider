@@ -2072,13 +2072,6 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
             PlayRandomBackgroundSong();
         }
 
-        // Things that we only want to happen when Wizard mode is NOT active
-        if (!PreparingWizardMode && !WizardModeEnding) {
-            
-        } else {
-            
-        }
-
         PreparingWizardMode = false;
         WizardModeEnding = false;
 
