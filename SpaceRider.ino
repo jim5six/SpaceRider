@@ -306,6 +306,7 @@ bool HOLD_PLAYFIELDX[4];        //"E"
 
 bool SamePlayerShootsAgain = false;
 bool PreparingWizardMode = false; // Goals have been achieved and ball is draining to start wizard
+unsigned long BonusBeforeWizardMode = 0; // Player's bonus before wizard mode started, to return when it is over
 bool WizardModeActive = false; // Wizard mode is in play, goals have not been completed
 bool WizardModeEnding = false; // Wizard mode has been completed and game is returning to normal play
 bool BallSaveUsed = false;
@@ -1971,22 +1972,24 @@ void PlayRandomBackgroundSong() {
     }
 }
 
-void NewBallHoldoverAwards() {
-    // If the player has a holdover award, then we need to
-    //  set the current bonus to that value
-    if (HOLD_BONUS[CurrentPlayer] == false) {
+/* 
+* Manage holdover awards on a new ball.
+* If ignoreAll is true, clear all holdover awards and don't apply any of them
+*/
+void NewBallHoldoverAwards(bool ignoreAll = false) {
+    if (HOLD_BONUS[CurrentPlayer] == false || ignoreAll) {
         Bonus[CurrentPlayer] = 0;
     }
-    if (HOLD_PLAYFIELDX[CurrentPlayer] == false) {
+    if (HOLD_PLAYFIELDX[CurrentPlayer] == false || ignoreAll) {
         PlayfieldMultiplier[CurrentPlayer] = 1;
     }
-    if (HOLD_BLASTOFF_PROGRESS[CurrentPlayer] == false) {
+    if (HOLD_BLASTOFF_PROGRESS[CurrentPlayer] == false || ignoreAll) {
         NumberOfCenterSpins[CurrentPlayer] = 0;
     }
-    if (HOLD_SPINNER_PROGRESS[CurrentPlayer] == false) {
+    if (HOLD_SPINNER_PROGRESS[CurrentPlayer] == false || ignoreAll) {
         NumberOfSpins[CurrentPlayer] = 0;
     }
-    if (HOLD_POP_PROGRESS[CurrentPlayer] == false) {
+    if (HOLD_POP_PROGRESS[CurrentPlayer] == false || ignoreAll) {
         NumberOfHits[CurrentPlayer] = 0;
     }
 
@@ -2062,9 +2065,14 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
             QueueNotification(SOUND_EFFECT_WIZARD_MODE_INSTRUCT, 2);
             PlayBackgroundSong(SOUND_EFFECT_WIZARD_BG);
             WizardModeActive = true;
+            NewBallHoldoverAwards(true);
         } else if (WizardModeEnding) {
-             // Just came out of wizard mode. TODO: What do we do?
-             // Restore bonus count here
+             // Just came out of wizard mode.
+             NewBallHoldoverAwards(true);
+             Bonus[CurrentPlayer] = BonusBeforeWizardMode;
+             BonusBeforeWizardMode = 0;
+             PlayRandomBackgroundSong();
+             SkillShotActive = false; // No skill shot after wizard mode
         } else {
             // Normal play, not before or after wizard mode
             SkillShotActive = true;
@@ -2168,7 +2176,6 @@ int ManageGameMode() {
             // recorded
             SetGeneralIlluminationOn(true);
             SkillShotActive = false;
-            SpaceToggle(); // Start the toggle cycle since those lights are no longer needed for Skill Shot
         }
         else {
             ShowLampAnimation(3, 480, CurrentTime, 5, false, false, 4);
@@ -2220,11 +2227,7 @@ int ManageGameMode() {
     }
 
     if (!SkillShotActive && SkillShotCelebrationBlinkEndTime != 0 && CurrentTime >= SkillShotCelebrationBlinkEndTime) {
-        RPU_SetLampState(LAMP_TOP_S, 0, 0, 0);
-        RPU_SetLampState(LAMP_TOP_P, 0, 0, 0);
-        RPU_SetLampState(LAMP_TOP_A, 0, 0, 0);
-        RPU_SetLampState(LAMP_TOP_C, 0, 0, 0);
-        RPU_SetLampState(LAMP_TOP_E, 0, 0, 0);
+        SpaceToggle(); // Start the toggle cycle since those lights are no longer needed for Skill Shot
         SkillShotCelebrationBlinkEndTime = 0; // Reset this to 0 so we don't contantly turn off the SPACE lamps, let them toggle
     }
 
@@ -2261,6 +2264,7 @@ int ManageGameMode() {
     {
         // Kill the flippers and lights to let the ball drain and start wizard mode
         PreparingWizardMode = true;
+        BonusBeforeWizardMode = Bonus[CurrentPlayer]; // Bonus will get cleared on the new ball, so save it off
         BallSaveEndTime = 0;
         RPU_TurnOffAllLamps();
         RPU_SetDisableFlippers(true);
@@ -3471,14 +3475,15 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
         } else if (PreparingWizardMode) {
             returnState = MACHINE_STATE_INIT_NEW_BALL;
         } else if (WizardModeEnding) {
-            QueueNotification(SOUND_EFFECT_SHOOTAGAIN, 1); //TODO: Different sound?
+            QueueNotification(SOUND_EFFECT_SHOOTAGAIN, 1); //TODO: Different sound for returning after Wiz mode?
             returnState = MACHINE_STATE_INIT_NEW_BALL;
             WizardModeEnding = false;
         } else if (WizardModeActive) {
-            //TODO: Check if wizard mode was completed before saying this
+            // If we are here it means the player drained before completing wizard mode
             QueueNotification(SOUND_EFFECT_WIZARD_MODE_FAILED, 1);
             returnState = MACHINE_STATE_INIT_NEW_BALL;
             WizardModeActive = false;
+            WizardModeEnding = true;
         } else {
             CurrentPlayer += 1;
             if (CurrentPlayer >= CurrentNumPlayers) {
