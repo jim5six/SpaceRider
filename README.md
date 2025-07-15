@@ -10,3 +10,5 @@ ToDo list:
 * The skillshot celebration blink is gone... - TJS 7/15 done, needs testing
 * POPs and Spinners not working in wizard mode. Its not just a visible thing as I cannot "win" wizard mode even if I am sure i hit everything i should. left and right target lights, center saucer lights, and drop target 4 lights are working as they should so I think they are working and counting (hopefully).
 * Left spinner lamps during wizard mode are not woking the 200 light anyway never is on. The game doesn't understand "3/4" I think. I changed to .75 and it works now. - TJS yeah 3/4 was actually evaluating to zero, I tried to be clever there and forgot how programming works
+* Lock in permanent 100, 200 300 bonus per player
+* Change skill shot to 30 second timer
