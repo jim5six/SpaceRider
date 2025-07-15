@@ -305,9 +305,9 @@ bool HOLD_BONUS[4];             //"C"
 bool HOLD_PLAYFIELDX[4];        //"E"
 
 bool SamePlayerShootsAgain = false;
-bool PreparingWizardMode = false;
-bool WizardModeActive = false;
-bool EndingWizardMode = false;
+bool PreparingWizardMode = false; // Goals have been achieved and ball is draining to start wizard
+bool WizardModeActive = false; // Wizard mode is in play, goals have not been completed
+bool WizardModeEnding = false; // Wizard mode has been completed and game is returning to normal play
 bool BallSaveUsed = false;
 bool ExtraBallCollected = false;
 bool GoalExtraBallCollected = false;
@@ -2057,19 +2057,30 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
 
         WizardModeProgress = {};
 
-        // Things that we only want to happen when Wizard mode is NOT active
-        if (!PreparingWizardMode) {
+        if (PreparingWizardMode) {
+            // Ball was just loaded to start wizard mode
+            QueueNotification(SOUND_EFFECT_WIZARD_MODE_INSTRUCT, 2);
+            PlayBackgroundSong(SOUND_EFFECT_WIZARD_BG);
+            WizardModeActive = true;
+        } else if (WizardModeEnding) {
+             // Just came out of wizard mode. TODO: What do we do?
+             // Restore bonus count here
+        } else {
+            // Normal play, not before or after wizard mode
             SkillShotActive = true;
             NewBallHoldoverAwards();
             PlayRandomBackgroundSong();
+        }
+
+        // Things that we only want to happen when Wizard mode is NOT active
+        if (!PreparingWizardMode && !WizardModeEnding) {
+            
         } else {
-            QueueNotification(SOUND_EFFECT_WIZARD_MODE_INSTRUCT, 2); // Might want to move this to when the ball is loaded
-            PlayBackgroundSong(SOUND_EFFECT_WIZARD_BG);
-            WizardModeActive = true;
+            
         }
 
         PreparingWizardMode = false;
-        EndingWizardMode = false;
+        WizardModeEnding = false;
 
         // Reset Drop Targets
         if (!FirstGame) {
@@ -2382,7 +2393,7 @@ int ManageGameMode() {
                             ShowPlayerScores(0xFF, false, false);
                             Audio.StopAllAudio();
 
-                            if (!PreparingWizardMode && !WizardModeActive) {
+                            if (!PreparingWizardMode && !WizardModeActive && !WizardModeEnding) {
                                 returnState = MACHINE_STATE_COUNTDOWN_BONUS;
                             } else {
                                 returnState = MACHINE_STATE_BALL_OVER;
@@ -2777,7 +2788,7 @@ void HandleSwitchesMinimal(byte switchHit) {
 }
 
 void HandleGamePlaySwitches(byte switchHit) {
-    if (PreparingWizardMode || EndingWizardMode)
+    if (PreparingWizardMode || WizardModeEnding)
     {
         HandleSwitchesMinimal(switchHit);
         return;
@@ -3215,7 +3226,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 RPU_SetDisableGate(true);
                 RPU_DisableSolenoidStack();
                 WizardModeActive = false;
-                EndingWizardMode = true;
+                WizardModeEnding = true;
             }
         }
         LastSwitchHitTime = CurrentTime;
@@ -3466,10 +3477,10 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
             returnState = MACHINE_STATE_INIT_NEW_BALL;
         } else if (PreparingWizardMode) {
             returnState = MACHINE_STATE_INIT_NEW_BALL;
-        } else if (EndingWizardMode) {
+        } else if (WizardModeEnding) {
             QueueNotification(SOUND_EFFECT_SHOOTAGAIN, 1); //TODO: Different sound?
             returnState = MACHINE_STATE_INIT_NEW_BALL;
-            EndingWizardMode = false;
+            WizardModeEnding = false;
         } else if (WizardModeActive) {
             //TODO: Check if wizard mode was completed before saying this
             QueueNotification(SOUND_EFFECT_WIZARD_MODE_FAILED, 1);
