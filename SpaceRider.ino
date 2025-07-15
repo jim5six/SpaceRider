@@ -2759,10 +2759,6 @@ int HandleSystemSwitches(int curState, byte switchHit) {
                 RPU_TurnOffAllLamps();
                 RPU_SetLampState(LAMP_HEAD_TILT, 1);
                 Audio.StopAllAudio();
-                if (WizardModeActive) {
-                    WizardModeActive = false;
-                    WizardModeEnding = true;
-                }
             }
             PlaySoundEffect(SOUND_EFFECT_TILT_WARNING);
         }
