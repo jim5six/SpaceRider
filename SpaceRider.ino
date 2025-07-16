@@ -420,7 +420,7 @@ void ReadStoredParameters() {
     SpecialValue = RPU_ReadULFromEEProm(EEPROM_SPECIAL_SCORE_UL);
     if (SpecialValue % 1000 || SpecialValue > 100000) SpecialValue = 40000;
 
-    SuperBonusEnabled = ReadSetting(EEPROM_SUPER_BONUS_BYTE, 1) ? true : false;
+    //SuperBonusEnabled = ReadSetting(EEPROM_SUPER_BONUS_BYTE, 1) ? true : false;
 
     TimeRequiredToResetGame = ReadSetting(EEPROM_CRB_HOLD_TIME, 1);
     if (TimeRequiredToResetGame > 3 && TimeRequiredToResetGame != 99) TimeRequiredToResetGame = 1;
