@@ -685,12 +685,12 @@ void ShowCenterSpinnerLamps() {
          if (WizardModeProgress.CenterSpinnerSpins >= WIZARD_MODE_CENTER_SPINS_REQUIRED / 2) {
             RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
          } else {
-            RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, WIZARD_MODE_CENTER_SPINS_REQUIRED);
+            RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
          }
          if (WizardModeProgress.CenterSpinnerSpins >= WIZARD_MODE_CENTER_SPINS_REQUIRED) {
             RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
          } else {
-            RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, WIZARD_MODE_CENTER_SPINS_REQUIRED);
+            RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
          }
     } else {
         if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 21) {
