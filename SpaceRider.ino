@@ -19,7 +19,7 @@
 #include "SpaceRider.h"
 #include <EEPROM.h>
 
-#define WIZARD_TEST_MODE (false)
+#define WIZARD_TEST_MODE (true)
 
 #define GAME_MAJOR_VERSION 2024
 #define GAME_MINOR_VERSION 1
@@ -274,8 +274,8 @@ GameGoals PlayerGoalProgress[4] = {
 struct WizardModeTracker {
     bool TopPopsHit = false;
     bool BottomPopHit = false;
-    bool LeftSpinnerSpins = 0;
-    bool CenterSpinnerSpins = 0;
+    unsigned long LeftSpinnerSpins = 0;
+    unsigned long CenterSpinnerSpins = 0;
     bool InlineTargetsCompleted = 0;
     bool CenterSaucerHit = false;
     bool RightTargetHit = false;
@@ -564,7 +564,7 @@ void SetGeneralIlluminationOn(boolean setGIOn = true) {
 }
 
 void ShowBonusLamps() {
-    if (IsSuperSuperBlastOffActive(CurrentTime) && WizardModeActive)
+    if (IsSuperSuperBlastOffActive(CurrentTime) || WizardModeActive)
     {
         return;
     }
@@ -687,9 +687,9 @@ void ShowCenterSpinnerLamps() {
             RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, WIZARD_MODE_CENTER_SPINS_REQUIRED);
          }
          if (WizardModeProgress.CenterSpinnerSpins >= WIZARD_MODE_CENTER_SPINS_REQUIRED) {
-            RPU_SetLampState(MASK_LAMP_C_SPINNER_4, 0, 0, 0);
+            RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
          } else {
-            RPU_SetLampState(MASK_LAMP_C_SPINNER_4, 1, 0, WIZARD_MODE_CENTER_SPINS_REQUIRED);
+            RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, WIZARD_MODE_CENTER_SPINS_REQUIRED);
          }
     } else {
         if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 21) {
@@ -1842,6 +1842,7 @@ void AddToBonus(byte amountToAdd = 1) {
     if (Bonus[CurrentPlayer] >= MAX_DISPLAY_BONUS) {
         Bonus[CurrentPlayer] = MAX_DISPLAY_BONUS;
         PlayerGoalProgress[CurrentPlayer].C_Complete = true;
+        QueueNotification(SOUND_EFFECT_SPACE_GOAL, 2); //TODO: Switch this with the bonus goal achieved callout
         RPU_SetLampState(LAMP_LOWER_C, 1, 0, 0);
     } else {
         BonusChanged = CurrentTime;
@@ -3130,7 +3131,7 @@ void HandleGamePlaySwitches(byte switchHit) {
         if (WizardModeActive) {
             PlaySoundEffect(SOUND_EFFECT_WIZARDTARGET2);
             CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
-            WizardModeProgress.CenterSpinnerSpins += 1;
+            WizardModeProgress.CenterSpinnerSpins += 1;;
             if (WizardModeProgress.CenterSpinnerSpins > WIZARD_MODE_CENTER_SPINS_REQUIRED) {
                 WizardModeProgress.CenterSpinnerSpins = WIZARD_MODE_CENTER_SPINS_REQUIRED;
             }
