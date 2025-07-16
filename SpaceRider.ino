@@ -297,7 +297,8 @@ unsigned long PlayfieldMultiplier[4];
 byte MaxTiltWarnings = 2;
 byte NumTiltWarnings = 0;
 byte AwardPhase;
-bool SkillShotActive = false;
+bool SkillShotActive = false; // Means no switches have been hit, or we're within 30 secs of hitting a switch
+unsigned long SkillShotGracePeroidEnd = 0;
 unsigned long SkillShotCelebrationBlinkEndTime = 0;
 bool IsAnyModeActive = false;
 bool HOLD_SPINNER_PROGRESS[4];  //"S"
@@ -2150,6 +2151,8 @@ boolean AddABall(boolean ballLocked = false, boolean ballSave = true) {
 }
 */
 
+
+
 byte GameModeStage;
 boolean DisplaysNeedRefreshing = false;
 unsigned long LastTimePromptPlayed = 0;
@@ -2188,6 +2191,7 @@ int ManageGameMode() {
             // recorded
             SetGeneralIlluminationOn(true);
             SkillShotActive = false;
+            SkillShotGracePeroidEnd = CurrentTime + 30000;
         }
         else {
             ShowLampAnimation(3, 480, CurrentTime, 5, false, false, 4);
