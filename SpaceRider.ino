@@ -1842,9 +1842,11 @@ void AddToBonus(byte amountToAdd = 1) {
     Bonus[CurrentPlayer] += amountToAdd;
     if (Bonus[CurrentPlayer] >= MAX_DISPLAY_BONUS) {
         Bonus[CurrentPlayer] = MAX_DISPLAY_BONUS;
-        PlayerGoalProgress[CurrentPlayer].C_Complete = true;
-        QueueNotification(SOUND_EFFECT_SPACE_GOAL, 2); //TODO: Switch this with the bonus goal achieved callout
-        RPU_SetLampState(LAMP_LOWER_C, 1, 0, 0);
+        if (PlayerGoalProgress[CurrentPlayer].C_Complete == false) {
+            PlayerGoalProgress[CurrentPlayer].C_Complete = true;
+            QueueNotification(SOUND_EFFECT_SPACE_GOAL, 2); //TODO: Switch this with the bonus goal achieved callout
+            RPU_SetLampState(LAMP_LOWER_C, 1, 0, 0);
+        }
     } else {
         BonusChanged = CurrentTime;
     }
