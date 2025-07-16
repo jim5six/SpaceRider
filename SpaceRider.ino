@@ -312,6 +312,7 @@ bool PreparingWizardMode = false; // Goals have been achieved and ball is draini
 unsigned long BonusBeforeWizardMode = 0; // Player's bonus before wizard mode started, to return when it is over
 bool WizardModeActive = false; // Wizard mode is in play, goals have not been completed
 bool WizardModeEnding = false; // Wizard mode has been completed and game is returning to normal play
+unsigned long WizardModeEndTime = 0;
 bool BallSaveUsed = false;
 bool ExtraBallCollected = false;
 bool GoalExtraBallCollected = false;
@@ -2270,7 +2271,10 @@ int ManageGameMode() {
     if (!specialAnimationRunning && NumTiltWarnings <= MaxTiltWarnings) {
         //    ShowTopSpaceLamps();
         ShowBonusLamps();
-        ShowShootAgainLamps();
+
+        if (!WizardModeActive && !WizardModeEnding) {
+            ShowShootAgainLamps();
+        }
         //    ShowPopBumpersLamps();
     }
 
@@ -2801,7 +2805,9 @@ void HandleSwitchesMinimal(byte switchHit) {
         RPU_PushToSolenoidStack(SOL_C_SAUCER, 16, true);
         break;
     case SW_R_SAUCER:
-        RPU_PushToSolenoidStack(SOL_R_SAUCER, 16, true);
+        if (CurrentTime > WizardModeEndTime + 3500) {
+            RPU_PushToSolenoidStack(SOL_R_SAUCER, 16, true);
+        }
         break;
     default:
         break;
@@ -3238,8 +3244,8 @@ void HandleGamePlaySwitches(byte switchHit) {
             if (AreWizardModeGoalsCompleted()) {
                 // Wizard Mode fully Completed
                 CurrentScores[CurrentPlayer] += WIZARD_MODE_COMPLETED_AWARD;
-                RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
                 RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
+                RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 3100, true);
                 QueueNotification(SOUND_EFFECT_WIZARD_MODE_COMPLETE, 1);
 
                 RPU_TurnOffAllLamps();
@@ -3248,6 +3254,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 RPU_DisableSolenoidStack();
                 WizardModeActive = false;
                 WizardModeEnding = true;
+                WizardModeEndTime = CurrentTime;
             }
         }
         LastSwitchHitTime = CurrentTime;
@@ -3501,7 +3508,7 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
         } else if (WizardModeEnding) {
             QueueNotification(SOUND_EFFECT_SHOOTAGAIN, 1); //TODO: Different sound for returning after Wiz mode?
             returnState = MACHINE_STATE_INIT_NEW_BALL;
-            WizardModeEnding = false;
+            //Keep WizardModeEnding as true so next ball knows we came out of wiz mode
         } else if (WizardModeActive) {
             // If we are here it means the player drained before completing wizard mode
             QueueNotification(SOUND_EFFECT_WIZARD_MODE_FAILED, 1);
@@ -3568,7 +3575,7 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
         }
     }
 
-    if (lastBallFirstSwitchHitTime == 0 && BallFirstSwitchHitTime != 0) {
+    if (lastBallFirstSwitchHitTime == 0 && BallFirstSwitchHitTime != 0 && !WizardModeActive && !WizardModeEnding) {
         BallSaveEndTime = BallFirstSwitchHitTime + ((unsigned long)BallSaveNumSeconds) * 1000;
     }
     if (CurrentTime > (BallSaveEndTime + BALL_SAVE_GRACE_PERIOD)) {
