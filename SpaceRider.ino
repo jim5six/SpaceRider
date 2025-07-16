@@ -79,6 +79,7 @@ boolean FirstGame = true;
 #define EEPROM_CRB_HOLD_TIME 118
 #define EEPROM_EXTRA_BALL_SCORE_UL 140
 #define EEPROM_SPECIAL_SCORE_UL 144
+#define EEPROM_SUPER_BONUS_BYTE 148 // TODO: Byte offset is TBD, do we need to program EEPROM first?
 
 // Sound Effects
 #define SOUND_EFFECT_NONE               0
@@ -239,6 +240,7 @@ boolean HighScoreReplay = true;
 boolean MatchFeature = true;
 boolean TournamentScoring = false;
 boolean ScrollingScores = false;
+boolean SuperBonusEnabled = true; //TODO: Read this from EEPROM
 unsigned long ExtraBallValue = 0;
 unsigned long SpecialValue = 0;
 unsigned long CurrentTime = 0;
@@ -417,6 +419,8 @@ void ReadStoredParameters() {
 
     SpecialValue = RPU_ReadULFromEEProm(EEPROM_SPECIAL_SCORE_UL);
     if (SpecialValue % 1000 || SpecialValue > 100000) SpecialValue = 40000;
+
+    SuperBonusEnabled = ReadSetting(EEPROM_SUPER_BONUS_BYTE, 1) ? true : false;
 
     TimeRequiredToResetGame = ReadSetting(EEPROM_CRB_HOLD_TIME, 1);
     if (TimeRequiredToResetGame > 3 && TimeRequiredToResetGame != 99) TimeRequiredToResetGame = 1;
@@ -1978,7 +1982,17 @@ void PlayRandomBackgroundSong() {
 */
 void NewBallHoldoverAwards(bool ignoreAll = false) {
     if (HOLD_BONUS[CurrentPlayer] == false || ignoreAll) {
-        Bonus[CurrentPlayer] = 0;
+        if (SuperBonusEnabled) {
+            if (Bonus[CurrentPlayer] >= 30) {
+                Bonus[CurrentPlayer] = 30;
+            } else if (Bonus[CurrentPlayer] >= 20) {
+                Bonus[CurrentPlayer] = 20;
+            } else if (Bonus[CurrentPlayer] >= 10) {
+                Bonus[CurrentPlayer] = 10;
+            }
+        } else {
+            Bonus[CurrentPlayer] = 0;
+        }
     }
     if (HOLD_PLAYFIELDX[CurrentPlayer] == false || ignoreAll) {
         PlayfieldMultiplier[CurrentPlayer] = 1;
@@ -2051,8 +2065,6 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         ResetModes();
         SpinnerToggle();
         TargetBank();
-        RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
-
 
         // Reset gate
         GateOpen = true; // Unpowered gate is open, gate open when true
