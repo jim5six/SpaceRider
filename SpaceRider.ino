@@ -2068,6 +2068,8 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         SpinnerToggle();
         TargetBank();
 
+        ShowPlayerScores(0xFF, false, false);
+
         // Reset gate
         GateOpen = true; // Unpowered gate is open, gate open when true
         GateOpenTime = 0;
@@ -2218,7 +2220,7 @@ int ManageGameMode() {
         OverrideScoreDisplay(displayToUse, SuperPopTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
 
         IsAnyModeActive = true;
-    } else {
+    } else if (!WizardModeActive) {
         RPU_SetLampState(LAMP_LR_POP, 1, 0, 0);
         RPU_SetLampState(LAMP_C_POP, 1, 0, 0);
     }
@@ -2506,7 +2508,12 @@ bool AreWizardModeGoalsCompleted() {
         (WizardModeProgress.CenterSpinnerSpins >= WIZARD_MODE_CENTER_SPINS_REQUIRED) &&
         (WizardModeProgress.InlineTargetsCompleted == true) &&
         (WizardModeProgress.LeftSpinnerSpins >= WIZARD_MODE_LEFT_SPINS_REQUIRED) &&
-        (WizardModeProgress.RightTargetHit)) {
+        (WizardModeProgress.RightTargetHit) && 
+        (WizardModeProgress.Target1Hit) && 
+        (WizardModeProgress.Target2Hit) && 
+        (WizardModeProgress.Target3Hit) && 
+        (WizardModeProgress.Target4Hit) && 
+        (WizardModeProgress.Target5Hit)) {
         return true;
     } else {
         return false;
@@ -3227,7 +3234,7 @@ void HandleGamePlaySwitches(byte switchHit) {
         } else if (WizardModeActive){
             RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 2000, true);
             PlaySoundEffect(SOUND_EFFECT_WIZARDTARGET1); //TODO "More Targets Required to Save Station" sound needed
-        } else {
+
             if (AreWizardModeGoalsCompleted()) {
                 // Wizard Mode fully Completed
                 CurrentScores[CurrentPlayer] += WIZARD_MODE_COMPLETED_AWARD;
