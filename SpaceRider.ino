@@ -1985,6 +1985,11 @@ void PlayRandomBackgroundSong() {
 */
 void NewBallHoldoverAwards(bool ignoreAll = false) {
     if (HOLD_BONUS[CurrentPlayer] == false || ignoreAll) {
+        // Bonus was maxed out last ball, so start back at 0
+        if (Bonus[CurrentPlayer] >= MAX_DISPLAY_BONUS) {
+            Bonus[CurrentPlayer] = 0;
+        }
+
         if (SuperBonusEnabled) {
             if (Bonus[CurrentPlayer] >= 30) {
                 Bonus[CurrentPlayer] = 30;
@@ -1992,6 +1997,8 @@ void NewBallHoldoverAwards(bool ignoreAll = false) {
                 Bonus[CurrentPlayer] = 20;
             } else if (Bonus[CurrentPlayer] >= 10) {
                 Bonus[CurrentPlayer] = 10;
+            } else {
+                Bonus[CurrentPlayer] = 0;
             }
         } else {
             Bonus[CurrentPlayer] = 0;
