@@ -79,6 +79,7 @@ boolean FirstGame = true;
 #define EEPROM_CRB_HOLD_TIME 118
 #define EEPROM_EXTRA_BALL_SCORE_UL 140
 #define EEPROM_SPECIAL_SCORE_UL 144
+#define EEPROM_SUPER_BONUS_BYTE 148 // TODO: Byte offset is TBD, do we need to program EEPROM first?
 
 // Sound Effects
 #define SOUND_EFFECT_NONE               0
@@ -239,6 +240,7 @@ boolean HighScoreReplay = true;
 boolean MatchFeature = true;
 boolean TournamentScoring = false;
 boolean ScrollingScores = false;
+boolean SuperBonusEnabled = true; //TODO: Read this from EEPROM
 unsigned long ExtraBallValue = 0;
 unsigned long SpecialValue = 0;
 unsigned long CurrentTime = 0;
@@ -272,8 +274,8 @@ GameGoals PlayerGoalProgress[4] = {
 struct WizardModeTracker {
     bool TopPopsHit = false;
     bool BottomPopHit = false;
-    bool LeftSpinnerSpins = 0;
-    bool CenterSpinnerSpins = 0;
+    unsigned long LeftSpinnerSpins = 0;
+    unsigned long CenterSpinnerSpins = 0;
     bool InlineTargetsCompleted = 0;
     bool CenterSaucerHit = false;
     bool RightTargetHit = false;
@@ -295,7 +297,8 @@ unsigned long PlayfieldMultiplier[4];
 byte MaxTiltWarnings = 2;
 byte NumTiltWarnings = 0;
 byte AwardPhase;
-bool SkillShotActive = false;
+bool SkillShotActive = false; // Means no switches have been hit, or we're within 30 secs of hitting a switch
+unsigned long SkillShotGracePeroidEnd = 0;
 unsigned long SkillShotCelebrationBlinkEndTime = 0;
 bool IsAnyModeActive = false;
 bool HOLD_SPINNER_PROGRESS[4];  //"S"
@@ -305,9 +308,11 @@ bool HOLD_BONUS[4];             //"C"
 bool HOLD_PLAYFIELDX[4];        //"E"
 
 bool SamePlayerShootsAgain = false;
-bool PreparingWizardMode = false;
-bool WizardModeActive = false;
-bool EndingWizardMode = false;
+bool PreparingWizardMode = false; // Goals have been achieved and ball is draining to start wizard
+unsigned long BonusBeforeWizardMode = 0; // Player's bonus before wizard mode started, to return when it is over
+bool WizardModeActive = false; // Wizard mode is in play, goals have not been completed
+bool WizardModeEnding = false; // Wizard mode has been completed and game is returning to normal play
+unsigned long WizardModeEndTime = 0;
 bool BallSaveUsed = false;
 bool ExtraBallCollected = false;
 bool GoalExtraBallCollected = false;
@@ -416,6 +421,8 @@ void ReadStoredParameters() {
 
     SpecialValue = RPU_ReadULFromEEProm(EEPROM_SPECIAL_SCORE_UL);
     if (SpecialValue % 1000 || SpecialValue > 100000) SpecialValue = 40000;
+
+    //SuperBonusEnabled = ReadSetting(EEPROM_SUPER_BONUS_BYTE, 1) ? true : false;
 
     TimeRequiredToResetGame = ReadSetting(EEPROM_CRB_HOLD_TIME, 1);
     if (TimeRequiredToResetGame > 3 && TimeRequiredToResetGame != 99) TimeRequiredToResetGame = 1;
@@ -558,7 +565,7 @@ void SetGeneralIlluminationOn(boolean setGIOn = true) {
 }
 
 void ShowBonusLamps() {
-    if (IsSuperSuperBlastOffActive(CurrentTime) && WizardModeActive)
+    if (IsSuperSuperBlastOffActive(CurrentTime) || WizardModeActive)
     {
         return;
     }
@@ -678,12 +685,12 @@ void ShowCenterSpinnerLamps() {
          if (WizardModeProgress.CenterSpinnerSpins >= WIZARD_MODE_CENTER_SPINS_REQUIRED / 2) {
             RPU_SetLampState(LAMP_C_SPINNER_5, 0, 0, 0);
          } else {
-            RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, WIZARD_MODE_CENTER_SPINS_REQUIRED);
+            RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
          }
          if (WizardModeProgress.CenterSpinnerSpins >= WIZARD_MODE_CENTER_SPINS_REQUIRED) {
-            RPU_SetLampState(MASK_LAMP_C_SPINNER_4, 0, 0, 0);
+            RPU_SetLampState(LAMP_C_SPINNER_4, 0, 0, 0);
          } else {
-            RPU_SetLampState(MASK_LAMP_C_SPINNER_4, 1, 0, WIZARD_MODE_CENTER_SPINS_REQUIRED);
+            RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
          }
     } else {
         if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 21) {
@@ -1835,8 +1842,11 @@ void AddToBonus(byte amountToAdd = 1) {
     Bonus[CurrentPlayer] += amountToAdd;
     if (Bonus[CurrentPlayer] >= MAX_DISPLAY_BONUS) {
         Bonus[CurrentPlayer] = MAX_DISPLAY_BONUS;
-        PlayerGoalProgress[CurrentPlayer].C_Complete = true;
-        RPU_SetLampState(LAMP_LOWER_C, 1, 0, 0);
+        if (PlayerGoalProgress[CurrentPlayer].C_Complete == false) {
+            PlayerGoalProgress[CurrentPlayer].C_Complete = true;
+            QueueNotification(SOUND_EFFECT_SPACE_GOAL, 2); //TODO: Switch this with the bonus goal achieved callout
+            RPU_SetLampState(LAMP_LOWER_C, 1, 0, 0);
+        }
     } else {
         BonusChanged = CurrentTime;
     }
@@ -1971,22 +1981,41 @@ void PlayRandomBackgroundSong() {
     }
 }
 
-void NewBallHoldoverAwards() {
-    // If the player has a holdover award, then we need to
-    //  set the current bonus to that value
-    if (HOLD_BONUS[CurrentPlayer] == false) {
-        Bonus[CurrentPlayer] = 0;
+/* 
+* Manage holdover awards on a new ball.
+* If ignoreAll is true, clear all holdover awards and don't apply any of them
+*/
+void NewBallHoldoverAwards(bool ignoreAll = false) {
+    if (HOLD_BONUS[CurrentPlayer] == false || ignoreAll) {
+        // Bonus was maxed out last ball, so start back at 0
+        if (Bonus[CurrentPlayer] >= MAX_DISPLAY_BONUS) {
+            Bonus[CurrentPlayer] = 0;
+        }
+
+        if (SuperBonusEnabled) {
+            if (Bonus[CurrentPlayer] >= 30) {
+                Bonus[CurrentPlayer] = 30;
+            } else if (Bonus[CurrentPlayer] >= 20) {
+                Bonus[CurrentPlayer] = 20;
+            } else if (Bonus[CurrentPlayer] >= 10) {
+                Bonus[CurrentPlayer] = 10;
+            } else {
+                Bonus[CurrentPlayer] = 0;
+            }
+        } else {
+            Bonus[CurrentPlayer] = 0;
+        }
     }
-    if (HOLD_PLAYFIELDX[CurrentPlayer] == false) {
+    if (HOLD_PLAYFIELDX[CurrentPlayer] == false || ignoreAll) {
         PlayfieldMultiplier[CurrentPlayer] = 1;
     }
-    if (HOLD_BLASTOFF_PROGRESS[CurrentPlayer] == false) {
+    if (HOLD_BLASTOFF_PROGRESS[CurrentPlayer] == false || ignoreAll) {
         NumberOfCenterSpins[CurrentPlayer] = 0;
     }
-    if (HOLD_SPINNER_PROGRESS[CurrentPlayer] == false) {
+    if (HOLD_SPINNER_PROGRESS[CurrentPlayer] == false || ignoreAll) {
         NumberOfSpins[CurrentPlayer] = 0;
     }
-    if (HOLD_POP_PROGRESS[CurrentPlayer] == false) {
+    if (HOLD_POP_PROGRESS[CurrentPlayer] == false || ignoreAll) {
         NumberOfHits[CurrentPlayer] = 0;
     }
 
@@ -2048,8 +2077,8 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         ResetModes();
         SpinnerToggle();
         TargetBank();
-        RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
 
+        ShowPlayerScores(0xFF, false, false);
 
         // Reset gate
         GateOpen = true; // Unpowered gate is open, gate open when true
@@ -2057,19 +2086,28 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
 
         WizardModeProgress = {};
 
-        // Things that we only want to happen when Wizard mode is NOT active
-        if (!PreparingWizardMode) {
+        if (PreparingWizardMode) {
+            // Ball was just loaded to start wizard mode
+            QueueNotification(SOUND_EFFECT_WIZARD_MODE_INSTRUCT, 2);
+            PlayBackgroundSong(SOUND_EFFECT_WIZARD_BG);
+            WizardModeActive = true;
+            NewBallHoldoverAwards(true);
+        } else if (WizardModeEnding) {
+             // Just came out of wizard mode.
+             NewBallHoldoverAwards(true);
+             Bonus[CurrentPlayer] = BonusBeforeWizardMode;
+             BonusBeforeWizardMode = 0;
+             PlayRandomBackgroundSong();
+             SkillShotActive = false; // No skill shot after wizard mode
+        } else {
+            // Normal play, not before or after wizard mode
             SkillShotActive = true;
             NewBallHoldoverAwards();
             PlayRandomBackgroundSong();
-        } else {
-            QueueNotification(SOUND_EFFECT_WIZARD_MODE_INSTRUCT, 2); // Might want to move this to when the ball is loaded
-            PlayBackgroundSong(SOUND_EFFECT_WIZARD_BG);
-            WizardModeActive = true;
         }
 
         PreparingWizardMode = false;
-        EndingWizardMode = false;
+        WizardModeEnding = false;
 
         // Reset Drop Targets
         if (!FirstGame) {
@@ -2126,6 +2164,8 @@ boolean AddABall(boolean ballLocked = false, boolean ballSave = true) {
 }
 */
 
+
+
 byte GameModeStage;
 boolean DisplaysNeedRefreshing = false;
 unsigned long LastTimePromptPlayed = 0;
@@ -2164,7 +2204,7 @@ int ManageGameMode() {
             // recorded
             SetGeneralIlluminationOn(true);
             SkillShotActive = false;
-            SpaceToggle(); // Start the toggle cycle since those lights are no longer needed for Skill Shot
+            SkillShotGracePeroidEnd = CurrentTime + 30000;
         }
         else {
             ShowLampAnimation(3, 480, CurrentTime, 5, false, false, 4);
@@ -2190,7 +2230,7 @@ int ManageGameMode() {
         OverrideScoreDisplay(displayToUse, SuperPopTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
 
         IsAnyModeActive = true;
-    } else {
+    } else if (!WizardModeActive) {
         RPU_SetLampState(LAMP_LR_POP, 1, 0, 0);
         RPU_SetLampState(LAMP_C_POP, 1, 0, 0);
     }
@@ -2216,11 +2256,7 @@ int ManageGameMode() {
     }
 
     if (!SkillShotActive && SkillShotCelebrationBlinkEndTime != 0 && CurrentTime >= SkillShotCelebrationBlinkEndTime) {
-        RPU_SetLampState(LAMP_TOP_S, 0, 0, 0);
-        RPU_SetLampState(LAMP_TOP_P, 0, 0, 0);
-        RPU_SetLampState(LAMP_TOP_A, 0, 0, 0);
-        RPU_SetLampState(LAMP_TOP_C, 0, 0, 0);
-        RPU_SetLampState(LAMP_TOP_E, 0, 0, 0);
+        SpaceToggle(); // Start the toggle cycle since those lights are no longer needed for Skill Shot
         SkillShotCelebrationBlinkEndTime = 0; // Reset this to 0 so we don't contantly turn off the SPACE lamps, let them toggle
     }
 
@@ -2244,7 +2280,10 @@ int ManageGameMode() {
     if (!specialAnimationRunning && NumTiltWarnings <= MaxTiltWarnings) {
         //    ShowTopSpaceLamps();
         ShowBonusLamps();
-        ShowShootAgainLamps();
+
+        if (!WizardModeActive && !WizardModeEnding) {
+            ShowShootAgainLamps();
+        }
         //    ShowPopBumpersLamps();
     }
 
@@ -2257,6 +2296,7 @@ int ManageGameMode() {
     {
         // Kill the flippers and lights to let the ball drain and start wizard mode
         PreparingWizardMode = true;
+        BonusBeforeWizardMode = Bonus[CurrentPlayer]; // Bonus will get cleared on the new ball, so save it off
         BallSaveEndTime = 0;
         RPU_TurnOffAllLamps();
         RPU_SetDisableFlippers(true);
@@ -2381,7 +2421,12 @@ int ManageGameMode() {
                         if (NumberOfBallsInPlay == 0) {
                             ShowPlayerScores(0xFF, false, false);
                             Audio.StopAllAudio();
-                            returnState = MACHINE_STATE_COUNTDOWN_BONUS;
+
+                            if (!PreparingWizardMode && !WizardModeActive && !WizardModeEnding) {
+                                returnState = MACHINE_STATE_COUNTDOWN_BONUS;
+                            } else {
+                                returnState = MACHINE_STATE_BALL_OVER;
+                            }
                         }
                     }
                 }
@@ -2476,7 +2521,12 @@ bool AreWizardModeGoalsCompleted() {
         (WizardModeProgress.CenterSpinnerSpins >= WIZARD_MODE_CENTER_SPINS_REQUIRED) &&
         (WizardModeProgress.InlineTargetsCompleted == true) &&
         (WizardModeProgress.LeftSpinnerSpins >= WIZARD_MODE_LEFT_SPINS_REQUIRED) &&
-        (WizardModeProgress.RightTargetHit)) {
+        (WizardModeProgress.RightTargetHit) && 
+        (WizardModeProgress.Target1Hit) && 
+        (WizardModeProgress.Target2Hit) && 
+        (WizardModeProgress.Target3Hit) && 
+        (WizardModeProgress.Target4Hit) && 
+        (WizardModeProgress.Target5Hit)) {
         return true;
     } else {
         return false;
@@ -2764,7 +2814,9 @@ void HandleSwitchesMinimal(byte switchHit) {
         RPU_PushToSolenoidStack(SOL_C_SAUCER, 16, true);
         break;
     case SW_R_SAUCER:
-        RPU_PushToSolenoidStack(SOL_R_SAUCER, 16, true);
+        if (CurrentTime > WizardModeEndTime + 3500) {
+            RPU_PushToSolenoidStack(SOL_R_SAUCER, 16, true);
+        }
         break;
     default:
         break;
@@ -2772,7 +2824,7 @@ void HandleSwitchesMinimal(byte switchHit) {
 }
 
 void HandleGamePlaySwitches(byte switchHit) {
-    if (PreparingWizardMode || EndingWizardMode)
+    if (PreparingWizardMode || WizardModeEnding)
     {
         HandleSwitchesMinimal(switchHit);
         return;
@@ -3101,7 +3153,7 @@ void HandleGamePlaySwitches(byte switchHit) {
         if (WizardModeActive) {
             PlaySoundEffect(SOUND_EFFECT_WIZARDTARGET2);
             CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
-            WizardModeProgress.CenterSpinnerSpins += 1;
+            WizardModeProgress.CenterSpinnerSpins += 1;;
             if (WizardModeProgress.CenterSpinnerSpins > WIZARD_MODE_CENTER_SPINS_REQUIRED) {
                 WizardModeProgress.CenterSpinnerSpins = WIZARD_MODE_CENTER_SPINS_REQUIRED;
             }
@@ -3197,12 +3249,12 @@ void HandleGamePlaySwitches(byte switchHit) {
         } else if (WizardModeActive){
             RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 2000, true);
             PlaySoundEffect(SOUND_EFFECT_WIZARDTARGET1); //TODO "More Targets Required to Save Station" sound needed
-        } else {
+
             if (AreWizardModeGoalsCompleted()) {
                 // Wizard Mode fully Completed
                 CurrentScores[CurrentPlayer] += WIZARD_MODE_COMPLETED_AWARD;
-                RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
                 RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
+                RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 3100, true);
                 QueueNotification(SOUND_EFFECT_WIZARD_MODE_COMPLETE, 1);
 
                 RPU_TurnOffAllLamps();
@@ -3210,7 +3262,8 @@ void HandleGamePlaySwitches(byte switchHit) {
                 RPU_SetDisableGate(true);
                 RPU_DisableSolenoidStack();
                 WizardModeActive = false;
-                EndingWizardMode = true;
+                WizardModeEnding = true;
+                WizardModeEndTime = CurrentTime;
             }
         }
         LastSwitchHitTime = CurrentTime;
@@ -3461,15 +3514,16 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
             returnState = MACHINE_STATE_INIT_NEW_BALL;
         } else if (PreparingWizardMode) {
             returnState = MACHINE_STATE_INIT_NEW_BALL;
-        } else if (EndingWizardMode) {
-            QueueNotification(SOUND_EFFECT_SHOOTAGAIN, 1); //TODO: Different sound?
+        } else if (WizardModeEnding) {
+            QueueNotification(SOUND_EFFECT_SHOOTAGAIN, 1); //TODO: Different sound for returning after Wiz mode?
             returnState = MACHINE_STATE_INIT_NEW_BALL;
-            EndingWizardMode = false;
+            //Keep WizardModeEnding as true so next ball knows we came out of wiz mode
         } else if (WizardModeActive) {
-            //TODO: Check if wizard mode was completed before saying this
+            // If we are here it means the player drained before completing wizard mode
             QueueNotification(SOUND_EFFECT_WIZARD_MODE_FAILED, 1);
             returnState = MACHINE_STATE_INIT_NEW_BALL;
             WizardModeActive = false;
+            WizardModeEnding = true;
         } else {
             CurrentPlayer += 1;
             if (CurrentPlayer >= CurrentNumPlayers) {
@@ -3530,7 +3584,7 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
         }
     }
 
-    if (lastBallFirstSwitchHitTime == 0 && BallFirstSwitchHitTime != 0) {
+    if (lastBallFirstSwitchHitTime == 0 && BallFirstSwitchHitTime != 0 && !WizardModeActive && !WizardModeEnding) {
         BallSaveEndTime = BallFirstSwitchHitTime + ((unsigned long)BallSaveNumSeconds) * 1000;
     }
     if (CurrentTime > (BallSaveEndTime + BALL_SAVE_GRACE_PERIOD)) {
