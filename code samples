@@ -101,4 +101,13 @@
         SetGameMode(GAME_MODE_UNSTRUCTURED_PLAY);
         WizardScoring = false;
       }
-    break;    
+    break; 
+    
+    
+    if (CountGoalsCompleted(CurrentPlayer) >= 5){
+                    QueueNotification(SOUND_EFFECT_SUPERSPINNER_WIZARD, 9);
+                } else if (CountGoalsCompleted(CurrentPlayer) == 3){
+                    QueueNotification(SOUND_EFFECT_SUPERSPINNER_EXTRABALL, 9);
+                } else {
+                    QueueNotification(SOUND_EFFECT_SUPERSPINNER_GOAL, 9);
+                }

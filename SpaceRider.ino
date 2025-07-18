@@ -192,6 +192,7 @@ unsigned short SelfTestStateToCalloutMap[34] = {134, 135, 133, 136, 137, 138, 13
 #define SOUND_EFFECT_SUPERPOPS_WIZARD 345
 #define SOUND_EFFECT_PLAYFIELDX_WIZARD 346
 #define SOUND_EFFECT_WIZARD_COLLECT 347
+#define SOUND_EFFECT_FIRE_ROCKET 348
 
 #define SOUND_EFFECT_DIAG_START 1900
 #define SOUND_EFFECT_DIAG_CREDIT_RESET_BUTTON 1900
@@ -213,11 +214,7 @@ unsigned short SelfTestStateToCalloutMap[34] = {134, 135, 133, 136, 137, 138, 13
 #define MAX_DISPLAY_BONUS 40
 #define TILT_WARNING_DEBOUNCE_TIME 1000
 
-// Wizard mode goals
-#define WIZARD_MODE_COMPLETED_AWARD 250000
-#define WIZARD_MODE_LEFT_SPINS_REQUIRED 20
-#define WIZARD_MODE_CENTER_SPINS_REQUIRED 20
-#define WIZARD_MODE_GOAL_BLINK_PERIOD_MS 500
+// Wizard mode goals JIm - moved to the spacerider.h file with the other score settings
 
 /*********************************************************************
 
@@ -1354,14 +1351,19 @@ void IncreasePlayfieldMultiplier() {
     } else if (PlayfieldMultiplier[CurrentPlayer] == 3) {
         QueueNotification(SOUND_EFFECT_MULTI_3X, 9);
     } else if (PlayfieldMultiplier[CurrentPlayer] == 5) {
-        QueueNotification(SOUND_EFFECT_MULTI_GOAL, 9);
         PlayerGoalProgress[CurrentPlayer].E_Complete = true;
+        if (CountGoalsCompleted(CurrentPlayer) >= 5){
+            QueueNotification(SOUND_EFFECT_PLAYFIELDX_WIZARD, 9);
+        } else if (CountGoalsCompleted(CurrentPlayer) == 3){
+            QueueNotification(SOUND_EFFECT_PLAYFIELDX_EXTRABALL, 9);
+        } else {
+            QueueNotification(SOUND_EFFECT_MULTI_GOAL, 9);
+        }
     } else if (PlayfieldMultiplier[CurrentPlayer] > 5) {
         // Should not currently be able to happen
         PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
     }
 }
-
 
 #define ADJ_TYPE_LIST 1
 #define ADJ_TYPE_MIN_MAX 2
@@ -1856,7 +1858,13 @@ void AddToBonus(byte amountToAdd = 1) {
         Bonus[CurrentPlayer] = MAX_DISPLAY_BONUS;
         if (PlayerGoalProgress[CurrentPlayer].C_Complete == false) {
             PlayerGoalProgress[CurrentPlayer].C_Complete = true;
-            QueueNotification(SOUND_EFFECT_BONUS_ACHIEVED, 9);
+            if (CountGoalsCompleted(CurrentPlayer) >= 5){
+                    QueueNotification(SOUND_EFFECT_BONUS_WIZARD, 9);
+                } else if (CountGoalsCompleted(CurrentPlayer) == 3){
+                    QueueNotification(SOUND_EFFECT_BONUS_EXTRABALL, 9);
+                } else {
+                    QueueNotification(SOUND_EFFECT_BONUS_ACHIEVED, 9);
+                }
             RPU_SetLampState(LAMP_LOWER_C, 1, 0, 0);
         }
     } else {
@@ -2283,7 +2291,7 @@ int ManageGameMode() {
     // If the player has completed three goals, Light Extra Ball at Right Target
     if (CountGoalsCompleted(CurrentPlayer) == 3 && !GoalExtraBallCollected && !RPU_ReadLampState(LAMP_EXTRABALL)) {
         RPU_SetLampState(LAMP_EXTRABALL, 1, 0, 0);
-        QueueNotification(SOUND_EFFECT_EXTRABALL_LIT, 8);
+        //QueueNotification(SOUND_EFFECT_EXTRABALL_LIT, 8);
     }
     else if (CountGoalsCompleted(CurrentPlayer) >= 5 && !PreparingWizardMode)
     {
@@ -2296,7 +2304,7 @@ int ManageGameMode() {
         RPU_SetDisableGate(true);
         RPU_DisableSolenoidStack();
         ResetModes();
-        QueueNotification(SOUND_EFFECT_WIZARD_MODE_START, 9);
+        //QueueNotification(SOUND_EFFECT_WIZARD_MODE_START, 9);
         PlayerGoalProgress[CurrentPlayer].S_Complete = false;
         PlayerGoalProgress[CurrentPlayer].P_Complete = false;
         PlayerGoalProgress[CurrentPlayer].A_Complete = false;
@@ -2869,10 +2877,17 @@ void HandleGamePlaySwitches(byte switchHit) {
             if (NumberOfHits[CurrentPlayer] >= 25) {
                 NumberOfHits[CurrentPlayer] = 0;
                 RPU_SetDisplayCredits(Credits);
-                QueueNotification(SOUND_EFFECT_SUPERPOP_GOAL, 9);
                 PlayerGoalProgress[CurrentPlayer].P_Complete = true;
                 PlayBackgroundSong(SOUND_EFFECT_HURRY_UP);
                 StartSuperPops(CurrentTime);
+                if (CountGoalsCompleted(CurrentPlayer) >= 5) {
+                    QueueNotification(SOUND_EFFECT_SUPERPOPS_WIZARD, 9);
+                } else if (CountGoalsCompleted(CurrentPlayer) == 3) {
+                    QueueNotification(SOUND_EFFECT_SUPERPOPS_EXTRABALL, 9);
+                } else {
+                    QueueNotification(SOUND_EFFECT_SUPERPOP_GOAL, 9);
+                }
+                
             } else if (!WizardModeActive) {
                 RPU_SetDisplayCredits(NumberOfHits[CurrentPlayer]);
             }
@@ -2968,7 +2983,14 @@ void HandleGamePlaySwitches(byte switchHit) {
                 PlayerGoalProgress[CurrentPlayer].S_Complete = true;
                 RPU_SetDisplayCredits(Credits);
                 PlayBackgroundSong(SOUND_EFFECT_HURRY_UP);
-                QueueNotification(SOUND_EFFECT_SUPERSPINNER_GOAL, 9);
+                if (CountGoalsCompleted(CurrentPlayer) >= 5){
+                    QueueNotification(SOUND_EFFECT_SUPERSPINNER_WIZARD, 9);
+                } else if (CountGoalsCompleted(CurrentPlayer) == 3){
+                    QueueNotification(SOUND_EFFECT_SUPERSPINNER_EXTRABALL, 9);
+                } else {
+                    QueueNotification(SOUND_EFFECT_SUPERSPINNER_GOAL, 9);
+                }
+                
                 
             } else if (!WizardModeActive) {
                 RPU_SetDisplayCredits(0 + NumberOfSpins[CurrentPlayer]);
@@ -3057,6 +3079,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 NumberOfCenterSpins[CurrentPlayer] = 1;
                 StartSuperBlastOff(CurrentTime);
                 PlayBackgroundSong(SOUND_EFFECT_ALARM);
+                QueueNotification(SOUND_EFFECT_FIRE_ROCKET, 9);
                 CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
                 RPU_SetDisplayBallInPlay(CurrentBallInPlay);
             } else if (NumberOfCenterSpins[CurrentPlayer] < 1) {
@@ -3198,9 +3221,15 @@ void HandleGamePlaySwitches(byte switchHit) {
             StopSuperBlastOff();
             SuperBlastOffCollectedHoldTime = CurrentTime + 3200;
             // Super Blast off was achieved, mark goal complete
-            QueueNotification(SOUND_EFFECT_BLASTOFF_GOAL, 9);
             RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
             PlayerGoalProgress[CurrentPlayer].A_Complete = true;
+            if (CountGoalsCompleted(CurrentPlayer) >= 5){
+                    QueueNotification(SOUND_EFFECT_BLASTOFF_WIZARD, 9);
+                } else if (CountGoalsCompleted(CurrentPlayer) == 3){
+                    QueueNotification(SOUND_EFFECT_BLASTOFF_EXTRABALL, 9);
+                } else {
+                    QueueNotification(SOUND_EFFECT_BLASTOFF_GOAL, 9);
+                }
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 6000, true);
 
         } else if (!WizardModeActive) {
@@ -3232,9 +3261,8 @@ void HandleGamePlaySwitches(byte switchHit) {
 
     case SW_R_SAUCER:
         if (!WizardModeActive){
-            CurrentScores[CurrentPlayer] += 25000 * PlayfieldMultiplier[CurrentPlayer];
+            CurrentScores[CurrentPlayer] += 25000;
             IncreasePlayfieldMultiplier[CurrentPlayer]();
-            CurrentScores[CurrentPlayer] += 25000 * PlayfieldMultiplier[CurrentPlayer];
             RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
             RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
             RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
