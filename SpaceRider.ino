@@ -2312,6 +2312,12 @@ int ManageGameMode() {
         RPU_SetDisableGate(true);
         RPU_DisableSolenoidStack();
         ResetModes();
+
+        // If bonus was maxed this ball, reset it so they don't get a free letter after wizard.
+        if (Bonus[CurrentPlayer] >= 40) {
+            Bonus[CurrentPlayer] = 0;
+        }
+
         //QueueNotification(SOUND_EFFECT_WIZARD_MODE_START, 9);
         PlayerGoalProgress[CurrentPlayer].S_Complete = false;
         PlayerGoalProgress[CurrentPlayer].P_Complete = false;
