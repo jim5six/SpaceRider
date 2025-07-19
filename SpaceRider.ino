@@ -2255,6 +2255,8 @@ int ManageGameMode() {
             // Some hurry up mode was active but now it's over
             IsAnyModeActive = false;
             PlayRandomBackgroundSong();
+            RPU_SetDisplayCredits(Credits);
+            RPU_SetDisplayBallInPlay(CurrentBallInPlay);
         }
     }
 
@@ -3006,7 +3008,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 
                 
             } else if (!WizardModeActive) {
-                RPU_SetDisplayCredits(0 + NumberOfSpins[CurrentPlayer]);
+                RPU_SetDisplayCredits(NumberOfSpins[CurrentPlayer]);
             }
             if (NumberOfSpins[CurrentPlayer] > 0 && NumberOfSpins[CurrentPlayer] < 51) {
                 CurrentScores[CurrentPlayer] += (SCORE_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
