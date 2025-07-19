@@ -306,7 +306,8 @@ unsigned long PlayfieldMultiplier[4];
 byte MaxTiltWarnings = 2;
 byte NumTiltWarnings = 0;
 byte AwardPhase;
-bool SkillShotActive = false; // Means no switches have been hit, or we're within 30 secs of hitting a switch
+bool SkillShotActive = false; // Means no switches have been hit yet
+const unsigned long SkillShotGracePeriodMs = 30000;
 unsigned long SkillShotGracePeroidEnd = 0;
 unsigned long SkillShotCelebrationBlinkEndTime = 0;
 bool IsAnyModeActive = false;
@@ -2110,6 +2111,8 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         PreparingWizardMode = false;
         WizardModeEnding = false;
 
+        SkillShotGracePeroidEnd = 0;
+
         // Reset Drop Targets
         if (!FirstGame) {
             // Only reset the drop targets if this is not the first game, since game start would have already reset them
@@ -2197,19 +2200,18 @@ int ManageGameMode() {
     else
         TimersPaused = false;
 
-    if (SkillShotActive == true) {
-        if (BallFirstSwitchHitTime != 0) {
-            // The switch handler will award the skill shot
-            // (when applicable) and this mode will move
-            // to unstructured play when any valid switch is
-            // recorded
-            SetGeneralIlluminationOn(true);
-            SkillShotActive = false;
-            SkillShotGracePeroidEnd = CurrentTime + 30000;
-        }
-        else {
-            ShowLampAnimation(3, 480, CurrentTime, 5, false, false, 4);
-            //ShowLampAnimation2(ANIMATION_TOP_SPACE_ROTATE, 200, CurrentTime, 1);
+    if (SkillShotActive == true && BallFirstSwitchHitTime != 0) {
+        // The switch handler will award the skill shot
+        // (when applicable) and this mode will move
+        // to unstructured play when any valid switch is
+        // recorded
+        SetGeneralIlluminationOn(true);
+        SkillShotActive = false;
+        SkillShotGracePeroidEnd = CurrentTime + SkillShotGracePeriodMs;
+    } else if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+        ShowLampAnimation(3, 480, CurrentTime, 5, false, false, 4);
+        //ShowLampAnimation2(ANIMATION_TOP_SPACE_ROTATE, 200, CurrentTime, 1);
+        if (SkillShotActive) {
             SetGeneralIlluminationOn(false);
         }
     }
@@ -2256,7 +2258,7 @@ int ManageGameMode() {
         }
     }
 
-    if (!SkillShotActive && SkillShotCelebrationBlinkEndTime != 0 && CurrentTime >= SkillShotCelebrationBlinkEndTime) {
+    if (!SkillShotActive && SkillShotCelebrationBlinkEndTime != 0 && CurrentTime > SkillShotCelebrationBlinkEndTime) {
         SpaceToggle(); // Start the toggle cycle since those lights are no longer needed for Skill Shot
         SkillShotCelebrationBlinkEndTime = 0; // Reset this to 0 so we don't contantly turn off the SPACE lamps, let them toggle
     }
@@ -2841,7 +2843,11 @@ void HandleGamePlaySwitches(byte switchHit) {
 
         if (!WizardModeActive) {
             SpinnerToggle();
-            SpaceToggle();
+
+            if (!SkillShotActive && CurrentTime > SkillShotGracePeroidEnd) {
+                // Only do the toggle if skill shot is NOT active - don't want to overwrite those lights
+                SpaceToggle(); 
+            }
         }
 
         if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
@@ -2895,7 +2901,10 @@ void HandleGamePlaySwitches(byte switchHit) {
             PlaySoundEffect(SOUND_EFFECT_POPBUMPER);
         }
         if (!WizardModeActive) {
-            SpaceToggle();
+            if (!SkillShotActive && CurrentTime > SkillShotGracePeroidEnd) {
+                // Only do the toggle if skill shot is NOT active - don't want to overwrite those lights
+                SpaceToggle(); 
+            }
         }
         LastSwitchHitTime = CurrentTime;
         if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
@@ -3179,7 +3188,7 @@ void HandleGamePlaySwitches(byte switchHit) {
         break;
 
     case SW_C_SAUCER:
-        if (SkillShotActive == true) {
+        if (SkillShotActive == true || CurrentTime <= SkillShotGracePeroidEnd) {
             unsigned int kickoutWaitTime = 3000;
 
             if (RPU_ReadLampState(LAMP_TOP_S)) {
