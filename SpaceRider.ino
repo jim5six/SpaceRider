@@ -2324,6 +2324,12 @@ int ManageGameMode() {
         PlayerGoalProgress[CurrentPlayer].A_Complete = false;
         PlayerGoalProgress[CurrentPlayer].C_Complete = false;
         PlayerGoalProgress[CurrentPlayer].E_Complete = false;
+        
+        // Handle the edge case where the saucer hit was the last thing needed to enter wizard - 
+        // We just cleared the solenoid stack so need to re-trigger the kickout
+        if (RPU_ReadSingleSwitchState(SW_C_SAUCER)) {
+            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
+        }
     }
 
     // Three types of display modes are shown here:
@@ -3251,7 +3257,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 } else {
                     QueueNotification(SOUND_EFFECT_BLASTOFF_GOAL, 9);
                 }
-            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 6000, true);
+            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
 
         } else if (!WizardModeActive) {
             // Regular hit during unstructured play
