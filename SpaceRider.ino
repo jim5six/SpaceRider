@@ -2258,9 +2258,13 @@ int ManageGameMode() {
         }
     }
 
-    if (!SkillShotActive && SkillShotCelebrationBlinkEndTime != 0 && CurrentTime > SkillShotCelebrationBlinkEndTime) {
+    // If skill shot was hit and we're done blinking, or if the skill shot grace period ended,
+    // switch to the normal gameplay SPACE letter togging.
+    if ((!SkillShotActive && SkillShotCelebrationBlinkEndTime != 0 && CurrentTime > SkillShotCelebrationBlinkEndTime) ||
+         (!SkillShotActive  && SkillShotGracePeroidEnd != 0 && CurrentTime > SkillShotGracePeroidEnd)) {
         SpaceToggle(); // Start the toggle cycle since those lights are no longer needed for Skill Shot
         SkillShotCelebrationBlinkEndTime = 0; // Reset this to 0 so we don't contantly turn off the SPACE lamps, let them toggle
+        SkillShotGracePeroidEnd = 0;
     }
 
     if ((GateOpenTime != 0) && ((CurrentTime - GateOpenTime) > 1000)) {
@@ -3218,7 +3222,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else {
                 kickoutWaitTime = 2000;
-                // Missed skill shot, only awars base saucer score
+                // Missed skill shot, only award base saucer score
                 QueueNotification(SOUND_EFFECT_SKILLSHOT_MISSED, 9);
                 CurrentScores[CurrentPlayer] += 1000;
             }
