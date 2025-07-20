@@ -661,7 +661,7 @@ void ShowLeftSpinnerLamps(void) {
             RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
         }
     } else {
-        if (NumberOfSpins[CurrentPlayer] > 0 && NumberOfSpins[CurrentPlayer] < 51) {
+        if (NumberOfSpins[CurrentPlayer] >= 0 && NumberOfSpins[CurrentPlayer] < 51) {
             RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 0);
             RPU_SetLampState(LAMP_L_SPINNER_200, 0, 0, 0);
             RPU_SetLampState(LAMP_L_SPINNER_1000, 0, 0, 0);
@@ -703,7 +703,7 @@ void ShowCenterSpinnerLamps() {
             RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, WIZARD_MODE_GOAL_BLINK_PERIOD_MS);
          }
     } else {
-        if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 21) {
+        if (NumberOfCenterSpins[CurrentPlayer] >= 0 && NumberOfCenterSpins[CurrentPlayer] < 21) {
             RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 100);
             RPU_SetLampState(LAMP_C_SPINNER_2, 0, 0, 0);
             RPU_SetLampState(LAMP_C_SPINNER_3, 0, 0, 0);
@@ -808,27 +808,13 @@ void ShowSpaceProgressLamps() {
     }
 }
 
-void ShowWizardModeLamps () {
-    RPU_SetLampState(LAMP_TARGET_1, 1, 0, 100);
-    RPU_SetLampState(LAMP_TARGET_2, 1, 0, 100);
-    RPU_SetLampState(LAMP_TARGET_3, 1, 0, 100);
-    RPU_SetLampState(LAMP_TARGET_4, 1, 0, 100);
-    RPU_SetLampState(LAMP_TARGET_5, 1, 0, 100);
-    RPU_SetLampState(LAMP_DROP_SPECIAL, 1, 0, 100);
-    RPU_SetLampState(LAMP_TARGET_SPECIAL, 1, 0, 100);
-    RPU_SetLampState(LAMP_C_POP, 1, 0, 100);
-    RPU_SetLampState(LAMP_LR_POP, 1, 0, 100);
-    RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 100);
-    RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 100);
-    RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 100);
-    RPU_SetLampState(LAMP_L_SPINNER_200, 1, 0, 100);
-    RPU_SetLampState(LAMP_L_SPINNER_1000, 1, 0, 100);
-    RPU_SetLampState(LAMP_L_SPINNER_2000, 1, 0, 100);
-    RPU_SetLampState(LAMP_TOP_S, 1, 0, 100);
-    RPU_SetLampState(LAMP_TOP_P, 1, 0, 100);
-    RPU_SetLampState(LAMP_TOP_A, 1, 0, 100);
-    RPU_SetLampState(LAMP_TOP_C, 1, 0, 100);
-    RPU_SetLampState(LAMP_TOP_E, 1, 0, 100);    
+void ShowPopBumperLamps() {
+    if (IsSuperPopsActive(CurrentTime))
+    {
+        return;
+    }
+    RPU_SetLampState(LAMP_C_POP, 1, 0, 0);
+    RPU_SetLampState(LAMP_LR_POP, 1, 0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -2210,7 +2196,6 @@ int ManageGameMode() {
         SkillShotGracePeroidEnd = CurrentTime + SkillShotGracePeriodMs;
     } else if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
         ShowLampAnimation(3, 960, CurrentTime, 23, false, false, 4);
-        //ShowLampAnimation2(ANIMATION_TOP_SPACE_ROTATE, 200, CurrentTime, 1);
         if (SkillShotActive) {
             SetGeneralIlluminationOn(false);
         }
@@ -2234,8 +2219,7 @@ int ManageGameMode() {
 
         IsAnyModeActive = true;
     } else if (!WizardModeActive) {
-        RPU_SetLampState(LAMP_LR_POP, 1, 0, 0);
-        RPU_SetLampState(LAMP_C_POP, 1, 0, 0);
+        //ShowPopBumperLamps();
     }
     
     if (IsSuperSuperBlastOffActive(CurrentTime)){
@@ -2293,7 +2277,7 @@ int ManageGameMode() {
         if (!WizardModeActive && !WizardModeEnding) {
             ShowShootAgainLamps();
         }
-        //    ShowPopBumpersLamps();
+            //ShowPopBumperLamps();
     }
 
     // If the player has completed three goals, Light Extra Ball at Right Target
