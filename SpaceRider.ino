@@ -2209,7 +2209,7 @@ int ManageGameMode() {
         SkillShotActive = false;
         SkillShotGracePeroidEnd = CurrentTime + SkillShotGracePeriodMs;
     } else if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
-        ShowLampAnimation(3, 480, CurrentTime, 5, false, false, 4);
+        ShowLampAnimation(3, 960, CurrentTime, 23, false, false, 4);
         //ShowLampAnimation2(ANIMATION_TOP_SPACE_ROTATE, 200, CurrentTime, 1);
         if (SkillShotActive) {
             SetGeneralIlluminationOn(false);
