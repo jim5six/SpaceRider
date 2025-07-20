@@ -162,7 +162,7 @@ unsigned short SelfTestStateToCalloutMap[34] = {134, 135, 133, 136, 137, 138, 13
 #define SOUND_EFFECT_GATE_CLOSED 315
 #define SOUND_EFFECT_L_OUTLANE_LIT 316
 #define SOUND_EFFECT_EXTRABALL_LIT 317
-#define SOUND_EFFECT_GOAL_ACHIEVED 318
+#define SOUND_EFFECT_OPENGATE_EXTRABALL 318
 #define SOUND_EFFECT_GAME_START 319
 #define SOUND_EFFECT_RIDER1 320
 #define SOUND_EFFECT_RIDER2 321
@@ -1262,7 +1262,7 @@ boolean AwardExtraBall() {
         SamePlayerShootsAgain = true;
         RPU_SetLampState(LAMP_SHOOT_AGAIN, SamePlayerShootsAgain);
         RPU_SetLampState(LAMP_HEAD_SAME_PLAYER_SHOOTS_AGAIN, SamePlayerShootsAgain);
-        QueueNotification(SOUND_EFFECT_EXTRABALL, 9);
+        //QueueNotification(SOUND_EFFECT_EXTRABALL, 9);
     }
     return true;
 }
@@ -1276,7 +1276,7 @@ boolean AwardGoalExtraBall() {
         SamePlayerShootsAgain = true;
         RPU_SetLampState(LAMP_SHOOT_AGAIN, SamePlayerShootsAgain);
         RPU_SetLampState(LAMP_HEAD_SAME_PLAYER_SHOOTS_AGAIN, SamePlayerShootsAgain);
-        QueueNotification(SOUND_EFFECT_EXTRABALL, 9);
+        //QueueNotification(SOUND_EFFECT_EXTRABALL, 9);
     }
     return true;
 }
@@ -1596,7 +1596,7 @@ int RunSelfTest(int curState, boolean curStateChanged) {
                     SoundSettingTimeout = CurrentTime + 5000;
                 } else if (curState == MACHINE_STATE_ADJUST_CALLOUTS_VOLUME) {
                     if (SoundSettingTimeout) Audio.StopAllAudio();
-                    Audio.PlaySound(SOUND_EFFECT_EXTRABALL, AUDIO_PLAY_TYPE_WAV_TRIGGER, curVal);
+                    Audio.PlaySound(SOUND_EFFECT_GAME_START, AUDIO_PLAY_TYPE_WAV_TRIGGER, curVal);
                     Audio.SetNotificationsVolume(curVal);
                     SoundSettingTimeout = CurrentTime + 3000;
                 }
@@ -3209,7 +3209,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else {
                 kickoutWaitTime = 2000;
-                // Missed skill shot, only awars base saucer score
+                // Missed skill shot, only awards base saucer score
                 QueueNotification(SOUND_EFFECT_SKILLSHOT_MISSED, 9);
                 CurrentScores[CurrentPlayer] += 1000;
             }
@@ -3230,7 +3230,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 } else {
                     QueueNotification(SOUND_EFFECT_BLASTOFF_GOAL, 9);
                 }
-            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 6000, true);
+            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 7000, true);
 
         } else if (!WizardModeActive) {
             // Regular hit during unstructured play
@@ -3239,11 +3239,11 @@ void HandleGamePlaySwitches(byte switchHit) {
                 RPU_ReadLampState(LAMP_TOP_E)){
                     CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
                     PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
-                    RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 500, false);
+                    RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1000, false);
                 } else {
                     CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
                     PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
-                    RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 500, false);
+                    RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1000, false);
                 }
             }
             AddToBonus(1);
@@ -3252,7 +3252,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             //Wizard mode is active
             WizardModeProgress.CenterSaucerHit = true;
             CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
-            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 2000, false);
+            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1000, false);
             PlaySoundEffect(SOUND_EFFECT_WIZARDTARGET1);
         }
         LastSwitchHitTime = CurrentTime;
@@ -3264,7 +3264,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             CurrentScores[CurrentPlayer] += 25000;
             IncreasePlayfieldMultiplier[CurrentPlayer]();
             RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
-            RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
+            RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 4000, true);
             RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
         } else if (WizardModeActive){
             RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 2000, true);
@@ -3308,6 +3308,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             } else if (RPU_ReadLampState(LAMP_EXTRABALL) && !RPU_ReadLampState(LAMP_5000) && !RPU_ReadLampState(LAMP_OPENGATE)) {
                 CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
                 RPU_SetLampState(LAMP_EXTRABALL, 0, 0, 0);
+                QueueNotification(SOUND_EFFECT_EXTRABALL, 9);
                 if (CountGoalsCompleted(CurrentPlayer) == 3 && !GoalExtraBallCollected){
                     AwardGoalExtraBall();
                     GoalExtraBallCollected = true;
@@ -3318,6 +3319,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             } else if (RPU_ReadLampState(LAMP_EXTRABALL) && RPU_ReadLampState(LAMP_5000) && !RPU_ReadLampState(LAMP_OPENGATE)) {
                 CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
                 RPU_SetLampState(LAMP_EXTRABALL, 0, 0, 0);
+                QueueNotification(SOUND_EFFECT_EXTRABALL, 9);
                 if (CountGoalsCompleted(CurrentPlayer) == 3 && !GoalExtraBallCollected){
                     AwardGoalExtraBall();
                     GoalExtraBallCollected = true;
@@ -3327,7 +3329,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 }
             } else if (RPU_ReadLampState(LAMP_EXTRABALL) && RPU_ReadLampState(LAMP_OPENGATE) && !RPU_ReadLampState(LAMP_5000)) {
                 CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
-                QueueNotification(SOUND_EFFECT_GATEOPEN, 9);
+                QueueNotification(SOUND_EFFECT_OPENGATE_EXTRABALL, 9);
                 RPU_SetDisableGate(true);
                 GateOpen = false;
                 RPU_SetLampState(LAMP_R_OUTLANE, 1, 0, 500);
@@ -3342,7 +3344,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 }
             } else if (RPU_ReadLampState(LAMP_EXTRABALL) && RPU_ReadLampState(LAMP_OPENGATE) && RPU_ReadLampState(LAMP_5000)) {
                 CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
-                QueueNotification(SOUND_EFFECT_GATEOPEN, 9);
+                QueueNotification(SOUND_EFFECT_OPENGATE_EXTRABALL, 9);
                 RPU_SetDisableGate(true);
                 GateOpen = false;
                 RPU_SetLampState(LAMP_R_OUTLANE, 1, 0, 500);
