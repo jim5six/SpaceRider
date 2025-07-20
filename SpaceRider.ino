@@ -162,7 +162,7 @@ unsigned short SelfTestStateToCalloutMap[34] = {134, 135, 133, 136, 137, 138, 13
 #define SOUND_EFFECT_GATE_CLOSED 315
 #define SOUND_EFFECT_L_OUTLANE_LIT 316
 #define SOUND_EFFECT_EXTRABALL_LIT 317
-#define SOUND_EFFECT_OPENGATE_EXTRABALL 318
+#define SOUND_EFFECT_GOAL_ACHIEVED 318
 #define SOUND_EFFECT_GAME_START 319
 #define SOUND_EFFECT_RIDER1 320
 #define SOUND_EFFECT_RIDER2 321
@@ -306,7 +306,8 @@ unsigned long PlayfieldMultiplier[4];
 byte MaxTiltWarnings = 2;
 byte NumTiltWarnings = 0;
 byte AwardPhase;
-bool SkillShotActive = false; // Means no switches have been hit, or we're within 30 secs of hitting a switch
+bool SkillShotActive = false; // Means no switches have been hit yet
+const unsigned long SkillShotGracePeriodMs = 30000;
 unsigned long SkillShotGracePeroidEnd = 0;
 unsigned long SkillShotCelebrationBlinkEndTime = 0;
 bool IsAnyModeActive = false;
@@ -1262,7 +1263,7 @@ boolean AwardExtraBall() {
         SamePlayerShootsAgain = true;
         RPU_SetLampState(LAMP_SHOOT_AGAIN, SamePlayerShootsAgain);
         RPU_SetLampState(LAMP_HEAD_SAME_PLAYER_SHOOTS_AGAIN, SamePlayerShootsAgain);
-        //QueueNotification(SOUND_EFFECT_EXTRABALL, 9);
+        QueueNotification(SOUND_EFFECT_EXTRABALL, 9);
     }
     return true;
 }
@@ -1276,7 +1277,7 @@ boolean AwardGoalExtraBall() {
         SamePlayerShootsAgain = true;
         RPU_SetLampState(LAMP_SHOOT_AGAIN, SamePlayerShootsAgain);
         RPU_SetLampState(LAMP_HEAD_SAME_PLAYER_SHOOTS_AGAIN, SamePlayerShootsAgain);
-        //QueueNotification(SOUND_EFFECT_EXTRABALL, 9);
+        QueueNotification(SOUND_EFFECT_EXTRABALL, 9);
     }
     return true;
 }
@@ -1596,7 +1597,7 @@ int RunSelfTest(int curState, boolean curStateChanged) {
                     SoundSettingTimeout = CurrentTime + 5000;
                 } else if (curState == MACHINE_STATE_ADJUST_CALLOUTS_VOLUME) {
                     if (SoundSettingTimeout) Audio.StopAllAudio();
-                    Audio.PlaySound(SOUND_EFFECT_GAME_START, AUDIO_PLAY_TYPE_WAV_TRIGGER, curVal);
+                    Audio.PlaySound(SOUND_EFFECT_EXTRABALL, AUDIO_PLAY_TYPE_WAV_TRIGGER, curVal);
                     Audio.SetNotificationsVolume(curVal);
                     SoundSettingTimeout = CurrentTime + 3000;
                 }
@@ -2110,6 +2111,8 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         PreparingWizardMode = false;
         WizardModeEnding = false;
 
+        SkillShotGracePeroidEnd = 0;
+
         // Reset Drop Targets
         if (!FirstGame) {
             // Only reset the drop targets if this is not the first game, since game start would have already reset them
@@ -2197,19 +2200,18 @@ int ManageGameMode() {
     else
         TimersPaused = false;
 
-    if (SkillShotActive == true) {
-        if (BallFirstSwitchHitTime != 0) {
-            // The switch handler will award the skill shot
-            // (when applicable) and this mode will move
-            // to unstructured play when any valid switch is
-            // recorded
-            SetGeneralIlluminationOn(true);
-            SkillShotActive = false;
-            SkillShotGracePeroidEnd = CurrentTime + 30000;
-        }
-        else {
-            ShowLampAnimation(3, 480, CurrentTime, 5, false, false, 4);
-            //ShowLampAnimation2(ANIMATION_TOP_SPACE_ROTATE, 200, CurrentTime, 1);
+    if (SkillShotActive == true && BallFirstSwitchHitTime != 0) {
+        // The switch handler will award the skill shot
+        // (when applicable) and this mode will move
+        // to unstructured play when any valid switch is
+        // recorded
+        SetGeneralIlluminationOn(true);
+        SkillShotActive = false;
+        SkillShotGracePeroidEnd = CurrentTime + SkillShotGracePeriodMs;
+    } else if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+        ShowLampAnimation(3, 960, CurrentTime, 23, false, false, 4);
+        //ShowLampAnimation2(ANIMATION_TOP_SPACE_ROTATE, 200, CurrentTime, 1);
+        if (SkillShotActive) {
             SetGeneralIlluminationOn(false);
         }
     }
@@ -2253,12 +2255,18 @@ int ManageGameMode() {
             // Some hurry up mode was active but now it's over
             IsAnyModeActive = false;
             PlayRandomBackgroundSong();
+            RPU_SetDisplayCredits(Credits);
+            RPU_SetDisplayBallInPlay(CurrentBallInPlay);
         }
     }
 
-    if (!SkillShotActive && SkillShotCelebrationBlinkEndTime != 0 && CurrentTime >= SkillShotCelebrationBlinkEndTime) {
+    // If skill shot was hit and we're done blinking, or if the skill shot grace period ended,
+    // switch to the normal gameplay SPACE letter togging.
+    if ((!SkillShotActive && SkillShotCelebrationBlinkEndTime != 0 && CurrentTime > SkillShotCelebrationBlinkEndTime) ||
+         (!SkillShotActive  && SkillShotGracePeroidEnd != 0 && CurrentTime > SkillShotGracePeroidEnd)) {
         SpaceToggle(); // Start the toggle cycle since those lights are no longer needed for Skill Shot
         SkillShotCelebrationBlinkEndTime = 0; // Reset this to 0 so we don't contantly turn off the SPACE lamps, let them toggle
+        SkillShotGracePeroidEnd = 0;
     }
 
     if ((GateOpenTime != 0) && ((CurrentTime - GateOpenTime) > 1000)) {
@@ -2304,12 +2312,24 @@ int ManageGameMode() {
         RPU_SetDisableGate(true);
         RPU_DisableSolenoidStack();
         ResetModes();
+
+        // If bonus was maxed this ball, reset it so they don't get a free letter after wizard.
+        if (Bonus[CurrentPlayer] >= 40) {
+            Bonus[CurrentPlayer] = 0;
+        }
+
         //QueueNotification(SOUND_EFFECT_WIZARD_MODE_START, 9);
         PlayerGoalProgress[CurrentPlayer].S_Complete = false;
         PlayerGoalProgress[CurrentPlayer].P_Complete = false;
         PlayerGoalProgress[CurrentPlayer].A_Complete = false;
         PlayerGoalProgress[CurrentPlayer].C_Complete = false;
         PlayerGoalProgress[CurrentPlayer].E_Complete = false;
+        
+        // Handle the edge case where the saucer hit was the last thing needed to enter wizard - 
+        // We just cleared the solenoid stack so need to re-trigger the kickout
+        if (RPU_ReadSingleSwitchState(SW_C_SAUCER)) {
+            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
+        }
     }
 
     // Three types of display modes are shown here:
@@ -2841,7 +2861,11 @@ void HandleGamePlaySwitches(byte switchHit) {
 
         if (!WizardModeActive) {
             SpinnerToggle();
-            SpaceToggle();
+
+            if (!SkillShotActive && CurrentTime > SkillShotGracePeroidEnd) {
+                // Only do the toggle if skill shot is NOT active - don't want to overwrite those lights
+                SpaceToggle(); 
+            }
         }
 
         if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
@@ -2895,7 +2919,10 @@ void HandleGamePlaySwitches(byte switchHit) {
             PlaySoundEffect(SOUND_EFFECT_POPBUMPER);
         }
         if (!WizardModeActive) {
-            SpaceToggle();
+            if (!SkillShotActive && CurrentTime > SkillShotGracePeroidEnd) {
+                // Only do the toggle if skill shot is NOT active - don't want to overwrite those lights
+                SpaceToggle(); 
+            }
         }
         LastSwitchHitTime = CurrentTime;
         if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
@@ -2993,7 +3020,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 
                 
             } else if (!WizardModeActive) {
-                RPU_SetDisplayCredits(0 + NumberOfSpins[CurrentPlayer]);
+                RPU_SetDisplayCredits(NumberOfSpins[CurrentPlayer]);
             }
             if (NumberOfSpins[CurrentPlayer] > 0 && NumberOfSpins[CurrentPlayer] < 51) {
                 CurrentScores[CurrentPlayer] += (SCORE_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
@@ -3179,7 +3206,7 @@ void HandleGamePlaySwitches(byte switchHit) {
         break;
 
     case SW_C_SAUCER:
-        if (SkillShotActive == true) {
+        if (SkillShotActive == true || CurrentTime <= SkillShotGracePeroidEnd) {
             unsigned int kickoutWaitTime = 3000;
 
             if (RPU_ReadLampState(LAMP_TOP_S)) {
@@ -3209,7 +3236,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else {
                 kickoutWaitTime = 2000;
-                // Missed skill shot, only awards base saucer score
+                // Missed skill shot, only award base saucer score
                 QueueNotification(SOUND_EFFECT_SKILLSHOT_MISSED, 9);
                 CurrentScores[CurrentPlayer] += 1000;
             }
@@ -3230,7 +3257,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 } else {
                     QueueNotification(SOUND_EFFECT_BLASTOFF_GOAL, 9);
                 }
-            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 7000, true);
+            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
 
         } else if (!WizardModeActive) {
             // Regular hit during unstructured play
@@ -3239,11 +3266,11 @@ void HandleGamePlaySwitches(byte switchHit) {
                 RPU_ReadLampState(LAMP_TOP_E)){
                     CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
                     PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
-                    RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1000, false);
+                    RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 500, false);
                 } else {
                     CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
                     PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
-                    RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1000, false);
+                    RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 500, false);
                 }
             }
             AddToBonus(1);
@@ -3252,7 +3279,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             //Wizard mode is active
             WizardModeProgress.CenterSaucerHit = true;
             CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
-            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1000, false);
+            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 2000, false);
             PlaySoundEffect(SOUND_EFFECT_WIZARDTARGET1);
         }
         LastSwitchHitTime = CurrentTime;
@@ -3264,7 +3291,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             CurrentScores[CurrentPlayer] += 25000;
             IncreasePlayfieldMultiplier[CurrentPlayer]();
             RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
-            RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 4000, true);
+            RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
             RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
         } else if (WizardModeActive){
             RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 2000, true);
@@ -3308,7 +3335,6 @@ void HandleGamePlaySwitches(byte switchHit) {
             } else if (RPU_ReadLampState(LAMP_EXTRABALL) && !RPU_ReadLampState(LAMP_5000) && !RPU_ReadLampState(LAMP_OPENGATE)) {
                 CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
                 RPU_SetLampState(LAMP_EXTRABALL, 0, 0, 0);
-                QueueNotification(SOUND_EFFECT_EXTRABALL, 9);
                 if (CountGoalsCompleted(CurrentPlayer) == 3 && !GoalExtraBallCollected){
                     AwardGoalExtraBall();
                     GoalExtraBallCollected = true;
@@ -3319,7 +3345,6 @@ void HandleGamePlaySwitches(byte switchHit) {
             } else if (RPU_ReadLampState(LAMP_EXTRABALL) && RPU_ReadLampState(LAMP_5000) && !RPU_ReadLampState(LAMP_OPENGATE)) {
                 CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
                 RPU_SetLampState(LAMP_EXTRABALL, 0, 0, 0);
-                QueueNotification(SOUND_EFFECT_EXTRABALL, 9);
                 if (CountGoalsCompleted(CurrentPlayer) == 3 && !GoalExtraBallCollected){
                     AwardGoalExtraBall();
                     GoalExtraBallCollected = true;
@@ -3329,7 +3354,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 }
             } else if (RPU_ReadLampState(LAMP_EXTRABALL) && RPU_ReadLampState(LAMP_OPENGATE) && !RPU_ReadLampState(LAMP_5000)) {
                 CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
-                QueueNotification(SOUND_EFFECT_OPENGATE_EXTRABALL, 9);
+                QueueNotification(SOUND_EFFECT_GATEOPEN, 9);
                 RPU_SetDisableGate(true);
                 GateOpen = false;
                 RPU_SetLampState(LAMP_R_OUTLANE, 1, 0, 500);
@@ -3344,7 +3369,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 }
             } else if (RPU_ReadLampState(LAMP_EXTRABALL) && RPU_ReadLampState(LAMP_OPENGATE) && RPU_ReadLampState(LAMP_5000)) {
                 CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
-                QueueNotification(SOUND_EFFECT_OPENGATE_EXTRABALL, 9);
+                QueueNotification(SOUND_EFFECT_GATEOPEN, 9);
                 RPU_SetDisableGate(true);
                 GateOpen = false;
                 RPU_SetLampState(LAMP_R_OUTLANE, 1, 0, 500);
