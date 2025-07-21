@@ -2173,6 +2173,7 @@ int ManageGameMode() {
     ShowCenterSpinnerLamps();
     // Determine which PlayfieldX lights should be on
     ShowPlayfieldXLamps();
+    ShowPopBumperLamps();
     // Show which goals have been achieved
     ShowSpaceProgressLamps();
 
