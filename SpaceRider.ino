@@ -329,6 +329,7 @@ bool GoalExtraBallCollected = false;
 bool SpecialCollected = false;
 bool TimersPaused = true;
 bool AllowResetAfterBallOne = true;
+bool DisableBallSaveThisBall = false;
 
 enum EnumCenterSpinnerStatus {
     CENTER_LEFT_SPINNER_LIT = 0,
@@ -1840,6 +1841,10 @@ byte CountBallsInTrough() {
 }
 
 void AddToBonus(byte amountToAdd = 1) {
+    if (WizardModeActive) {
+        return;
+    }
+
     Bonus[CurrentPlayer] += amountToAdd;
     if (Bonus[CurrentPlayer] >= MAX_DISPLAY_BONUS) {
         Bonus[CurrentPlayer] = MAX_DISPLAY_BONUS;
@@ -2080,6 +2085,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
             PlayBackgroundSong(SOUND_EFFECT_WIZARD_BG);
             WizardModeActive = true;
             NewBallHoldoverAwards(true);
+            DisableBallSaveThisBall = true;
         } else if (WizardModeEnding) {
              // Just came out of wizard mode.
              NewBallHoldoverAwards(true);
@@ -2087,11 +2093,13 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
              BonusBeforeWizardMode = 0;
              PlayRandomBackgroundSong();
              SkillShotActive = false; // No skill shot after wizard mode
+             DisableBallSaveThisBall = true;
         } else {
             // Normal play, not before or after wizard mode
             SkillShotActive = true;
             NewBallHoldoverAwards();
             PlayRandomBackgroundSong();
+            DisableBallSaveThisBall = false;
         }
 
         PreparingWizardMode = false;
@@ -2197,9 +2205,6 @@ int ManageGameMode() {
         SkillShotGracePeroidEnd = CurrentTime + SkillShotGracePeriodMs;
     } else if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
         ShowLampAnimation(3, 960, CurrentTime, 23, false, false, 4);
-        if (SkillShotActive) {
-            SetGeneralIlluminationOn(false);
-        }
     }
 
     if (IsSuperSpinnerActive(CurrentTime)) {
@@ -2249,6 +2254,10 @@ int ManageGameMode() {
     // switch to the normal gameplay SPACE letter togging.
     if ((!SkillShotActive && SkillShotCelebrationBlinkEndTime != 0 && CurrentTime > SkillShotCelebrationBlinkEndTime) ||
          (!SkillShotActive  && SkillShotGracePeroidEnd != 0 && CurrentTime > SkillShotGracePeroidEnd)) {
+
+        // We cut off the SPACE animation so some light might be still on
+        RPU_TurnOffAllLamps(); //TODO: Trying this lazy way first, will do individual lamps if its an issue
+
         SpaceToggle(); // Start the toggle cycle since those lights are no longer needed for Skill Shot
         SkillShotCelebrationBlinkEndTime = 0; // Reset this to 0 so we don't contantly turn off the SPACE lamps, let them toggle
         SkillShotGracePeroidEnd = 0;
@@ -2290,7 +2299,6 @@ int ManageGameMode() {
     {
         // Kill the flippers and lights to let the ball drain and start wizard mode
         PreparingWizardMode = true;
-        BonusBeforeWizardMode = Bonus[CurrentPlayer]; // Bonus will get cleared on the new ball, so save it off
         BallSaveEndTime = 0;
         RPU_TurnOffAllLamps();
         RPU_SetDisableFlippers(true);
@@ -2302,6 +2310,7 @@ int ManageGameMode() {
         if (Bonus[CurrentPlayer] >= 40) {
             Bonus[CurrentPlayer] = 0;
         }
+        BonusBeforeWizardMode = Bonus[CurrentPlayer]; // Bonus will get cleared on the new ball, so save it off
 
         //QueueNotification(SOUND_EFFECT_WIZARD_MODE_START, 9);
         PlayerGoalProgress[CurrentPlayer].S_Complete = false;
@@ -3226,6 +3235,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 CurrentScores[CurrentPlayer] += 1000;
             }
 
+            SkillShotGracePeroidEnd = 0;
             SkillShotCelebrationBlinkEndTime = CurrentTime + kickoutWaitTime;
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + kickoutWaitTime, true);
 
@@ -3615,7 +3625,7 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
         }
     }
 
-    if (lastBallFirstSwitchHitTime == 0 && BallFirstSwitchHitTime != 0 && !WizardModeActive && !WizardModeEnding) {
+    if (lastBallFirstSwitchHitTime == 0 && BallFirstSwitchHitTime != 0 && !DisableBallSaveThisBall) {
         BallSaveEndTime = BallFirstSwitchHitTime + ((unsigned long)BallSaveNumSeconds) * 1000;
     }
     if (CurrentTime > (BallSaveEndTime + BALL_SAVE_GRACE_PERIOD)) {
