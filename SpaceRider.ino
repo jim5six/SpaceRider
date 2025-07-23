@@ -61,7 +61,8 @@ boolean FirstGame = true;
 #define MACHINE_STATE_ADJUST_EXTRA_BALL_AWARD (MACHINE_STATE_TEST_DONE - 12)
 #define MACHINE_STATE_ADJUST_SPECIAL_AWARD (MACHINE_STATE_TEST_DONE - 13)
 #define MACHINE_STATE_ADJUST_CREDIT_RESET_HOLD_TIME (MACHINE_STATE_TEST_DONE - 14)
-#define MACHINE_STATE_ADJUST_DONE (MACHINE_STATE_TEST_DONE - 15)
+#define MACHINE_STATE_ADJUST_WIZARD_DIFFICULTY (MACHINE_STATE_TEST_DONE - 15)
+#define MACHINE_STATE_ADJUST_DONE (MACHINE_STATE_TEST_DONE - 16)
 
 // Indices of EEPROM save locations
 #define EEPROM_BALL_SAVE_BYTE 100
@@ -79,7 +80,7 @@ boolean FirstGame = true;
 #define EEPROM_CRB_HOLD_TIME 118
 #define EEPROM_EXTRA_BALL_SCORE_UL 140
 #define EEPROM_SPECIAL_SCORE_UL 144
-#define EEPROM_SUPER_BONUS_BYTE 148 // TODO: Byte offset is TBD, do we need to program EEPROM first?
+#define EEPROM_WIZARD_HARD_MODE_BYTE 148 // TODO: Byte offset is TBD, do we need to program EEPROM first?
 
 // Sound Effects
 #define SOUND_EFFECT_NONE               0
@@ -249,7 +250,7 @@ boolean HighScoreReplay = true;
 boolean MatchFeature = true;
 boolean TournamentScoring = false;
 boolean ScrollingScores = false;
-boolean SuperBonusEnabled = true; //TODO: Read this from EEPROM
+boolean WizardHardMode = false; // Makes wizard mode harder to achieve
 unsigned long ExtraBallValue = 0;
 unsigned long SpecialValue = 0;
 unsigned long CurrentTime = 0;
@@ -329,6 +330,7 @@ bool GoalExtraBallCollected = false;
 bool SpecialCollected = false;
 bool TimersPaused = true;
 bool AllowResetAfterBallOne = true;
+bool DisableBallSaveThisBall = false;
 
 enum EnumCenterSpinnerStatus {
     CENTER_LEFT_SPINNER_LIT = 0,
@@ -432,7 +434,10 @@ void ReadStoredParameters() {
     SpecialValue = RPU_ReadULFromEEProm(EEPROM_SPECIAL_SCORE_UL);
     if (SpecialValue % 1000 || SpecialValue > 100000) SpecialValue = 40000;
 
-    //SuperBonusEnabled = ReadSetting(EEPROM_SUPER_BONUS_BYTE, 1) ? true : false;
+    //Just want to run this once to initialize
+    //EEPROM.write(EEPROM_WIZARD_HARD_MODE_BYTE, 0); 
+    
+    //WizardHardMode = ReadSetting(EEPROM_WIZARD_HARD_MODE_BYTE, 1) ? true : false;
 
     TimeRequiredToResetGame = ReadSetting(EEPROM_CRB_HOLD_TIME, 1);
     if (TimeRequiredToResetGame > 3 && TimeRequiredToResetGame != 99) TimeRequiredToResetGame = 1;
@@ -1530,6 +1535,9 @@ int RunSelfTest(int curState, boolean curStateChanged) {
                 CurrentAdjustmentByte = &TimeRequiredToResetGame;
                 CurrentAdjustmentStorageByte = EEPROM_CRB_HOLD_TIME;
                 break;
+            case MACHINE_STATE_ADJUST_WIZARD_DIFFICULTY:
+                CurrentAdjustmentByte = (byte *)&WizardHardMode;
+                CurrentAdjustmentStorageByte = EEPROM_WIZARD_HARD_MODE_BYTE;
             case MACHINE_STATE_ADJUST_DONE:
                 returnState = MACHINE_STATE_ATTRACT;
                 break;
@@ -1840,6 +1848,10 @@ byte CountBallsInTrough() {
 }
 
 void AddToBonus(byte amountToAdd = 1) {
+    if (WizardModeActive) {
+        return;
+    }
+
     Bonus[CurrentPlayer] += amountToAdd;
     if (Bonus[CurrentPlayer] >= MAX_DISPLAY_BONUS) {
         Bonus[CurrentPlayer] = MAX_DISPLAY_BONUS;
@@ -1980,7 +1992,7 @@ void NewBallHoldoverAwards(bool ignoreAll = false) {
             Bonus[CurrentPlayer] = 0;
         }
 
-        if (SuperBonusEnabled) {
+        if (!WizardHardMode) {
             if (Bonus[CurrentPlayer] >= 30) {
                 Bonus[CurrentPlayer] = 30;
             } else if (Bonus[CurrentPlayer] >= 20) {
@@ -2080,6 +2092,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
             PlayBackgroundSong(SOUND_EFFECT_WIZARD_BG);
             WizardModeActive = true;
             NewBallHoldoverAwards(true);
+            DisableBallSaveThisBall = true;
         } else if (WizardModeEnding) {
              // Just came out of wizard mode.
              NewBallHoldoverAwards(true);
@@ -2087,11 +2100,13 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
              BonusBeforeWizardMode = 0;
              PlayRandomBackgroundSong();
              SkillShotActive = false; // No skill shot after wizard mode
+             DisableBallSaveThisBall = true;
         } else {
             // Normal play, not before or after wizard mode
             SkillShotActive = true;
             NewBallHoldoverAwards();
             PlayRandomBackgroundSong();
+            DisableBallSaveThisBall = false;
         }
 
         PreparingWizardMode = false;
@@ -2173,6 +2188,7 @@ int ManageGameMode() {
     ShowCenterSpinnerLamps();
     // Determine which PlayfieldX lights should be on
     ShowPlayfieldXLamps();
+    ShowPopBumperLamps();
     // Show which goals have been achieved
     ShowSpaceProgressLamps();
 
@@ -2248,6 +2264,10 @@ int ManageGameMode() {
     // switch to the normal gameplay SPACE letter togging.
     if ((!SkillShotActive && SkillShotCelebrationBlinkEndTime != 0 && CurrentTime > SkillShotCelebrationBlinkEndTime) ||
          (!SkillShotActive  && SkillShotGracePeroidEnd != 0 && CurrentTime > SkillShotGracePeroidEnd)) {
+
+        // We cut off the SPACE animation so some light might be still on
+        RPU_TurnOffAllLamps(); //TODO: Trying this lazy way first, will do individual lamps if its an issue
+
         SpaceToggle(); // Start the toggle cycle since those lights are no longer needed for Skill Shot
         SkillShotCelebrationBlinkEndTime = 0; // Reset this to 0 so we don't contantly turn off the SPACE lamps, let them toggle
         SkillShotGracePeroidEnd = 0;
@@ -2289,7 +2309,6 @@ int ManageGameMode() {
     {
         // Kill the flippers and lights to let the ball drain and start wizard mode
         PreparingWizardMode = true;
-        BonusBeforeWizardMode = Bonus[CurrentPlayer]; // Bonus will get cleared on the new ball, so save it off
         BallSaveEndTime = 0;
         RPU_TurnOffAllLamps();
         RPU_SetDisableFlippers(true);
@@ -2301,6 +2320,7 @@ int ManageGameMode() {
         if (Bonus[CurrentPlayer] >= 40) {
             Bonus[CurrentPlayer] = 0;
         }
+        BonusBeforeWizardMode = Bonus[CurrentPlayer]; // Bonus will get cleared on the new ball, so save it off
 
         //QueueNotification(SOUND_EFFECT_WIZARD_MODE_START, 9);
         PlayerGoalProgress[CurrentPlayer].S_Complete = false;
@@ -3225,6 +3245,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 CurrentScores[CurrentPlayer] += 1000;
             }
 
+            SkillShotGracePeroidEnd = 0;
             SkillShotCelebrationBlinkEndTime = CurrentTime + kickoutWaitTime;
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + kickoutWaitTime, true);
 
@@ -3614,7 +3635,7 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
         }
     }
 
-    if (lastBallFirstSwitchHitTime == 0 && BallFirstSwitchHitTime != 0 && !WizardModeActive && !WizardModeEnding) {
+    if (lastBallFirstSwitchHitTime == 0 && BallFirstSwitchHitTime != 0 && !DisableBallSaveThisBall) {
         BallSaveEndTime = BallFirstSwitchHitTime + ((unsigned long)BallSaveNumSeconds) * 1000;
     }
     if (CurrentTime > (BallSaveEndTime + BALL_SAVE_GRACE_PERIOD)) {
