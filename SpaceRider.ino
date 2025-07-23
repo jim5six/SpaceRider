@@ -61,7 +61,8 @@ boolean FirstGame = true;
 #define MACHINE_STATE_ADJUST_EXTRA_BALL_AWARD (MACHINE_STATE_TEST_DONE - 12)
 #define MACHINE_STATE_ADJUST_SPECIAL_AWARD (MACHINE_STATE_TEST_DONE - 13)
 #define MACHINE_STATE_ADJUST_CREDIT_RESET_HOLD_TIME (MACHINE_STATE_TEST_DONE - 14)
-#define MACHINE_STATE_ADJUST_DONE (MACHINE_STATE_TEST_DONE - 15)
+#define MACHINE_STATE_ADJUST_WIZARD_DIFFICULTY (MACHINE_STATE_TEST_DONE - 15)
+#define MACHINE_STATE_ADJUST_DONE (MACHINE_STATE_TEST_DONE - 16)
 
 // Indices of EEPROM save locations
 #define EEPROM_BALL_SAVE_BYTE 100
@@ -79,7 +80,7 @@ boolean FirstGame = true;
 #define EEPROM_CRB_HOLD_TIME 118
 #define EEPROM_EXTRA_BALL_SCORE_UL 140
 #define EEPROM_SPECIAL_SCORE_UL 144
-#define EEPROM_SUPER_BONUS_BYTE 148 // TODO: Byte offset is TBD, do we need to program EEPROM first?
+#define EEPROM_WIZARD_HARD_MODE_BYTE 148 // TODO: Byte offset is TBD, do we need to program EEPROM first?
 
 // Sound Effects
 #define SOUND_EFFECT_NONE               0
@@ -249,7 +250,7 @@ boolean HighScoreReplay = true;
 boolean MatchFeature = true;
 boolean TournamentScoring = false;
 boolean ScrollingScores = false;
-boolean SuperBonusEnabled = true; //TODO: Read this from EEPROM
+boolean WizardHardMode = false; // Makes wizard mode harder to achieve
 unsigned long ExtraBallValue = 0;
 unsigned long SpecialValue = 0;
 unsigned long CurrentTime = 0;
@@ -433,7 +434,7 @@ void ReadStoredParameters() {
     SpecialValue = RPU_ReadULFromEEProm(EEPROM_SPECIAL_SCORE_UL);
     if (SpecialValue % 1000 || SpecialValue > 100000) SpecialValue = 40000;
 
-    //SuperBonusEnabled = ReadSetting(EEPROM_SUPER_BONUS_BYTE, 1) ? true : false;
+    //WizardHardMode = ReadSetting(EEPROM_WIZARD_HARD_MODE_BYTE, 1) ? true : false;
 
     TimeRequiredToResetGame = ReadSetting(EEPROM_CRB_HOLD_TIME, 1);
     if (TimeRequiredToResetGame > 3 && TimeRequiredToResetGame != 99) TimeRequiredToResetGame = 1;
@@ -1531,6 +1532,9 @@ int RunSelfTest(int curState, boolean curStateChanged) {
                 CurrentAdjustmentByte = &TimeRequiredToResetGame;
                 CurrentAdjustmentStorageByte = EEPROM_CRB_HOLD_TIME;
                 break;
+            case MACHINE_STATE_ADJUST_WIZARD_DIFFICULTY:
+                CurrentAdjustmentByte = (byte *)&WizardHardMode;
+                CurrentAdjustmentStorageByte = EEPROM_WIZARD_HARD_MODE_BYTE;
             case MACHINE_STATE_ADJUST_DONE:
                 returnState = MACHINE_STATE_ATTRACT;
                 break;
@@ -1985,7 +1989,7 @@ void NewBallHoldoverAwards(bool ignoreAll = false) {
             Bonus[CurrentPlayer] = 0;
         }
 
-        if (SuperBonusEnabled) {
+        if (!WizardHardMode) {
             if (Bonus[CurrentPlayer] >= 30) {
                 Bonus[CurrentPlayer] = 30;
             } else if (Bonus[CurrentPlayer] >= 20) {
