@@ -584,6 +584,12 @@ void ShowBonusLamps() {
     {
         return;
     }
+
+    if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+        // Don't fight the animation
+        return;
+    }
+
     byte bonus = Bonus[CurrentPlayer];
     if (bonus > MAX_DISPLAY_BONUS) bonus = MAX_DISPLAY_BONUS;
 
@@ -642,6 +648,11 @@ void ShowBonusLamps() {
 }
 
 void ShowLeftSpinnerLamps(void) {
+    if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+        // Don't fight the animation
+        return;
+    }
+
     if (IsSuperSpinnerActive(CurrentTime)) {
         ShowLampAnimation(4, 240, CurrentTime, 23, false, false);
     } else if (WizardModeActive) {
@@ -694,6 +705,11 @@ void ShowLeftSpinnerLamps(void) {
 }
 
 void ShowCenterSpinnerLamps() {
+    if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+        // Don't fight the animation
+        return;
+    }
+
     if (IsSuperSuperBlastOffActive(CurrentTime)) {
         ShowLampAnimation(2, 144, CurrentTime, 23, false, false);
     } else if (WizardModeActive) {
@@ -765,18 +781,27 @@ void ShowPlayfieldXLamps() {
     }
     if (PlayfieldMultiplier[CurrentPlayer] == 2) {
         RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 0);
-        RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
-        RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
+        if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+            // Don't fight the animation
+            RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
+            RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
+        }
     }
     if (PlayfieldMultiplier[CurrentPlayer] == 3) {
-        RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
         RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
-        RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
+        if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+            // Don't fight the animation
+            RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
+            RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
+        }
     }
     if (PlayfieldMultiplier[CurrentPlayer] == 5) {
-        RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
-        RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
         RPU_SetLampState(LAMP_BONUS_5X, 1, 0, 0);
+        if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+            // Don't fight the animation
+            RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
+            RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
+        }
     }
 
 }
@@ -814,8 +839,11 @@ void ShowSpaceProgressLamps() {
 }
 
 void ShowPopBumperLamps() {
-    if (IsSuperPopsActive(CurrentTime))
-    {
+    if (IsSuperPopsActive(CurrentTime) || WizardModeActive) {
+        return;
+    }
+    if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+        // Don't fight the animation
         return;
     }
     RPU_SetLampState(LAMP_C_POP, 1, 0, 0);
@@ -2210,7 +2238,7 @@ int ManageGameMode() {
         SkillShotActive = false;
         SkillShotGracePeroidEnd = CurrentTime + SkillShotGracePeriodMs;
     } else if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
-        ShowLampAnimation(3, 960, CurrentTime, 23, false, false, 4);
+        ShowLampAnimation(3, 960, CurrentTime, 23, false, false);
         if (SkillShotActive) {
             SetGeneralIlluminationOn(false);
         }
