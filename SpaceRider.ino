@@ -2064,7 +2064,6 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         ScoreAdditionAnimationStartTime = 0;
         BonusXAnimationStart = 0;
         //    Bonus[CurrentPlayer] = 0;
-        PlayfieldMultiplier[CurrentPlayer] = 1;
         BallSaveEndTime = 0;
         Bonus[CurrentPlayer] = Bonus[CurrentPlayer];
         for (int count = 0; count < 4; count++) {
