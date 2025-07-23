@@ -2237,11 +2237,8 @@ int ManageGameMode() {
         SetGeneralIlluminationOn(true);
         SkillShotActive = false;
         SkillShotGracePeroidEnd = CurrentTime + SkillShotGracePeriodMs;
-    } else if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+    } else if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd && CurrentTime >= SkillShotCelebrationBlinkEndTime) {
         ShowLampAnimation(3, 960, CurrentTime, 23, false, false);
-        if (SkillShotActive) {
-            SetGeneralIlluminationOn(false);
-        }
     }
 
     if (IsSuperSpinnerActive(CurrentTime)) {
@@ -3272,6 +3269,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 CurrentScores[CurrentPlayer] += 1000;
             }
 
+            SkillShotActive = false;
             SkillShotGracePeroidEnd = 0;
             SkillShotCelebrationBlinkEndTime = CurrentTime + kickoutWaitTime;
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + kickoutWaitTime, true);
