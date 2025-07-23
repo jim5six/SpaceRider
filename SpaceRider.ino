@@ -434,6 +434,9 @@ void ReadStoredParameters() {
     SpecialValue = RPU_ReadULFromEEProm(EEPROM_SPECIAL_SCORE_UL);
     if (SpecialValue % 1000 || SpecialValue > 100000) SpecialValue = 40000;
 
+    //Just want to run this once to initialize
+    //EEPROM.write(EEPROM_WIZARD_HARD_MODE_BYTE, 0); 
+    
     //WizardHardMode = ReadSetting(EEPROM_WIZARD_HARD_MODE_BYTE, 1) ? true : false;
 
     TimeRequiredToResetGame = ReadSetting(EEPROM_CRB_HOLD_TIME, 1);
