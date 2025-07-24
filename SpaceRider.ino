@@ -3234,7 +3234,7 @@ void HandleGamePlaySwitches(byte switchHit) {
         break;
 
     case SW_C_SAUCER:
-        if (SkillShotActive == true || CurrentTime <= SkillShotGracePeroidEnd) {
+        if ((SkillShotActive == true || CurrentTime <= SkillShotGracePeroidEnd) && CurrentTime > SkillShotCelebrationBlinkEndTime) {
             unsigned int kickoutWaitTime = 3000;
 
             if (RPU_ReadLampState(LAMP_TOP_S)) {
