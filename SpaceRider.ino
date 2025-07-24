@@ -2237,8 +2237,16 @@ int ManageGameMode() {
         SetGeneralIlluminationOn(true);
         SkillShotActive = false;
         SkillShotGracePeroidEnd = CurrentTime + SkillShotGracePeriodMs;
-    } else if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd && CurrentTime >= SkillShotCelebrationBlinkEndTime) {
+    } else if ((SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) && CurrentTime >= SkillShotCelebrationBlinkEndTime) {
         ShowLampAnimation(3, 960, CurrentTime, 23, false, false);
+
+        // Show a countdown if within the grace period
+        if (!SkillShotActive) {
+            unsigned long SkillShotTimeLeft = (SkillShotActive) ? 30 : (SkillShotGracePeroidEnd - CurrentTime) / 1000;
+            byte displayToUse = (CurrentPlayer == 3) ? 0 : CurrentPlayer + 1; // Use the next available display
+
+            OverrideScoreDisplay(displayToUse, SkillShotTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
+        }
     }
 
     if (IsSuperSpinnerActive(CurrentTime)) {
