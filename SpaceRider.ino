@@ -2415,19 +2415,6 @@ int ManageGameMode() {
         }
     } else {
         ShowPlayerScores(CurrentPlayer, (BallFirstSwitchHitTime == 0) ? true : false, (BallFirstSwitchHitTime > 0 && ((CurrentTime - LastTimeScoreChanged) > 2000)) ? true : false);
-
-        // Show the player up lamp
-        if (BallFirstSwitchHitTime == 0) {
-            for (byte count = 0; count < 4; count++) {
-                //        RPU_SetLampState(LAMP_HEAD_PLAYER_1_UP + count, (((CurrentTime / 250) % 2) == 0 || CurrentPlayer != count) ? false : true);
-                //        RPU_SetLampState(LAMP_HEAD_1_PLAYER + count, ((count+1)==CurrentNumPlayers) ? true : false);
-            }
-        } else {
-            for (byte count = 0; count < 4; count++) {
-                //        RPU_SetLampState(LAMP_HEAD_PLAYER_1_UP + count, (CurrentPlayer == count) ? true : false);
-                //        RPU_SetLampState(LAMP_HEAD_1_PLAYER + count, ((count+1)==CurrentNumPlayers) ? true : false);
-            }
-        }
     }
 
     // Check to see if ball is in the outhole
