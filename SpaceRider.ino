@@ -779,31 +779,30 @@ void ShowPlayfieldXLamps() {
     {
         return;
     }
+    if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+        // Don't fight the animation
+        return;
+    }
+    if (PlayfieldMultiplier[CurrentPlayer] <= 1) {
+        RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
+    }
     if (PlayfieldMultiplier[CurrentPlayer] == 2) {
         RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 0);
-        if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
-            // Don't fight the animation
-            RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
-            RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
-        }
+        RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
     }
     if (PlayfieldMultiplier[CurrentPlayer] == 3) {
         RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
-        if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
-            // Don't fight the animation
-            RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
-            RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
-        }
+        RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
     }
     if (PlayfieldMultiplier[CurrentPlayer] == 5) {
         RPU_SetLampState(LAMP_BONUS_5X, 1, 0, 0);
-        if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
-            // Don't fight the animation
-            RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
-            RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
-        }
+        RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
     }
-
 }
 
 void ShowSpaceProgressLamps() {
@@ -3337,6 +3336,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             }
         }
         LastSwitchHitTime = CurrentTime;
+        if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
         break;
 
     case SW_R_TARGET:
@@ -3557,6 +3557,7 @@ void HandleGamePlaySwitches(byte switchHit) {
     case SW_RUBBER:
         CurrentScores[CurrentPlayer] += 10;
         PlaySoundEffect(SOUND_EFFECT_RUBBER);
+        if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
         break;
     }
 }
