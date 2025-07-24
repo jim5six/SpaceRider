@@ -781,7 +781,7 @@ void ShowPlayfieldXLamps() {
     }
     if (PlayfieldMultiplier[CurrentPlayer] == 2) {
         RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 0);
-        if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+        if (!(SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd)) {
             // Don't fight the animation
             RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
             RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
@@ -789,7 +789,7 @@ void ShowPlayfieldXLamps() {
     }
     if (PlayfieldMultiplier[CurrentPlayer] == 3) {
         RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
-        if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+        if (!(SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd)) {
             // Don't fight the animation
             RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
             RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
@@ -797,7 +797,7 @@ void ShowPlayfieldXLamps() {
     }
     if (PlayfieldMultiplier[CurrentPlayer] == 5) {
         RPU_SetLampState(LAMP_BONUS_5X, 1, 0, 0);
-        if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+        if (!(SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd)) {
             // Don't fight the animation
             RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
             RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
@@ -2288,9 +2288,6 @@ int ManageGameMode() {
     // switch to the normal gameplay SPACE letter togging.
     if ((!SkillShotActive && SkillShotCelebrationBlinkEndTime != 0 && CurrentTime > SkillShotCelebrationBlinkEndTime) ||
          (!SkillShotActive  && SkillShotGracePeroidEnd != 0 && CurrentTime > SkillShotGracePeroidEnd)) {
-
-        // We cut off the SPACE animation so some light might be still on
-        RPU_TurnOffAllLamps(); //TODO: Trying this lazy way first, will do individual lamps if its an issue
 
         SpaceToggle(); // Start the toggle cycle since those lights are no longer needed for Skill Shot
         SkillShotCelebrationBlinkEndTime = 0; // Reset this to 0 so we don't contantly turn off the SPACE lamps, let them toggle
