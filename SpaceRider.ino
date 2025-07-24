@@ -3319,7 +3319,7 @@ void HandleGamePlaySwitches(byte switchHit) {
     case SW_R_SAUCER:
         if (!WizardModeActive){
             CurrentScores[CurrentPlayer] += 25000;
-            IncreasePlayfieldMultiplier[CurrentPlayer]();
+            IncreasePlayfieldMultiplier();
             RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
             RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
             RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
