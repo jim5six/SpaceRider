@@ -2290,7 +2290,7 @@ int ManageGameMode() {
          (!SkillShotActive  && SkillShotGracePeroidEnd != 0 && CurrentTime > SkillShotGracePeroidEnd)) {
 
         // We cut off the SPACE animation so some light might be still on
-        RPU_TurnOffAllLamps(); //TODO: Trying this lazy way first, will do individual lamps if its an issue
+        //RPU_TurnOffAllLamps(); //TODO: Trying this lazy way first, will do individual lamps if its an issue
 
         SpaceToggle(); // Start the toggle cycle since those lights are no longer needed for Skill Shot
         SkillShotCelebrationBlinkEndTime = 0; // Reset this to 0 so we don't contantly turn off the SPACE lamps, let them toggle
