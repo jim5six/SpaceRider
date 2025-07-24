@@ -2239,6 +2239,12 @@ int ManageGameMode() {
         SkillShotGracePeroidEnd = CurrentTime + SkillShotGracePeriodMs;
     } else if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd && CurrentTime >= SkillShotCelebrationBlinkEndTime) {
         ShowLampAnimation(3, 960, CurrentTime, 23, false, false);
+
+        // Show a countdown if within the grace period
+        if (!SkillShotActive) {
+            unsigned long SkillShotTimeLeft = (SkillShotActive) ? 30 : (SkillShotGracePeroidEnd - CurrentTime) / 1000;
+            byte displayToUse = (CurrentPlayer == 3) ? 0 : CurrentPlayer + 2; // Use the next available display
+        }
     }
 
     if (IsSuperSpinnerActive(CurrentTime)) {
@@ -3308,7 +3314,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             CurrentScores[CurrentPlayer] += 25000;
             IncreasePlayfieldMultiplier();
             RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
-            RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
+            RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 4000, true);
             RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
         } else if (WizardModeActive){
             RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 2000, true);
@@ -3318,7 +3324,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 // Wizard Mode fully Completed
                 CurrentScores[CurrentPlayer] += WIZARD_MODE_COMPLETED_AWARD;
                 RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
-                RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 3100, true);
+                RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
                 QueueNotification(SOUND_EFFECT_WIZARD_MODE_COMPLETE, 9);
 
                 RPU_TurnOffAllLamps();
