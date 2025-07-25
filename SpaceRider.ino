@@ -328,7 +328,6 @@ bool BallSaveUsed = false;
 bool ExtraBallCollected = false;
 bool GoalExtraBallCollected = false;
 bool SpecialCollected = false;
-bool TimersPaused = true;
 bool AllowResetAfterBallOne = true;
 bool DisableBallSaveThisBall = false;
 
@@ -2222,11 +2221,6 @@ int ManageGameMode() {
         ShowLampAnimation(6, 48, CurrentTime, 23, false, false);
         ManageWizardMode();
     }
-
-    if ((CurrentTime - LastSwitchHitTime) > 3000)
-        TimersPaused = true;
-    else
-        TimersPaused = false;
 
     if (SkillShotActive == true && BallFirstSwitchHitTime != 0) {
         // The switch handler will award the skill shot
