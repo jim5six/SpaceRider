@@ -2242,7 +2242,9 @@ int ManageGameMode() {
         // Show a countdown if within the grace period
         if (!SkillShotActive) {
             unsigned long SkillShotTimeLeft = (SkillShotActive) ? 30 : (SkillShotGracePeroidEnd - CurrentTime) / 1000;
-            byte displayToUse = (CurrentPlayer == 3) ? 0 : CurrentPlayer + 2; // Use the next available display
+            byte displayToUse = (CurrentPlayer == 3) ? 0 : CurrentPlayer + 1; // Use the next available display
+            ShowPlayerScores(displayToUse, false, false);
+            OverrideScoreDisplay(displayToUse, SkillShotTimeLeft, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
         }
     }
 
@@ -2277,8 +2279,13 @@ int ManageGameMode() {
         IsAnyModeActive = true;
     }
 
-    if (!IsSuperSpinnerActive(CurrentTime) && !IsSuperPopsActive(CurrentTime) && !IsSuperSuperBlastOffActive(CurrentTime) && !SkillShotActive) {
-        ShowPlayerScores(0xFF, false, false);
+    if (!IsSuperSpinnerActive(CurrentTime) && 
+        !IsSuperPopsActive(CurrentTime) && 
+        !IsSuperSuperBlastOffActive(CurrentTime) && 
+        !SkillShotActive && 
+        CurrentTime > SkillShotGracePeroidEnd) {
+        
+            ShowPlayerScores(0xFF, false, false);
 
         if (IsAnyModeActive == true) {
             // Some hurry up mode was active but now it's over
@@ -2293,9 +2300,6 @@ int ManageGameMode() {
     // switch to the normal gameplay SPACE letter togging.
     if ((!SkillShotActive && SkillShotCelebrationBlinkEndTime != 0 && CurrentTime > SkillShotCelebrationBlinkEndTime) ||
          (!SkillShotActive  && SkillShotGracePeroidEnd != 0 && CurrentTime > SkillShotGracePeroidEnd)) {
-
-        // We cut off the SPACE animation so some light might be still on
-        //RPU_TurnOffAllLamps(); //TODO: Trying this lazy way first, will do individual lamps if its an issue
 
         SpaceToggle(); // Start the toggle cycle since those lights are no longer needed for Skill Shot
         SkillShotCelebrationBlinkEndTime = 0; // Reset this to 0 so we don't contantly turn off the SPACE lamps, let them toggle
