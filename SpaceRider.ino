@@ -779,31 +779,30 @@ void ShowPlayfieldXLamps() {
     {
         return;
     }
+    if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+        // Don't fight the animation
+        return;
+    }
+    if (PlayfieldMultiplier[CurrentPlayer] <= 1) {
+        RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
+    }
     if (PlayfieldMultiplier[CurrentPlayer] == 2) {
         RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 0);
-        if (!(SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd)) {
-            // Don't fight the animation
-            RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
-            RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
-        }
+        RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
     }
     if (PlayfieldMultiplier[CurrentPlayer] == 3) {
         RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 0);
-        if (!(SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd)) {
-            // Don't fight the animation
-            RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
-            RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
-        }
+        RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_5X, 0, 0, 0);
     }
     if (PlayfieldMultiplier[CurrentPlayer] == 5) {
         RPU_SetLampState(LAMP_BONUS_5X, 1, 0, 0);
-        if (!(SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd)) {
-            // Don't fight the animation
-            RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
-            RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
-        }
+        RPU_SetLampState(LAMP_BONUS_2X, 0, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_3X, 0, 0, 0);
     }
-
 }
 
 void ShowSpaceProgressLamps() {
@@ -2243,9 +2242,7 @@ int ManageGameMode() {
         // Show a countdown if within the grace period
         if (!SkillShotActive) {
             unsigned long SkillShotTimeLeft = (SkillShotActive) ? 30 : (SkillShotGracePeroidEnd - CurrentTime) / 1000;
-            byte displayToUse = (CurrentPlayer == 3) ? 0 : CurrentPlayer + 1; // Use the next available display
-
-            OverrideScoreDisplay(displayToUse, SkillShotTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
+            byte displayToUse = (CurrentPlayer == 3) ? 0 : CurrentPlayer + 2; // Use the next available display
         }
     }
 
@@ -2296,6 +2293,9 @@ int ManageGameMode() {
     // switch to the normal gameplay SPACE letter togging.
     if ((!SkillShotActive && SkillShotCelebrationBlinkEndTime != 0 && CurrentTime > SkillShotCelebrationBlinkEndTime) ||
          (!SkillShotActive  && SkillShotGracePeroidEnd != 0 && CurrentTime > SkillShotGracePeroidEnd)) {
+
+        // We cut off the SPACE animation so some light might be still on
+        //RPU_TurnOffAllLamps(); //TODO: Trying this lazy way first, will do individual lamps if its an issue
 
         SpaceToggle(); // Start the toggle cycle since those lights are no longer needed for Skill Shot
         SkillShotCelebrationBlinkEndTime = 0; // Reset this to 0 so we don't contantly turn off the SPACE lamps, let them toggle
@@ -3313,7 +3313,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             CurrentScores[CurrentPlayer] += 25000;
             IncreasePlayfieldMultiplier();
             RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
-            RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
+            RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 4000, true);
             RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
         } else if (WizardModeActive){
             RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 2000, true);
@@ -3323,7 +3323,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 // Wizard Mode fully Completed
                 CurrentScores[CurrentPlayer] += WIZARD_MODE_COMPLETED_AWARD;
                 RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
-                RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 3100, true);
+                RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
                 QueueNotification(SOUND_EFFECT_WIZARD_MODE_COMPLETE, 9);
 
                 RPU_TurnOffAllLamps();
@@ -3336,6 +3336,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             }
         }
         LastSwitchHitTime = CurrentTime;
+        if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
         break;
 
     case SW_R_TARGET:
@@ -3556,6 +3557,7 @@ void HandleGamePlaySwitches(byte switchHit) {
     case SW_RUBBER:
         CurrentScores[CurrentPlayer] += 10;
         PlaySoundEffect(SOUND_EFFECT_RUBBER);
+        if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
         break;
     }
 }
