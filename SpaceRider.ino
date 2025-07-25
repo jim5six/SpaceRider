@@ -2238,7 +2238,7 @@ int ManageGameMode() {
             unsigned long SkillShotTimeLeft = (SkillShotActive) ? 30 : (SkillShotGracePeroidEnd - CurrentTime) / 1000;
             byte displayToUse = (CurrentPlayer == 3) ? 0 : CurrentPlayer + 1; // Use the next available display
             ShowPlayerScores(displayToUse, false, false);
-            OverrideScoreDisplay(displayToUse, SkillShotTimeLeft, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
+            OverrideScoreDisplay(displayToUse, SkillShotTimeLeft, DISPLAY_OVERRIDE_ANIMATION_BOUNCE);
         }
     }
 
@@ -2246,7 +2246,7 @@ int ManageGameMode() {
         unsigned long SuperSpinnerTimeLeft = SuperSpinnerRemainingTime(CurrentTime);
         
         byte displayToUse = (CurrentPlayer == 0) ? 1 : 0; // Show spinner time on first available display
-        OverrideScoreDisplay(displayToUse, SuperSpinnerTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
+        OverrideScoreDisplay(displayToUse, SuperSpinnerTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_BOUNCE);
 
         IsAnyModeActive = true;
     }
@@ -2256,7 +2256,7 @@ int ManageGameMode() {
         unsigned long SuperPopTimeLeft = SuperPopsRemainingTime(CurrentTime);
 
         byte displayToUse = (CurrentPlayer == 0 || CurrentPlayer == 1) ? 2 : 1; // Show spinner time on first available display
-        OverrideScoreDisplay(displayToUse, SuperPopTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
+        OverrideScoreDisplay(displayToUse, SuperPopTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_BOUNCE);
 
         IsAnyModeActive = true;
     } else if (!WizardModeActive) {
@@ -2268,7 +2268,7 @@ int ManageGameMode() {
         unsigned long SuperBlastOffTimeLeft = SuperBlastOffRemainingTime(CurrentTime);
 
         byte displayToUse = (CurrentPlayer == 3) ? 2 : 3; // Show spinner time on first available display
-        OverrideScoreDisplay(displayToUse, SuperBlastOffTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_FLUTTER);
+        OverrideScoreDisplay(displayToUse, SuperBlastOffTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_BOUNCE);
 
         IsAnyModeActive = true;
     }
