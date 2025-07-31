@@ -593,7 +593,7 @@ void ShowBonusLamps() {
     if (bonus > MAX_DISPLAY_BONUS) bonus = MAX_DISPLAY_BONUS;
 
     if (bonus >= 40) {
-        RPU_SetLampState(LAMP_BONUS_400, 1, 0, 0);
+        RPU_SetLampState(LAMP_BONUS_400, 1, 0, 500);
 
         // Flash all other bonus lamps
         RPU_SetLampState(LAMP_BONUS_10, 1, 0, 500);
@@ -1340,20 +1340,12 @@ void TargetBank() {
         }
     if ((TargetBankComplete[CurrentPlayer] == 2) && !(RPU_ReadLampState(LAMP_EXTRABALL))) {
             RPU_SetLampState(LAMP_EXTRABALL, 1, 0, 0);
-            RPU_SetLampState(LAMP_TARGET_1, 1, 0, 500);
-            RPU_SetLampState(LAMP_TARGET_2, 1, 0, 500);
-            RPU_SetLampState(LAMP_TARGET_3, 1, 0, 500);
-            RPU_SetLampState(LAMP_TARGET_4, 1, 0, 500);
-            RPU_SetLampState(LAMP_TARGET_5, 1, 0, 500);
+            ShowLampAnimation(7, 96, CurrentTime, 23, false, false);
             QueueNotification(SOUND_EFFECT_EXTRABALL_LIT, 9);
             TargetBankComplete[CurrentPlayer] += 1;
     }
     if  (TargetBankComplete[CurrentPlayer] >= 3) {
-            RPU_SetLampState(LAMP_TARGET_1, 1, 0, 500);
-            RPU_SetLampState(LAMP_TARGET_2, 1, 0, 500);
-            RPU_SetLampState(LAMP_TARGET_3, 1, 0, 500);
-            RPU_SetLampState(LAMP_TARGET_4, 1, 0, 500);
-            RPU_SetLampState(LAMP_TARGET_5, 1, 0, 500);
+            ShowLampAnimation(7, 96, CurrentTime, 23, false, false);
     }
 }
 
@@ -3231,26 +3223,50 @@ void HandleGamePlaySwitches(byte switchHit) {
                 QueueNotification(SOUND_EFFECT_SPINNER_HELD, 9);
                 HOLD_SPINNER_PROGRESS[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_TOP_S, 1, 0, 250);
+                RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 250);
+                RPU_SetLampState(LAMP_L_SPINNER_200, 1, 0, 250);
+                RPU_SetLampState(LAMP_L_SPINNER_1000, 1, 0, 250);
+                RPU_SetLampState(LAMP_L_SPINNER_2000, 1, 0, 250);
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else if (RPU_ReadLampState(LAMP_TOP_P)) {
                 QueueNotification(SOUND_EFFECT_POP_HELD, 9);
                 HOLD_POP_PROGRESS[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_TOP_P, 1, 0, 250);
+                RPU_SetLampState(LAMP_C_POP, 1, 0, 250);
+                RPU_SetLampState(LAMP_LR_POP, 1, 0, 250);
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else if (RPU_ReadLampState(LAMP_TOP_A)) {
                 QueueNotification(SOUND_EFFECT_BLASTOFF_HELD, 9);
                 HOLD_BLASTOFF_PROGRESS[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_TOP_A, 1, 0, 250);
+                RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 250);
+                RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 250);
+                RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 250);
+                RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 250);
+                RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 250);
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else if (RPU_ReadLampState(LAMP_TOP_C)) {
                 QueueNotification(SOUND_EFFECT_BONUS_HELD, 9);
                 HOLD_BONUS[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_TOP_C, 1, 0, 250);
+                RPU_SetLampState(LAMP_BONUS_10, 1, 0, 250);
+                RPU_SetLampState(LAMP_BONUS_20, 1, 0, 250);
+                RPU_SetLampState(LAMP_BONUS_30, 1, 0, 250);
+                RPU_SetLampState(LAMP_BONUS_40, 1, 0, 250);
+                RPU_SetLampState(LAMP_BONUS_50, 1, 0, 250);
+                RPU_SetLampState(LAMP_BONUS_60, 1, 0, 250);
+                RPU_SetLampState(LAMP_BONUS_70, 1, 0, 250);
+                RPU_SetLampState(LAMP_BONUS_80, 1, 0, 250);
+                RPU_SetLampState(LAMP_BONUS_90, 1, 0, 250);
+                RPU_SetLampState(LAMP_BONUS_100, 1, 0, 250);
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else if (RPU_ReadLampState(LAMP_TOP_E)) {
                 QueueNotification(SOUND_EFFECT_PLAYFIELDX_HELD, 9);
                 HOLD_PLAYFIELDX[CurrentPlayer] = true;
                 RPU_SetLampState(LAMP_TOP_E, 1, 0, 250);
+                RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 250);
+                RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 250);
+                RPU_SetLampState(LAMP_BONUS_5X, 1, 0, 250);
                 CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
             } else {
                 kickoutWaitTime = 2000;
