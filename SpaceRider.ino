@@ -14,7 +14,6 @@
 #include "AudioHandler.h"
 #include "GameModeManager.h"
 #include "LampAnimations.h"
-#include "TrevorLampAnimations.h"
 #include "SelfTestAndAudit.h"
 #include "SpaceRider.h"
 #include <EEPROM.h>
@@ -579,7 +578,7 @@ void SetGeneralIlluminationOn(boolean setGIOn = true) {
 }
 
 void ShowBonusLamps() {
-    if (IsSuperSuperBlastOffActive(CurrentTime) || WizardModeActive)
+    if (IsSuperSuperBlastOffActive(CurrentTime) || WizardModeActive || CurrentTime <= SkillShotCelebrationBlinkEndTime)
     {
         return;
     }
@@ -647,7 +646,7 @@ void ShowBonusLamps() {
 }
 
 void ShowLeftSpinnerLamps(void) {
-    if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+    if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd || CurrentTime <= SkillShotCelebrationBlinkEndTime) {
         // Don't fight the animation
         return;
     }
@@ -704,7 +703,7 @@ void ShowLeftSpinnerLamps(void) {
 }
 
 void ShowCenterSpinnerLamps() {
-    if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+    if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd || CurrentTime <= SkillShotCelebrationBlinkEndTime) {
         // Don't fight the animation
         return;
     }
@@ -778,7 +777,7 @@ void ShowPlayfieldXLamps() {
     {
         return;
     }
-    if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+    if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd || CurrentTime <= SkillShotCelebrationBlinkEndTime) {
         // Don't fight the animation
         return;
     }
@@ -840,7 +839,7 @@ void ShowPopBumperLamps() {
     if (IsSuperPopsActive(CurrentTime) || WizardModeActive) {
         return;
     }
-    if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd) {
+    if (SkillShotActive || CurrentTime <= SkillShotGracePeroidEnd || CurrentTime <= SkillShotCelebrationBlinkEndTime) {
         // Don't fight the animation
         return;
     }
