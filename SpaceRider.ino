@@ -239,9 +239,7 @@ byte NumberOfSpins[4]; // Left spinner spins
 byte NumberOfCenterSpins[4]; // Center spinner spins
 byte NumberOfHits[4];
 byte PlayfieldX[4];
-byte Goals[4] = {0, 0, 0, 0};
 byte TargetBankComplete[4];
-byte LampType = 0;
 boolean SkillShotHit = false;
 boolean FreePlayMode = true;
 boolean GoalsDisplayToggle;
@@ -1947,7 +1945,6 @@ int InitGamePlay(boolean curStateChanged) {
     for (int count = 0; count < 4; count++) {
         // Initialize game-specific variables
         BonusX[count] = 1;
-        Goals[count] = 0;
         NumberOfSpins[count] = 0;
         NumberOfCenterSpins[count] = 0;
         NumberOfHits[count] = 0;
@@ -2083,13 +2080,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         //    Bonus[CurrentPlayer] = 0;
         BallSaveEndTime = 0;
         Bonus[CurrentPlayer] = Bonus[CurrentPlayer];
-        for (int count = 0; count < 4; count++) {
-            //      NumberOfSpins[count] = 1;
-            //      NumberOfCenterSpins[count] = 1;
-            //      NumberOfHits[count] = 0;
-            Goals[count] = 0;
-            //TargetBankComplete[count] = 0;
-        }
+
         ResetModes();
         SpinnerToggle();
         TargetBank();
