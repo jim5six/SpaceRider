@@ -240,7 +240,6 @@ byte NumberOfCenterSpins[4]; // Center spinner spins
 byte NumberOfHits[4];
 byte PlayfieldX[4];
 byte TargetBankComplete[4];
-boolean SkillShotHit = false;
 boolean FreePlayMode = true;
 boolean GoalsDisplayToggle;
 boolean HighScoreReplay = true;
@@ -254,7 +253,6 @@ unsigned long CurrentTime = 0;
 unsigned long HighScore = 0;
 unsigned long AwardScores[3];
 unsigned long CreditResetPressStarted = 0;
-unsigned long LastTimeSpinnerHit = 0;
 
 AudioHandler Audio;
 
@@ -325,7 +323,6 @@ bool BallSaveUsed = false;
 bool ExtraBallCollected = false;
 bool GoalExtraBallCollected = false;
 bool SpecialCollected = false;
-bool AllowResetAfterBallOne = true;
 bool DisableBallSaveThisBall = false;
 
 enum EnumCenterSpinnerStatus {
@@ -361,12 +358,8 @@ unsigned long SuperBlastOffCollectedHoldTime = 0;
     Game Specific State Variables
 
 *********************************************************************/
-unsigned long BonusChanged;
-unsigned long BonusXAnimationStart;
 boolean GateOpen = true;
 unsigned long GateOpenTime = 0;
-
-// DropTargetBank DropTargets(4, 1, DROP_TARGET_TYPE_BLY_1, 50);
 
 /******************************************************
  *
@@ -1798,11 +1791,7 @@ int RunAttractMode(int curState, boolean curStateChanged) {
     if (attractPlayfieldPhase != AttractLastPlayfieldMode) {
         RPU_TurnOffAllLamps();
         AttractLastPlayfieldMode = attractPlayfieldPhase;
-        // Not sure why this used to turn on skill shot, leaving it commented for now - TJS
-        //if (attractPlayfieldPhase == 2)
-        //    GameMode = GAME_MODE_SKILL_SHOT;
-        //else
-        //    GameMode = GAME_MODE_UNSTRUCTURED_PLAY;
+
         AttractLastLadderBonus = 1;
         AttractLastLadderTime = CurrentTime;
     }
@@ -1881,8 +1870,6 @@ void AddToBonus(byte amountToAdd = 1) {
                 }
             RPU_SetLampState(LAMP_LOWER_C, 1, 0, 0);
         }
-    } else {
-        BonusChanged = CurrentTime;
     }
 }
 
@@ -2076,7 +2063,6 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         SpecialCollected = false;
         ScoreAdditionAnimation = 0;
         ScoreAdditionAnimationStartTime = 0;
-        BonusXAnimationStart = 0;
         //    Bonus[CurrentPlayer] = 0;
         BallSaveEndTime = 0;
         Bonus[CurrentPlayer] = Bonus[CurrentPlayer];
@@ -2740,33 +2726,6 @@ int ShowMatchSequence(boolean curStateChanged) {
     return MACHINE_STATE_MATCH_MODE;
 }
 
-////////////////////////////////////////////////////////////////////////////
-//
-//  Switch Handling functions
-//
-////////////////////////////////////////////////////////////////////////////
-/*
-// Example lock function
-
-void HandleLockSwitch(byte lockIndex) {
-
-  if (GameMode==GAME_MODE_UNSTRUCTURED_PLAY) {
-    // If this player has a lock available
-    if (PlayerLockStatus[CurrentPlayer] & (LOCK_1_AVAILABLE<<lockIndex)) {
-      // Lock the ball
-      LockBall(lockIndex);
-      SetGameMode(GAME_MODE_OFFER_LOCK);
-    } else {
-      if ((MachineLocks & (LOCK_1_ENGAGED<<lockIndex))==0) {
-        // Kick unlocked ball
-        RPU_PushToSolenoidStack(SOL_UPPER_BALL_EJECT, 12, true);
-      }
-    }
-  }
-}
-
-*/
-
 int HandleSystemSwitches(int curState, byte switchHit) {
     int returnState = curState;
     switch (switchHit) {
@@ -3045,7 +3004,6 @@ void HandleGamePlaySwitches(byte switchHit) {
             CurrentScores[CurrentPlayer] += (SCORE_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
         }
 
-        LastTimeSpinnerHit = CurrentTime;
         if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
         break;
 
