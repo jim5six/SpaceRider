@@ -1340,12 +1340,19 @@ void TargetBank() {
         }
     if ((TargetBankComplete[CurrentPlayer] == 2) && !(RPU_ReadLampState(LAMP_EXTRABALL))) {
             RPU_SetLampState(LAMP_EXTRABALL, 1, 0, 0);
-            ShowLampAnimation(7, 96, CurrentTime, 23, false, false);
-            QueueNotification(SOUND_EFFECT_EXTRABALL_LIT, 9);
+            RPU_SetLampState(LAMP_TARGET_1, 1, 0, 500);
+            RPU_SetLampState(LAMP_TARGET_2, 1, 0, 500);
+            RPU_SetLampState(LAMP_TARGET_3, 1, 0, 500);
+            RPU_SetLampState(LAMP_TARGET_4, 1, 0, 500);
+            RPU_SetLampState(LAMP_TARGET_5, 1, 0, 500);
             TargetBankComplete[CurrentPlayer] += 1;
     }
     if  (TargetBankComplete[CurrentPlayer] >= 3) {
-            ShowLampAnimation(7, 96, CurrentTime, 23, false, false);
+            RPU_SetLampState(LAMP_TARGET_1, 1, 0, 500);
+            RPU_SetLampState(LAMP_TARGET_2, 1, 0, 500);
+            RPU_SetLampState(LAMP_TARGET_3, 1, 0, 500);
+            RPU_SetLampState(LAMP_TARGET_4, 1, 0, 500);
+            RPU_SetLampState(LAMP_TARGET_5, 1, 0, 500);
     }
 }
 
@@ -2877,7 +2884,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 SpaceToggle(); 
             }
         }
-
+        AddToBonus(1);
         if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
         break;
 
@@ -3362,6 +3369,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 GateOpen = false;
                 RPU_SetLampState(LAMP_R_OUTLANE, 1, 0, 500);
                 RPU_SetLampState(LAMP_OPENGATE, 0, 0, 0);
+                AddToBonus(1);
             } else if (RPU_ReadLampState(LAMP_OPENGATE) && RPU_ReadLampState(LAMP_5000) && !RPU_ReadLampState(LAMP_EXTRABALL)) {
                 CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
                 QueueNotification(SOUND_EFFECT_GATEOPEN, 9);
@@ -3369,9 +3377,11 @@ void HandleGamePlaySwitches(byte switchHit) {
                 GateOpen = false;
                 RPU_SetLampState(LAMP_R_OUTLANE, 1, 0, 500);
                 RPU_SetLampState(LAMP_OPENGATE, 0, 0, 0);
+                AddToBonus(1);
             } else if (RPU_ReadLampState(LAMP_EXTRABALL) && !RPU_ReadLampState(LAMP_5000) && !RPU_ReadLampState(LAMP_OPENGATE)) {
                 CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
                 RPU_SetLampState(LAMP_EXTRABALL, 0, 0, 0);
+                AddToBonus(1);
                 if (CountGoalsCompleted(CurrentPlayer) == 3 && !GoalExtraBallCollected){
                     AwardGoalExtraBall();
                     GoalExtraBallCollected = true;
@@ -3382,6 +3392,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             } else if (RPU_ReadLampState(LAMP_EXTRABALL) && RPU_ReadLampState(LAMP_5000) && !RPU_ReadLampState(LAMP_OPENGATE)) {
                 CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
                 RPU_SetLampState(LAMP_EXTRABALL, 0, 0, 0);
+                AddToBonus(1);
                 if (CountGoalsCompleted(CurrentPlayer) == 3 && !GoalExtraBallCollected){
                     AwardGoalExtraBall();
                     GoalExtraBallCollected = true;
@@ -3397,6 +3408,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 RPU_SetLampState(LAMP_R_OUTLANE, 1, 0, 500);
                 RPU_SetLampState(LAMP_OPENGATE, 0, 0, 0);
                 RPU_SetLampState(LAMP_EXTRABALL, 0, 0, 0);
+                AddToBonus(1);
                 if (CountGoalsCompleted(CurrentPlayer) == 3 && !GoalExtraBallCollected){
                     AwardGoalExtraBall();
                     GoalExtraBallCollected = true;
@@ -3412,6 +3424,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 RPU_SetLampState(LAMP_R_OUTLANE, 1, 0, 500);
                 RPU_SetLampState(LAMP_EXTRABALL, 0, 0, 0);
                 RPU_SetLampState(LAMP_OPENGATE, 0, 0, 0);
+                AddToBonus(1);
                 if (CountGoalsCompleted(CurrentPlayer) == 3 && !GoalExtraBallCollected){
                     AwardGoalExtraBall();
                     GoalExtraBallCollected = true;
@@ -3422,6 +3435,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             } else if (!RPU_ReadLampState(LAMP_EXTRABALL) && !RPU_ReadLampState(LAMP_OPENGATE) && RPU_ReadLampState(LAMP_5000)) {
                 CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
                 PlaySoundEffect(SOUND_EFFECT_SWITCHHIT);
+                AddToBonus(1);
             } else
                 CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
                 AddToBonus(1);
@@ -3571,6 +3585,7 @@ void HandleGamePlaySwitches(byte switchHit) {
     case SW_RUBBER:
         CurrentScores[CurrentPlayer] += 10;
         PlaySoundEffect(SOUND_EFFECT_RUBBER);
+        AddToBonus(1);
         if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
         break;
     }
