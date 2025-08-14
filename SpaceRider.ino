@@ -127,7 +127,7 @@ boolean FirstGame = true;
 
 #if (RPU_MPU_ARCHITECTURE<10) && !defined(RPU_OS_DISABLE_CPC_FOR_SPACE)
 // This array maps the self-test modes to audio callouts
-unsigned short SelfTestStateToCalloutMap[34] = {136, 137, 135, 134, 133, 140, 141, 142, 139, 143, 144, 145, 146, 147, 148, 149, 138, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166};
+unsigned short SelfTestStateToCalloutMap[35] = {136, 137, 135, 134, 133, 140, 141, 142, 139, 143, 144, 145, 146, 147, 148, 149, 138, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 331};
 #elif (RPU_MPU_ARCHITECTURE < 10) && defined(RPU_OS_DISABLE_CPC_FOR_SPACE)
 unsigned short SelfTestStateToCalloutMap[31] = {136, 137, 135, 134, 133, 140, 141, 142, 139, 143, 144, 145, 146, 147, 148, 149, 138, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166};
 #elif (RPU_MPU_ARCHITECTURE >= 10) && !defined(RPU_OS_DISABLE_CPC_FOR_SPACE)
@@ -422,11 +422,8 @@ void ReadStoredParameters() {
 
     SpecialValue = RPU_ReadULFromEEProm(EEPROM_SPECIAL_SCORE_UL);
     if (SpecialValue % 1000 || SpecialValue > 100000) SpecialValue = 40000;
-
-    //Just want to run this once to initialize
-    //EEPROM.write(EEPROM_WIZARD_HARD_MODE_BYTE, 0); 
     
-    //WizardHardMode = ReadSetting(EEPROM_WIZARD_HARD_MODE_BYTE, 1) ? true : false;
+    WizardHardMode = ReadSetting(EEPROM_WIZARD_HARD_MODE_BYTE, 1) ? true : false;
 
     TimeRequiredToResetGame = ReadSetting(EEPROM_CRB_HOLD_TIME, 1);
     if (TimeRequiredToResetGame > 3 && TimeRequiredToResetGame != 99) TimeRequiredToResetGame = 1;
@@ -1553,6 +1550,7 @@ int RunSelfTest(int curState, boolean curStateChanged) {
             case MACHINE_STATE_ADJUST_WIZARD_DIFFICULTY:
                 CurrentAdjustmentByte = (byte *)&WizardHardMode;
                 CurrentAdjustmentStorageByte = EEPROM_WIZARD_HARD_MODE_BYTE;
+                break;
             case MACHINE_STATE_ADJUST_DONE:
                 returnState = MACHINE_STATE_ATTRACT;
                 break;
