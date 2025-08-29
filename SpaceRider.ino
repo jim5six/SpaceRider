@@ -475,6 +475,7 @@ void setup() {
 
     // Set up the Audio handler in order to play boot messages
     CurrentTime = millis();
+    randomSeed(analogRead(A1));
     Audio.InitDevices(AUDIO_PLAY_TYPE_WAV_TRIGGER | AUDIO_PLAY_TYPE_ORIGINAL_SOUNDS);
     Audio.StopAllAudio();
 
@@ -2937,6 +2938,7 @@ void HandleSwitchesStallBall(byte switchHit) {
 
     StallBallSwitchCount++;
     if (StallBallSwitchCount >= STALL_BALL_SWITCHES_TO_DROP_RESET) {
+        StallBallSwitchCount = 0;
         RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime, true);
     }
 
