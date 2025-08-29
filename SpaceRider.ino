@@ -446,6 +446,9 @@ void ReadStoredParameters() {
     
     WizardHardMode = ReadSetting(EEPROM_WIZARD_HARD_MODE_BYTE, 1) ? true : false;
 
+    RPU_WriteByteToEEProm(EEPROM_STALL_BALL_BYTE, 0); // TODO: Remove this after we run it once
+    StallBallEnabled = ReadSetting(EEPROM_STALL_BALL_BYTE, 1) ? true : false;
+
     TimeRequiredToResetGame = ReadSetting(EEPROM_CRB_HOLD_TIME, 1);
     if (TimeRequiredToResetGame > 3 && TimeRequiredToResetGame != 99) TimeRequiredToResetGame = 1;
 
