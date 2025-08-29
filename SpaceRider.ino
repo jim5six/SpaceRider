@@ -369,6 +369,7 @@ unsigned long ScoreAdditionAnimationStartTime;
 unsigned long LastRemainingAnimatedScoreShown;
 unsigned long LastTimeThroughLoop;
 unsigned long LastSwitchHitTime;
+unsigned long StallBallSwitchCount = 0;
 unsigned long BallSaveEndTime;
 unsigned long SuperBlastOffCollectedHoldTime = 0;
 
@@ -1999,7 +2000,7 @@ int InitGamePlay(boolean curStateChanged) {
 void PlayRandomBackgroundSong() {
     if (MusicVolume == 0) return;
 
-    int rand = random()%6+1;
+    long = random()%6+1;
     if (rand == 1) {
         PlayBackgroundSong(SOUND_EFFECT_BACKGROUND1);
     } else if (rand == 2) {
@@ -2013,6 +2014,18 @@ void PlayRandomBackgroundSong() {
     } else {
         PlayBackgroundSong(SOUND_EFFECT_BACKGROUND6);
     }
+}
+
+void PlayRandomStallBallSuccessSound() {
+    if (MusicVolume == 0) return;
+    long rand = random(8);
+    QueueNotification(SOUND_EFFECT_GOOD_JOB + rand, 9);
+}
+
+void PlayRandomStallBallFailureSound() {
+    if (MusicVolume == 0) return;
+    long rand = random(4);
+    QueueNotification(SOUND_EFFECT_OUT_OF_GAME + rand, 9);
 }
 
 /* 
@@ -2120,13 +2133,17 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
             NewBallHoldoverAwards(true);
             DisableBallSaveThisBall = true;
         } else if (WizardModeEnding) {
-             // Just came out of wizard mode.
-             NewBallHoldoverAwards(true);
-             Bonus[CurrentPlayer] = BonusBeforeWizardMode;
-             BonusBeforeWizardMode = 0;
-             PlayRandomBackgroundSong();
-             SkillShotActive = false; // No skill shot after wizard mode
-             DisableBallSaveThisBall = true;
+            // Just came out of wizard mode.
+            NewBallHoldoverAwards(true);
+            Bonus[CurrentPlayer] = BonusBeforeWizardMode;
+            BonusBeforeWizardMode = 0;
+            PlayRandomBackgroundSong();
+            SkillShotActive = false; // No skill shot after wizard mode
+            DisableBallSaveThisBall = true;
+        } else if (StallBallEnabled) {
+            PlayRandomBackgroundSong();
+            SkillShotActive = false;
+            DisableBallSaveThisBall = true;
         } else {
             // Normal play, not before or after wizard mode
             SkillShotActive = true;
@@ -2434,7 +2451,7 @@ int ManageGameMode() {
             // 0.5 seconds to be sure that it's not bouncing or passing through
             if ((CurrentTime - BallTimeInTrough) > 750) {
 
-                if (BallFirstSwitchHitTime == 0 && NumTiltWarnings <= MaxTiltWarnings) {
+                if ((BallFirstSwitchHitTime == 0 && NumTiltWarnings <= MaxTiltWarnings) || StallBallEnabled) {
                     // Nothing hit yet, so return the ball to the player
                     RPU_PushToTimedSolenoidStack(SOL_OUTHOLE, 16, CurrentTime);
                     BallTimeInTrough = 0;
@@ -2456,7 +2473,6 @@ int ManageGameMode() {
                         }
 
                     } else {
-
                         NumberOfBallsInPlay -= 1;
                         if (NumberOfBallsInPlay == 0) {
                             ShowPlayerScores(0xFF, false, false);
@@ -2836,10 +2852,84 @@ void HandleSwitchesMinimal(byte switchHit) {
     }   
 }
 
+void HandleSwitchesStallBall(byte switchHit) {
+
+    switch (switchHit) {
+
+    case SW_LEFT_SLING:
+    case SW_RIGHT_SLING:
+        PlaySoundEffect(SOUND_EFFECT_SLINGSHOT);
+        break;
+
+    case SW_L_POP_BUMPER:
+    case SW_C_POP_BUMPER:
+    case SW_R_POP_BUMPER:
+        PlaySoundEffect(SOUND_EFFECT_POPBUMPER);
+        break;
+
+    case SW_DROP_1:
+    case SW_DROP_2:
+    case SW_DROP_3:
+    case SW_DROP_4:
+        PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
+        break;
+
+    case SW_L_SPINNER:
+    case SW_CL_SPINNER:
+    case SW_CR_SPINNER:
+        PlaySoundEffect(SOUND_EFFECT_SPINNER100);
+        break;
+
+    case SW_C_SAUCER:
+    case SW_R_SAUCER:
+        break;
+
+    case SW_R_TARGET:
+    case SW_TARGET1:
+    case SW_TARGET2:
+    case SW_TARGET3:
+    case SW_TARGET4:
+    case SW_TARGET5:
+        PlaySoundEffect(SOUND_EFFECT_SWITCHHIT);
+        break;
+
+    case SW_R_INLANE:
+        PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
+        break;
+
+    case SW_R_OUTLANE:
+        PlaySoundEffect(SOUND_EFFECT_OUTLANE);
+        break;
+
+    case SW_L_OUTLANE:
+        PlaySoundEffect(SOUND_EFFECT_OUTLANE);
+        break;
+
+    case SW_RUBBER:
+        PlaySoundEffect(SOUND_EFFECT_RUBBER);
+        break;
+
+    default:
+        break;
+    }
+
+    StallBallSwitchCount++;
+    if (StallBallSwitchCount >= STALL_BALL_SWITCHES_TO_DROP_RESET) {
+        RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime, true);
+    }
+
+    LastSwitchHitTime = CurrentTime;
+    if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
+}
+
 void HandleGamePlaySwitches(byte switchHit) {
-    if (PreparingWizardMode || WizardModeEnding)
-    {
+    if (PreparingWizardMode || WizardModeEnding) {
         HandleSwitchesMinimal(switchHit);
+        return;
+    }
+
+    if (StallBallEnabled) {
+        HandleSwitchesStallBall(switchHit);
         return;
     }
 
@@ -3630,7 +3720,7 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
     }
 
     if (CreditResetPressStarted) {
-        if (CurrentBallInPlay < 2) {
+        if (CurrentBallInPlay < 2 && !StallBallEnabled) {
             // If we haven't finished the first ball, we can add players
             AddPlayer();
             if (DEBUG_MESSAGES) {
