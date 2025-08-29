@@ -1576,7 +1576,7 @@ int RunSelfTest(int curState, boolean curStateChanged) {
                 CurrentAdjustmentByte = (byte *)&WizardHardMode;
                 CurrentAdjustmentStorageByte = EEPROM_WIZARD_HARD_MODE_BYTE;
                 break;
-            case MACHINE_STATE_ADJUST_STALL BALL:
+            case MACHINE_STATE_ADJUST_STALL_BALL:
                 CurrentAdjustmentByte = (byte *)&StallBallEnabled;
                 CurrentAdjustmentStorageByte = EEPROM_STALL_BALL_BYTE;
                 break;
@@ -2000,20 +2000,26 @@ int InitGamePlay(boolean curStateChanged) {
 void PlayRandomBackgroundSong() {
     if (MusicVolume == 0) return;
 
-    long = random()%6+1;
-    if (rand == 1) {
+    long rand = random(6);
+    if (rand == 0) {
         PlayBackgroundSong(SOUND_EFFECT_BACKGROUND1);
-    } else if (rand == 2) {
+    } else if (rand == 1) {
         PlayBackgroundSong(SOUND_EFFECT_BACKGROUND2);
-    } else if (rand == 3) {
+    } else if (rand == 2) {
         PlayBackgroundSong(SOUND_EFFECT_BACKGROUND3);
-    } else if (rand == 4) {
+    } else if (rand == 3) {
         PlayBackgroundSong(SOUND_EFFECT_BACKGROUND4);
-    } else if (rand == 5) {
+    } else if (rand == 4) {
         PlayBackgroundSong(SOUND_EFFECT_BACKGROUND5);
     } else {
         PlayBackgroundSong(SOUND_EFFECT_BACKGROUND6);
     }
+}
+
+void PlayRandomStallBallBackgroundSong() {
+    if (MusicVolume == 0) return;
+    long rand = random(3);
+    QueueNotification(SOUND_EFFECT_STALLBALL_BG1 + rand, 9);
 }
 
 void PlayRandomStallBallSuccessSound() {
@@ -2141,7 +2147,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
             SkillShotActive = false; // No skill shot after wizard mode
             DisableBallSaveThisBall = true;
         } else if (StallBallEnabled) {
-            PlayRandomBackgroundSong();
+            PlayRandomStallBallBackgroundSong();
             SkillShotActive = false;
             DisableBallSaveThisBall = true;
         } else {
@@ -2456,6 +2462,17 @@ int ManageGameMode() {
                     RPU_PushToTimedSolenoidStack(SOL_OUTHOLE, 16, CurrentTime);
                     BallTimeInTrough = 0;
                     returnState = MACHINE_STATE_NORMAL_GAMEPLAY;
+                    
+                    if (StallBallEnabled) {
+                        PlayRandomStallBallFailureSound();
+                        
+                        // If we tilted out of stall ball play, turn stuff back on
+                        if (NumTiltWarnings > MaxTiltWarnings) {
+                            RPU_EnableSolenoidStack();
+                            RPU_SetDisableFlippers(false);
+                            RPU_SetLampState(LAMP_HEAD_TILT, 0);
+                        }
+                    }
                 } else {
                     // if we haven't used the ball save, and we're under the time limit, then save the ball
                     if (BallSaveEndTime && CurrentTime < (BallSaveEndTime + BALL_SAVE_GRACE_PERIOD)) {
@@ -2881,7 +2898,12 @@ void HandleSwitchesStallBall(byte switchHit) {
         break;
 
     case SW_C_SAUCER:
+        RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
+        PlayRandomStallBallSuccessSound();
+        break;
     case SW_R_SAUCER:
+        RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 16, CurrentTime + 3000, true);
+        PlayRandomStallBallSuccessSound();
         break;
 
     case SW_R_TARGET:
