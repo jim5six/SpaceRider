@@ -61,7 +61,8 @@ boolean FirstGame = true;
 #define MACHINE_STATE_ADJUST_SPECIAL_AWARD (MACHINE_STATE_TEST_DONE - 13)
 #define MACHINE_STATE_ADJUST_CREDIT_RESET_HOLD_TIME (MACHINE_STATE_TEST_DONE - 14)
 #define MACHINE_STATE_ADJUST_WIZARD_DIFFICULTY (MACHINE_STATE_TEST_DONE - 15)
-#define MACHINE_STATE_ADJUST_DONE (MACHINE_STATE_TEST_DONE - 16)
+#define MACHINE_STATE_ADJUST_STALL_BALL (MACHINE_STATE_TEST_DONE - 16)
+#define MACHINE_STATE_ADJUST_DONE (MACHINE_STATE_TEST_DONE - 17)
 
 // Indices of EEPROM save locations
 #define EEPROM_BALL_SAVE_BYTE 100
@@ -79,7 +80,8 @@ boolean FirstGame = true;
 #define EEPROM_CRB_HOLD_TIME 118
 #define EEPROM_EXTRA_BALL_SCORE_UL 140
 #define EEPROM_SPECIAL_SCORE_UL 144
-#define EEPROM_WIZARD_HARD_MODE_BYTE 148 // TODO: Byte offset is TBD, do we need to program EEPROM first?
+#define EEPROM_WIZARD_HARD_MODE_BYTE 148
+#define EEPROM_STALL_BALL_BYTE 149
 
 // Sound Effects
 #define SOUND_EFFECT_NONE               0
@@ -127,7 +129,7 @@ boolean FirstGame = true;
 
 #if (RPU_MPU_ARCHITECTURE<10) && !defined(RPU_OS_DISABLE_CPC_FOR_SPACE)
 // This array maps the self-test modes to audio callouts
-unsigned short SelfTestStateToCalloutMap[35] = {136, 137, 135, 134, 133, 140, 141, 142, 139, 143, 144, 145, 146, 147, 148, 149, 138, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167};
+unsigned short SelfTestStateToCalloutMap[36] = {136, 137, 135, 134, 133, 140, 141, 142, 139, 143, 144, 145, 146, 147, 148, 149, 138, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168};
 #elif (RPU_MPU_ARCHITECTURE < 10) && defined(RPU_OS_DISABLE_CPC_FOR_SPACE)
 unsigned short SelfTestStateToCalloutMap[31] = {136, 137, 135, 134, 133, 140, 141, 142, 139, 143, 144, 145, 146, 147, 148, 149, 138, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166};
 #elif (RPU_MPU_ARCHITECTURE >= 10) && !defined(RPU_OS_DISABLE_CPC_FOR_SPACE)
@@ -265,6 +267,7 @@ boolean MatchFeature = true;
 boolean TournamentScoring = false;
 boolean ScrollingScores = false;
 boolean WizardHardMode = false; // Makes wizard mode harder to achieve
+boolean StallBallEnabled = false;
 unsigned long ExtraBallValue = 0;
 unsigned long SpecialValue = 0;
 unsigned long CurrentTime = 0;
@@ -1568,6 +1571,10 @@ int RunSelfTest(int curState, boolean curStateChanged) {
             case MACHINE_STATE_ADJUST_WIZARD_DIFFICULTY:
                 CurrentAdjustmentByte = (byte *)&WizardHardMode;
                 CurrentAdjustmentStorageByte = EEPROM_WIZARD_HARD_MODE_BYTE;
+                break;
+            case MACHINE_STATE_ADJUST_STALL BALL:
+                CurrentAdjustmentByte = (byte *)&StallBallEnabled;
+                CurrentAdjustmentStorageByte = EEPROM_STALL_BALL_BYTE;
                 break;
             case MACHINE_STATE_ADJUST_DONE:
                 returnState = MACHINE_STATE_ATTRACT;
