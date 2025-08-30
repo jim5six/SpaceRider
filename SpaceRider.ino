@@ -197,21 +197,28 @@ unsigned short SelfTestStateToCalloutMap[34] = {134, 135, 133, 136, 137, 138, 13
 #define SOUND_EFFECT_FIRE_ROCKET 348
 
 // Stallball Mode Sounds
-#define SOUND_EFFECT_GOOD_JOB 349
-#define SOUND_EFFECT_MAKE_SPACE 350
-#define SOUND_EFFECT_MOVE 351
-#define SOUND_EFFECT_MOVE_OVER 352
-#define SOUND_EFFECT_NEXT_PLAYER 353
-#define SOUND_EFFECT_OUT_OF_WAY 354
-#define SOUND_EFFECT_RIDE_OUT 355
-#define SOUND_EFFECT_YOU_DID_IT 356
-#define SOUND_EFFECT_OUT_OF_GAME 357
-#define SOUND_EFFECT_PLAYER_OUT 358
-#define SOUND_EFFECT_PLAYER_ELIMINATED 359
-#define SOUND_EFFECT_YOU_HAD_ONE_JOB 360
-#define SOUND_EFFECT_STALLBALL_BG1 361
-#define SOUND_EFFECT_STALLBALL_BG2 362
-#define SOUND_EFFECT_STALLBALL_BG3 363
+#define SOUND_EFFECT_GOOD1 349
+#define SOUND_EFFECT_GOOD2 350
+#define SOUND_EFFECT_GOOD3 351
+#define SOUND_EFFECT_GOOD4 352
+#define SOUND_EFFECT_GOOD5 353
+#define SOUND_EFFECT_GOOD6 354
+#define SOUND_EFFECT_GOOD7 355
+#define SOUND_EFFECT_GOOD8 356
+#define SOUND_EFFECT_GOOD9 357
+#define SOUND_EFFECT_OUT1 358
+#define SOUND_EFFECT_OUT2 359
+#define SOUND_EFFECT_OUT3 360
+#define SOUND_EFFECT_OUT4 361
+#define SOUND_EFFECT_OUT5 362
+#define SOUND_EFFECT_OUT6 363
+#define SOUND_EFFECT_OUT7 364
+#define SOUND_EFFECT_OUT8 365
+#define SOUND_EFFECT_OUT9 366
+#define SOUND_EFFECT_OUT10 367
+#define SOUND_EFFECT_STALLBALL_BG1 370
+#define SOUND_EFFECT_STALLBALL_BG2 371
+#define SOUND_EFFECT_STALLBALL_BG3 372
 
 
 #define SOUND_EFFECT_DIAG_START 1900
@@ -447,7 +454,7 @@ void ReadStoredParameters() {
     
     WizardHardMode = ReadSetting(EEPROM_WIZARD_HARD_MODE_BYTE, 1) ? true : false;
 
-    RPU_WriteByteToEEProm(EEPROM_STALL_BALL_BYTE, 0); // TODO: Remove this after we run it once
+    //RPU_WriteByteToEEProm(EEPROM_STALL_BALL_BYTE, 0); // TODO: Remove this after we run it once
     StallBallEnabled = ReadSetting(EEPROM_STALL_BALL_BYTE, 0) ? true : false;
 
     TimeRequiredToResetGame = ReadSetting(EEPROM_CRB_HOLD_TIME, 1);
@@ -2020,19 +2027,19 @@ void PlayRandomBackgroundSong() {
 void PlayRandomStallBallBackgroundSong() {
     if (MusicVolume == 0) return;
     long rand = random(3);
-    PlayBackgroundSong(SOUND_EFFECT_STALLBALL_BG1 + rand);
+    PlayBackgroundSong(SOUND_EFFECT_STALLBALL_BG1);
 }
 
 void PlayRandomStallBallSuccessSound() {
     if (MusicVolume == 0) return;
-    long rand = random(8);
-    QueueNotification(SOUND_EFFECT_GOOD_JOB + rand, 9);
+    long rand = random(9);
+    QueueNotification(SOUND_EFFECT_GOOD1 + rand, 9);
 }
 
 void PlayRandomStallBallFailureSound() {
     if (MusicVolume == 0) return;
-    long rand = random(4);
-    QueueNotification(SOUND_EFFECT_OUT_OF_GAME + rand, 9);
+    long rand = random(10);
+    QueueNotification(SOUND_EFFECT_OUT1 + rand, 9);
 }
 
 /* 
@@ -2899,11 +2906,11 @@ void HandleSwitchesStallBall(byte switchHit) {
         break;
 
     case SW_C_SAUCER:
-        RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
+        RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1000, true);
         PlayRandomStallBallSuccessSound();
         break;
     case SW_R_SAUCER:
-        RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 16, CurrentTime + 3000, true);
+        RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 16, CurrentTime + 1000, true);
         PlayRandomStallBallSuccessSound();
         break;
 
