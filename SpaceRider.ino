@@ -219,7 +219,8 @@ unsigned short SelfTestStateToCalloutMap[34] = {134, 135, 133, 136, 137, 138, 13
 #define SOUND_EFFECT_STALLBALL_BG1 370
 #define SOUND_EFFECT_STALLBALL_BG2 371
 #define SOUND_EFFECT_STALLBALL_BG3 372
-
+#define SOUND_EFFECT_STALLBALL_BG4 373
+#define SOUND_EFFECT_STALLBALL_BG5 374
 
 #define SOUND_EFFECT_DIAG_START 1900
 #define SOUND_EFFECT_DIAG_CREDIT_RESET_BUTTON 1900
@@ -2024,11 +2025,11 @@ void PlayRandomBackgroundSong() {
     }
 }
 
-void PlayRandomStallBallBackgroundSong() {
-    if (MusicVolume == 0) return;
-    long rand = random(3);
-    PlayBackgroundSong(SOUND_EFFECT_STALLBALL_BG1);
-}
+//void PlayRandomStallBallBackgroundSong() {
+//    if (MusicVolume == 0) return;
+//    long rand = random(3);
+//    PlayBackgroundSong(SOUND_EFFECT_STALLBALL_BG1);
+//}
 
 void PlayRandomStallBallSuccessSound() {
     if (MusicVolume == 0) return;
@@ -2038,7 +2039,7 @@ void PlayRandomStallBallSuccessSound() {
 
 void PlayRandomStallBallFailureSound() {
     if (MusicVolume == 0) return;
-    long rand = random(10);
+    long rand = random(9);
     QueueNotification(SOUND_EFFECT_OUT1 + rand, 9);
 }
 
@@ -2155,7 +2156,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
             SkillShotActive = false; // No skill shot after wizard mode
             DisableBallSaveThisBall = true;
         } else if (StallBallEnabled) {
-            PlayRandomStallBallBackgroundSong();
+            PlayBackgroundSong(SOUND_EFFECT_STALLBALL_BG4);
             SkillShotActive = false;
             DisableBallSaveThisBall = true;
         } else {
