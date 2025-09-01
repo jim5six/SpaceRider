@@ -2039,7 +2039,7 @@ void PlayRandomStallBallSuccessSound() {
 
 void PlayRandomStallBallFailureSound() {
     if (MusicVolume == 0) return;
-    long rand = random(9);
+    long rand = random(10);
     QueueNotification(SOUND_EFFECT_OUT1 + rand, 9);
 }
 
@@ -2156,7 +2156,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
             SkillShotActive = false; // No skill shot after wizard mode
             DisableBallSaveThisBall = true;
         } else if (StallBallEnabled) {
-            PlayBackgroundSong(SOUND_EFFECT_STALLBALL_BG4);
+            PlayBackgroundSong(SOUND_EFFECT_STALLBALL_BG2);
             SkillShotActive = false;
             DisableBallSaveThisBall = true;
         } else {
@@ -3427,7 +3427,11 @@ void HandleGamePlaySwitches(byte switchHit) {
 
     case SW_R_SAUCER:
         if (!WizardModeActive){
-            CurrentScores[CurrentPlayer] += 25000;
+            if (RPU_ReadLampState(LAMP_DROP_TARGET)){
+                CurrentScores[CurrentPlayer] += 25000;
+            } else {
+                CurrentScores[CurrentPlayer] += 1000;
+            }
             IncreasePlayfieldMultiplier();
             RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
             RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 4000, true);
