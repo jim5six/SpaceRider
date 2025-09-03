@@ -2242,15 +2242,17 @@ int ManageGameMode() {
 
     boolean specialAnimationRunning = false;
 
-    // Determine which spinner lights should be on
-    ShowLeftSpinnerLamps();
-    // Should BlastOff lights be on?
-    ShowCenterSpinnerLamps();
-    // Determine which PlayfieldX lights should be on
-    ShowPlayfieldXLamps();
-    ShowPopBumperLamps();
-    // Show which goals have been achieved
-    ShowSpaceProgressLamps();
+    if (!StallBallEnabled) {
+        // Determine which spinner lights should be on
+        ShowLeftSpinnerLamps();
+        // Should BlastOff lights be on?
+        ShowCenterSpinnerLamps();
+        // Determine which PlayfieldX lights should be on
+        ShowPlayfieldXLamps();
+        ShowPopBumperLamps();
+        // Show which goals have been achieved
+        ShowSpaceProgressLamps();
+    }
 
     if (WizardModeActive) {
         ShowLampAnimation(6, 48, CurrentTime, 23, false, false);
@@ -2258,6 +2260,7 @@ int ManageGameMode() {
     }
 
     if (StallBallEnabled) {
+        ShowLampAnimation(1, 48, CurrentTime, 23, false, false);
         CurrentScores[CurrentPlayer] = STALL_BALL_SWITCHES_TO_DROP_RESET - StallBallSwitchCount;
     }
 
