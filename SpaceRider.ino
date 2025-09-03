@@ -283,7 +283,6 @@ unsigned long HighScore = 0;
 unsigned long AwardScores[3];
 unsigned long CreditResetPressStarted = 0;
 unsigned long StallNotifyDebounceTime = 0;
-unsigned long temp = 0;
 
 AudioHandler Audio;
 
@@ -485,7 +484,8 @@ void setup() {
 
     // Set up the Audio handler in order to play boot messages
     CurrentTime = millis();
-    randomSeed(analogRead(A1));
+    // A single analog read was not noisy enough, so we combine 4!
+    randomSeed(analogRead(A4)+analogRead(A5)+analogRead(A11)+analogRead(A12));
     Audio.InitDevices(AUDIO_PLAY_TYPE_WAV_TRIGGER | AUDIO_PLAY_TYPE_ORIGINAL_SOUNDS);
     Audio.StopAllAudio();
 
@@ -2257,6 +2257,10 @@ int ManageGameMode() {
         ManageWizardMode();
     }
 
+    if (StallBallEnabled) {
+        CurrentScores[CurrentPlayer] = STALL_BALL_SWITCHES_TO_DROP_RESET - StallBallSwitchCount;
+    }
+
     if (SkillShotActive == true && BallFirstSwitchHitTime != 0) {
         // The switch handler will award the skill shot
         // (when applicable) and this mode will move
@@ -2970,11 +2974,6 @@ void HandleGamePlaySwitches(byte switchHit) {
 
     if (StallBallEnabled) {
         HandleSwitchesStallBall(switchHit);
-
-        temp++;
-        if (temp >= 250) { 
-            CurrentScores[CurrentPlayer] = analogRead(A1);
-        }
         return;
     }
 
@@ -3767,7 +3766,7 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
         returnState = HandleSystemSwitches(curState, switchHit);
         if (NumTiltWarnings <= MaxTiltWarnings) HandleGamePlaySwitches(switchHit);
     }
-
+    
     if (CreditResetPressStarted) {
         if (CurrentBallInPlay < 2 && !StallBallEnabled) {
             // If we haven't finished the first ball, we can add players
