@@ -282,6 +282,8 @@ unsigned long CurrentTime = 0;
 unsigned long HighScore = 0;
 unsigned long AwardScores[3];
 unsigned long CreditResetPressStarted = 0;
+unsigned long StallNotifyDebounceTime = 0;
+unsigned long temp = 0;
 
 AudioHandler Audio;
 
@@ -2907,12 +2909,18 @@ void HandleSwitchesStallBall(byte switchHit) {
         break;
 
     case SW_C_SAUCER:
-        RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1000, true);
-        PlayRandomStallBallSuccessSound();
+        if (CurrentTime > StallNotifyDebounceTime) {
+            StallNotifyDebounceTime = CurrentTime + 1000;
+            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1000, true);
+            PlayRandomStallBallSuccessSound();
+        }
         break;
     case SW_R_SAUCER:
-        RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 16, CurrentTime + 1000, true);
-        PlayRandomStallBallSuccessSound();
+        if (CurrentTime > StallNotifyDebounceTime) {
+            StallNotifyDebounceTime = CurrentTime + 1000;
+            RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 16, CurrentTime + 1000, true);
+            PlayRandomStallBallSuccessSound();
+        }
         break;
 
     case SW_R_TARGET:
@@ -2962,6 +2970,11 @@ void HandleGamePlaySwitches(byte switchHit) {
 
     if (StallBallEnabled) {
         HandleSwitchesStallBall(switchHit);
+
+        temp++;
+        if (temp >= 250) { 
+            CurrentScores[CurrentPlayer] = analogRead(A1);
+        }
         return;
     }
 
