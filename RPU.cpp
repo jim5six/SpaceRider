@@ -1673,8 +1673,8 @@ void RPU_SetDisplayCredits(int value, boolean displayOn, boolean showBothDigits)
   DisplayDigits[4][2] = (value%100) / 10;
   DisplayDigits[4][3] = (value%10);
 #else
-  DisplayDigits[4][2] = (value%100) / 10;
-  DisplayDigits[4][3] = (value%10);
+  DisplayDigits[4][1] = (value%100) / 10;
+  DisplayDigits[4][2] = (value%10);
 #endif 
   byte enableMask = DisplayDigitEnable[4] & RPU_OS_MASK_SHIFT_1;
 
@@ -1689,10 +1689,10 @@ void RPU_SetDisplayCredits(int value, boolean displayOn, boolean showBothDigits)
 void RPU_SetDisplayBallInPlay(int value, boolean displayOn, boolean showBothDigits) {
 #ifdef RPU_OS_USE_6_DIGIT_CREDIT_DISPLAY_WITH_7_DIGIT_DISPLAYS
   DisplayDigits[4][5] = (value%100) / 10;
-  DisplayDigits[4][5] = (value%10); 
-#else
-  DisplayDigits[4][5] = (value%100) / 10;
   DisplayDigits[4][6] = (value%10); 
+#else
+  DisplayDigits[4][4] = (value%100) / 10;
+  DisplayDigits[4][5] = (value%10); 
 #endif
   byte enableMask = DisplayDigitEnable[4] & RPU_OS_MASK_SHIFT_2;
 
