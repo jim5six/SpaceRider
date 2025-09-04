@@ -2027,11 +2027,11 @@ void PlayRandomBackgroundSong() {
     }
 }
 
-//void PlayRandomStallBallBackgroundSong() {
-//    if (MusicVolume == 0) return;
-//    long rand = random(3);
-//    PlayBackgroundSong(SOUND_EFFECT_STALLBALL_BG1);
-//}
+void PlayRandomStallBallBackgroundSong() {
+    if (MusicVolume == 0) return;
+    long rand = random(5);
+    PlayBackgroundSong(SOUND_EFFECT_STALLBALL_BG1 + rand);
+}
 
 void PlayRandomStallBallSuccessSound() {
     if (MusicVolume == 0) return;
@@ -2158,7 +2158,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
             SkillShotActive = false; // No skill shot after wizard mode
             DisableBallSaveThisBall = true;
         } else if (StallBallEnabled) {
-            PlayBackgroundSong(SOUND_EFFECT_STALLBALL_BG2);
+            PlayRandomStallBallBackgroundSong();
             SkillShotActive = false;
             DisableBallSaveThisBall = true;
         } else {
