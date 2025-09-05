@@ -2158,7 +2158,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
             SkillShotActive = false; // No skill shot after wizard mode
             DisableBallSaveThisBall = true;
         } else if (StallBallEnabled) {
-            PlayRandomStallBallBackgroundSong();
+            PlayBackgroundSong(SOUND_EFFECT_STALLBALL_BG5);
             SkillShotActive = false;
             DisableBallSaveThisBall = true;
         } else {
