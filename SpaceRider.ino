@@ -2905,8 +2905,11 @@ void HandleSwitchesStallBall(byte switchHit) {
     case SW_DROP_1:
     case SW_DROP_2:
     case SW_DROP_3:
+        PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
+        break;
     case SW_DROP_4:
         PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
+        GateOpen = false;
         break;
 
     case SW_L_SPINNER:
@@ -2944,7 +2947,13 @@ void HandleSwitchesStallBall(byte switchHit) {
         break;
 
     case SW_R_OUTLANE:
-        PlaySoundEffect(SOUND_EFFECT_OUTLANE);
+        if (GateOpen == false) {
+            PlaySoundEffect(SOUND_EFFECT_OUTLANE);
+            GateOpen = true;
+            GateOpenTime = CurrentTime;
+        } else {
+            PlaySoundEffect(SOUND_EFFECT_OUTLANE);
+        }
         break;
 
     case SW_L_OUTLANE:
