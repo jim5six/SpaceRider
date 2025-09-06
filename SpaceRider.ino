@@ -2260,7 +2260,7 @@ int ManageGameMode() {
     }
 
     if (StallBallEnabled) {
-        ShowLampAnimation(1, 48, CurrentTime, 23, false, false);
+        ShowLampAnimation(8, 24, CurrentTime, 23, false, false);
         CurrentScores[CurrentPlayer] = STALL_BALL_SWITCHES_TO_DROP_RESET - StallBallSwitchCount;
     }
 
