@@ -602,7 +602,7 @@ void SetGeneralIlluminationOn(boolean setGIOn = true) {
 }
 
 void ShowBonusLamps() {
-    if (IsSuperSuperBlastOffActive(CurrentTime) || WizardModeActive || CurrentTime <= SkillShotCelebrationBlinkEndTime)
+    if (IsSuperSuperBlastOffActive(CurrentTime) || StallBallEnabled || WizardModeActive || CurrentTime <= SkillShotCelebrationBlinkEndTime)
     {
         return;
     }
@@ -785,6 +785,11 @@ void ShowCenterSpinnerLamps() {
 }    
 
 void ShowShootAgainLamps() {
+    if (StallBallEnabled) {
+        // Don't fight the animation
+        return;
+    }
+    
     if ((BallFirstSwitchHitTime == 0 && BallSaveNumSeconds) || (BallSaveEndTime && CurrentTime < BallSaveEndTime)) {
         unsigned long msRemaining = 5000;
         if (BallSaveEndTime != 0) msRemaining = BallSaveEndTime - CurrentTime;
@@ -2260,7 +2265,7 @@ int ManageGameMode() {
     }
 
     if (StallBallEnabled) {
-        ShowLampAnimation(8, 24, CurrentTime, 23, false, false);
+        ShowLampAnimation(8, 288, CurrentTime, 23, false, false);
         CurrentScores[CurrentPlayer] = STALL_BALL_SWITCHES_TO_DROP_RESET - StallBallSwitchCount;
     }
 
@@ -2359,7 +2364,7 @@ int ManageGameMode() {
         GoalsDisplayToggle = false;
     }
 
-    if (!specialAnimationRunning && NumTiltWarnings <= MaxTiltWarnings) {
+    if (!specialAnimationRunning && NumTiltWarnings <= MaxTiltWarnings || !StallBallEnabled) {
         //    ShowTopSpaceLamps();
         ShowBonusLamps();
 
@@ -2909,6 +2914,7 @@ void HandleSwitchesStallBall(byte switchHit) {
         break;
     case SW_DROP_4:
         PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
+        RPU_SetDisableGate(true);
         GateOpen = false;
         break;
 
