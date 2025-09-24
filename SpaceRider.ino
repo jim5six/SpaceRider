@@ -283,6 +283,7 @@ unsigned long HighScore = 0;
 unsigned long AwardScores[3];
 unsigned long CreditResetPressStarted = 0;
 unsigned long StallNotifyDebounceTime = 0;
+unsigned long RightSaucerDebounceTime = 0;
 
 AudioHandler Audio;
 
@@ -478,7 +479,7 @@ void setup() {
 
     if (DEBUG_MESSAGES) {
         // If debug is on, set up the Serial port for communication
-        Serial.begin(115200);
+        Serial.begin(57600);
         Serial.println("Starting");
     }
 
@@ -3456,17 +3457,19 @@ void HandleGamePlaySwitches(byte switchHit) {
         break;
 
     case SW_R_SAUCER:
-        if (!WizardModeActive){
+        if (!WizardModeActive && CurrentTime > RightSaucerDebounceTime){
             if (RPU_ReadLampState(LAMP_DROP_TARGET)){
                 CurrentScores[CurrentPlayer] += 25000;
             } else {
                 CurrentScores[CurrentPlayer] += 1000;
             }
             IncreasePlayfieldMultiplier();
+            RightSaucerDebounceTime = CurrentTime + 1000;
             RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
             RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 4000, true);
             RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
-        } else if (WizardModeActive){
+        } else if (WizardModeActive && CurrentTime > RightSaucerDebounceTime){
+            RightSaucerDebounceTime = CurrentTime + 1000;
             RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 2000, true);
             PlaySoundEffect(SOUND_EFFECT_WIZARDTARGET1); //TODO "More Targets Required to Save Station" sound needed
 
