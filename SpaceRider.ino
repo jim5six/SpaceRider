@@ -2020,7 +2020,7 @@ void PlayRandomBackgroundSong() {
 void PlayRandomStallBallBackgroundSong() {
     if (MusicVolume == 0) return;
     long rand = random(3);
-    QueueNotification(SOUND_EFFECT_STALLBALL_BG1 + rand, 9);
+    PlayBackgroundSong(SOUND_EFFECT_STALLBALL_BG1 + rand);
 }
 
 void PlayRandomStallBallSuccessSound() {
