@@ -337,6 +337,7 @@ bool SkillShotActive = false; // Means no switches have been hit yet
 const unsigned long SkillShotGracePeriodMs = 30000;
 unsigned long SkillShotGracePeroidEnd = 0;
 unsigned long SkillShotCelebrationBlinkEndTime = 0;
+bool RandomSeeded = false;
 bool IsAnyModeActive = false;
 bool HOLD_SPINNER_PROGRESS[4];  //"S"
 bool HOLD_POP_PROGRESS[4];      //"P"
@@ -485,8 +486,6 @@ void setup() {
 
     // Set up the Audio handler in order to play boot messages
     CurrentTime = millis();
-    // A single analog read was not noisy enough, so we combine 4!
-    randomSeed(analogRead(A4)+analogRead(A5)+analogRead(A11)+analogRead(A12));
     Audio.InitDevices(AUDIO_PLAY_TYPE_WAV_TRIGGER | AUDIO_PLAY_TYPE_ORIGINAL_SOUNDS);
     Audio.StopAllAudio();
 
@@ -1859,6 +1858,10 @@ unsigned long animationTime = (CurrentTime - AttractModeStartTime);
     byte switchHit;
     while ((switchHit = RPU_PullFirstFromSwitchStack()) != SWITCH_STACK_EMPTY) {
         if (switchHit == SW_CREDIT_RESET) {
+            if (RandomSeeded == false) {
+                RandomSeeded = true;
+                randomSeed(CurrentTime); // Time of first credit press is random enough, use that as the seed
+            }
             if (AddPlayer(true)) returnState = MACHINE_STATE_INIT_GAMEPLAY;
         }
         if (switchHit == SW_COIN_1 || switchHit == SW_COIN_2 || switchHit == SW_COIN_3) {
