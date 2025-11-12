@@ -1300,15 +1300,19 @@ void AwardSpecial() {
 }
 
 boolean AwardExtraBall() {
-    if (ExtraBallCollected) return false;
-        ExtraBallCollected = true;
     if (TournamentScoring) {
         CurrentScores[CurrentPlayer] += ExtraBallValue * PlayfieldMultiplier[CurrentPlayer];
     } else {
-        SamePlayerShootsAgain = true;
-        RPU_SetLampState(LAMP_SHOOT_AGAIN, SamePlayerShootsAgain);
-        RPU_SetLampState(LAMP_HEAD_SAME_PLAYER_SHOOTS_AGAIN, SamePlayerShootsAgain);
-        QueueNotification(SOUND_EFFECT_EXTRABALL, 9);
+        if(StallBallEnabled){
+            QueueNotification(SOUND_EFFECT_EXTRABALL, 9);
+        } else {
+            if (ExtraBallCollected) return false;
+                ExtraBallCollected = true;
+            SamePlayerShootsAgain = true;
+            RPU_SetLampState(LAMP_SHOOT_AGAIN, SamePlayerShootsAgain);
+            RPU_SetLampState(LAMP_HEAD_SAME_PLAYER_SHOOTS_AGAIN, SamePlayerShootsAgain);
+            QueueNotification(SOUND_EFFECT_EXTRABALL, 9);
+        }
     }
     return true;
 }
@@ -2045,12 +2049,18 @@ void PlayRandomStallBallBackgroundSong() {
 void PlayRandomStallBallSuccessSound() {
     if (MusicVolume == 0) return;
     long rand = random(9);
+    char buffer[64];
+    sprintf(buffer, "Playing success sound %d\r\n", SOUND_EFFECT_GOOD1 + rand);
+    Serial.write(buffer);
     QueueNotification(SOUND_EFFECT_GOOD1 + rand, 9);
 }
 
 void PlayRandomStallBallFailureSound() {
     if (MusicVolume == 0) return;
-    long rand = random(10);
+    long rand = random(11);
+    char buffer[64];
+    sprintf(buffer, "Playing failure sound %d\r\n", SOUND_EFFECT_OUT1 + rand);
+    Serial.write(buffer);
     QueueNotification(SOUND_EFFECT_OUT1 + rand, 9);
 }
 
@@ -2912,14 +2922,17 @@ void HandleSwitchesStallBall(byte switchHit) {
         break;
 
     case SW_DROP_1:
+        PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
+        break;
     case SW_DROP_2:
+        RPU_SetDisableGate(true);
+        GateOpen = false;
     case SW_DROP_3:
         PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
         break;
     case SW_DROP_4:
         PlaySoundEffect(SOUND_EFFECT_DROPTARGET);
-        RPU_SetDisableGate(true);
-        GateOpen = false;
+        AwardExtraBall();
         break;
 
     case SW_L_SPINNER:
