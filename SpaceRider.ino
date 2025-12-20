@@ -241,8 +241,7 @@ unsigned short SelfTestStateToCalloutMap[34] = {134, 135, 133, 136, 137, 138, 13
 
 #define MAX_DISPLAY_BONUS 40
 #define TILT_WARNING_DEBOUNCE_TIME 1000
-
-// Wizard mode goals JIm - moved to the spacerider.h file with the other score settings
+#define SAUCER_DEBOUNCE_TIME_MS 500 // How long saucers should ignore additional switch hits after the first hit
 
 /*********************************************************************
 
@@ -375,6 +374,7 @@ unsigned long CurrentScores[4];
 unsigned long BallFirstSwitchHitTime = 0;
 unsigned long BallTimeInTrough = 0;
 unsigned long LastTiltWarningTime = 0;
+unsigned long SaucerDebounceTimeEnd = 0;
 unsigned long ScoreAdditionAnimation;
 unsigned long ScoreAdditionAnimationStartTime;
 unsigned long LastRemainingAnimatedScoreShown;
@@ -2894,11 +2894,17 @@ int HandleSystemSwitches(int curState, byte switchHit) {
 void HandleSwitchesMinimal(byte switchHit) {
     switch (switchHit) {  
     case SW_C_SAUCER:
-        RPU_PushToSolenoidStack(SOL_C_SAUCER, 16, true);
+        if (CurrentTime >= SaucerDebounceTimeEnd) {
+            SaucerDebounceTimeEnd = CurrentTime + SAUCER_DEBOUNCE_TIME_MS;
+            RPU_PushToSolenoidStack(SOL_C_SAUCER, 16, true);
+        }
         break;
     case SW_R_SAUCER:
-        if (CurrentTime > WizardModeEndTime + 3500) {
-            RPU_PushToSolenoidStack(SOL_R_SAUCER, 16, true);
+        if (CurrentTime >= SaucerDebounceTimeEnd) {
+            SaucerDebounceTimeEnd = CurrentTime + SAUCER_DEBOUNCE_TIME_MS;
+            if (CurrentTime > WizardModeEndTime + 3500) {
+                RPU_PushToSolenoidStack(SOL_R_SAUCER, 16, true);
+            }
         }
         break;
     default:
@@ -2942,14 +2948,16 @@ void HandleSwitchesStallBall(byte switchHit) {
         break;
 
     case SW_C_SAUCER:
-        if (CurrentTime > StallNotifyDebounceTime) {
+        if (CurrentTime >= StallNotifyDebounceTime && CurrentTime >= SaucerDebounceTimeEnd) {
+            SaucerDebounceTimeEnd = CurrentTime + SAUCER_DEBOUNCE_TIME_MS;
             StallNotifyDebounceTime = CurrentTime + 1000;
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1000, true);
             PlayRandomStallBallSuccessSound();
         }
         break;
     case SW_R_SAUCER:
-        if (CurrentTime > StallNotifyDebounceTime) {
+        if (CurrentTime > StallNotifyDebounceTime && CurrentTime >= SaucerDebounceTimeEnd) {
+            SaucerDebounceTimeEnd = CurrentTime + SAUCER_DEBOUNCE_TIME_MS;
             StallNotifyDebounceTime = CurrentTime + 1000;
             RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 16, CurrentTime + 1000, true);
             PlayRandomStallBallSuccessSound();
@@ -3366,147 +3374,154 @@ void HandleGamePlaySwitches(byte switchHit) {
         break;
 
     case SW_C_SAUCER:
-        if ((SkillShotActive == true || CurrentTime <= SkillShotGracePeroidEnd) && CurrentTime > SkillShotCelebrationBlinkEndTime) {
-            unsigned int kickoutWaitTime = 3000;
+        if (CurrentTime >= SaucerDebounceTimeEnd) {
+            SaucerDebounceTimeEnd = CurrentTime + SAUCER_DEBOUNCE_TIME_MS;
 
-            if (RPU_ReadLampState(LAMP_TOP_S)) {
-                QueueNotification(SOUND_EFFECT_SPINNER_HELD, 9);
-                HOLD_SPINNER_PROGRESS[CurrentPlayer] = true;
-                RPU_SetLampState(LAMP_TOP_S, 1, 0, 250);
-                RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 250);
-                RPU_SetLampState(LAMP_L_SPINNER_200, 1, 0, 250);
-                RPU_SetLampState(LAMP_L_SPINNER_1000, 1, 0, 250);
-                RPU_SetLampState(LAMP_L_SPINNER_2000, 1, 0, 250);
-                CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
-            } else if (RPU_ReadLampState(LAMP_TOP_P)) {
-                QueueNotification(SOUND_EFFECT_POP_HELD, 9);
-                HOLD_POP_PROGRESS[CurrentPlayer] = true;
-                RPU_SetLampState(LAMP_TOP_P, 1, 0, 250);
-                RPU_SetLampState(LAMP_C_POP, 1, 0, 250);
-                RPU_SetLampState(LAMP_LR_POP, 1, 0, 250);
-                CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
-            } else if (RPU_ReadLampState(LAMP_TOP_A)) {
-                QueueNotification(SOUND_EFFECT_BLASTOFF_HELD, 9);
-                HOLD_BLASTOFF_PROGRESS[CurrentPlayer] = true;
-                RPU_SetLampState(LAMP_TOP_A, 1, 0, 250);
-                RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 250);
-                RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 250);
-                RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 250);
-                RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 250);
-                RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 250);
-                CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
-            } else if (RPU_ReadLampState(LAMP_TOP_C)) {
-                QueueNotification(SOUND_EFFECT_BONUS_HELD, 9);
-                HOLD_BONUS[CurrentPlayer] = true;
-                RPU_SetLampState(LAMP_TOP_C, 1, 0, 250);
-                RPU_SetLampState(LAMP_BONUS_10, 1, 0, 250);
-                RPU_SetLampState(LAMP_BONUS_20, 1, 0, 250);
-                RPU_SetLampState(LAMP_BONUS_30, 1, 0, 250);
-                RPU_SetLampState(LAMP_BONUS_40, 1, 0, 250);
-                RPU_SetLampState(LAMP_BONUS_50, 1, 0, 250);
-                RPU_SetLampState(LAMP_BONUS_60, 1, 0, 250);
-                RPU_SetLampState(LAMP_BONUS_70, 1, 0, 250);
-                RPU_SetLampState(LAMP_BONUS_80, 1, 0, 250);
-                RPU_SetLampState(LAMP_BONUS_90, 1, 0, 250);
-                RPU_SetLampState(LAMP_BONUS_100, 1, 0, 250);
-                CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
-            } else if (RPU_ReadLampState(LAMP_TOP_E)) {
-                QueueNotification(SOUND_EFFECT_PLAYFIELDX_HELD, 9);
-                HOLD_PLAYFIELDX[CurrentPlayer] = true;
-                RPU_SetLampState(LAMP_TOP_E, 1, 0, 250);
-                RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 250);
-                RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 250);
-                RPU_SetLampState(LAMP_BONUS_5X, 1, 0, 250);
-                CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
-            } else {
-                kickoutWaitTime = 2000;
-                // Missed skill shot, only award base saucer score
-                QueueNotification(SOUND_EFFECT_SKILLSHOT_MISSED, 9);
-                CurrentScores[CurrentPlayer] += 1000;
-            }
+            if ((SkillShotActive == true || CurrentTime <= SkillShotGracePeroidEnd) && CurrentTime > SkillShotCelebrationBlinkEndTime) {
+                unsigned int kickoutWaitTime = 3000;
 
-            SkillShotActive = false;
-            SkillShotGracePeroidEnd = 0;
-            SkillShotCelebrationBlinkEndTime = CurrentTime + kickoutWaitTime;
-            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + kickoutWaitTime, true);
-
-        } else if (IsSuperSuperBlastOffActive(CurrentTime)) {
-            StopSuperBlastOff();
-            SuperBlastOffCollectedHoldTime = CurrentTime + 3200;
-            // Super Blast off was achieved, mark goal complete
-            RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
-            PlayerGoalProgress[CurrentPlayer].A_Complete = true;
-            if (CountGoalsCompleted(CurrentPlayer) >= 5){
-                    QueueNotification(SOUND_EFFECT_BLASTOFF_WIZARD, 9);
-                } else if (CountGoalsCompleted(CurrentPlayer) == 3){
-                    QueueNotification(SOUND_EFFECT_BLASTOFF_EXTRABALL, 9);
+                if (RPU_ReadLampState(LAMP_TOP_S)) {
+                    QueueNotification(SOUND_EFFECT_SPINNER_HELD, 9);
+                    HOLD_SPINNER_PROGRESS[CurrentPlayer] = true;
+                    RPU_SetLampState(LAMP_TOP_S, 1, 0, 250);
+                    RPU_SetLampState(LAMP_L_SPINNER_100, 1, 0, 250);
+                    RPU_SetLampState(LAMP_L_SPINNER_200, 1, 0, 250);
+                    RPU_SetLampState(LAMP_L_SPINNER_1000, 1, 0, 250);
+                    RPU_SetLampState(LAMP_L_SPINNER_2000, 1, 0, 250);
+                    CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
+                } else if (RPU_ReadLampState(LAMP_TOP_P)) {
+                    QueueNotification(SOUND_EFFECT_POP_HELD, 9);
+                    HOLD_POP_PROGRESS[CurrentPlayer] = true;
+                    RPU_SetLampState(LAMP_TOP_P, 1, 0, 250);
+                    RPU_SetLampState(LAMP_C_POP, 1, 0, 250);
+                    RPU_SetLampState(LAMP_LR_POP, 1, 0, 250);
+                    CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
+                } else if (RPU_ReadLampState(LAMP_TOP_A)) {
+                    QueueNotification(SOUND_EFFECT_BLASTOFF_HELD, 9);
+                    HOLD_BLASTOFF_PROGRESS[CurrentPlayer] = true;
+                    RPU_SetLampState(LAMP_TOP_A, 1, 0, 250);
+                    RPU_SetLampState(LAMP_C_SPINNER_1, 1, 0, 250);
+                    RPU_SetLampState(LAMP_C_SPINNER_2, 1, 0, 250);
+                    RPU_SetLampState(LAMP_C_SPINNER_3, 1, 0, 250);
+                    RPU_SetLampState(LAMP_C_SPINNER_4, 1, 0, 250);
+                    RPU_SetLampState(LAMP_C_SPINNER_5, 1, 0, 250);
+                    CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
+                } else if (RPU_ReadLampState(LAMP_TOP_C)) {
+                    QueueNotification(SOUND_EFFECT_BONUS_HELD, 9);
+                    HOLD_BONUS[CurrentPlayer] = true;
+                    RPU_SetLampState(LAMP_TOP_C, 1, 0, 250);
+                    RPU_SetLampState(LAMP_BONUS_10, 1, 0, 250);
+                    RPU_SetLampState(LAMP_BONUS_20, 1, 0, 250);
+                    RPU_SetLampState(LAMP_BONUS_30, 1, 0, 250);
+                    RPU_SetLampState(LAMP_BONUS_40, 1, 0, 250);
+                    RPU_SetLampState(LAMP_BONUS_50, 1, 0, 250);
+                    RPU_SetLampState(LAMP_BONUS_60, 1, 0, 250);
+                    RPU_SetLampState(LAMP_BONUS_70, 1, 0, 250);
+                    RPU_SetLampState(LAMP_BONUS_80, 1, 0, 250);
+                    RPU_SetLampState(LAMP_BONUS_90, 1, 0, 250);
+                    RPU_SetLampState(LAMP_BONUS_100, 1, 0, 250);
+                    CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
+                } else if (RPU_ReadLampState(LAMP_TOP_E)) {
+                    QueueNotification(SOUND_EFFECT_PLAYFIELDX_HELD, 9);
+                    HOLD_PLAYFIELDX[CurrentPlayer] = true;
+                    RPU_SetLampState(LAMP_TOP_E, 1, 0, 250);
+                    RPU_SetLampState(LAMP_BONUS_2X, 1, 0, 250);
+                    RPU_SetLampState(LAMP_BONUS_3X, 1, 0, 250);
+                    RPU_SetLampState(LAMP_BONUS_5X, 1, 0, 250);
+                    CurrentScores[CurrentPlayer] += SCORE_SKILL_SHOT;
                 } else {
-                    QueueNotification(SOUND_EFFECT_BLASTOFF_GOAL, 9);
+                    kickoutWaitTime = 2000;
+                    // Missed skill shot, only award base saucer score
+                    QueueNotification(SOUND_EFFECT_SKILLSHOT_MISSED, 9);
+                    CurrentScores[CurrentPlayer] += 1000;
                 }
-            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
 
-        } else if (!WizardModeActive) {
-            // Regular hit during unstructured play
-            if (CurrentTime >= SuperBlastOffCollectedHoldTime && CurrentTime >= SkillShotCelebrationBlinkEndTime) {
-                if (RPU_ReadLampState(LAMP_TOP_S) && RPU_ReadLampState(LAMP_TOP_P) && RPU_ReadLampState(LAMP_TOP_A) && RPU_ReadLampState(LAMP_TOP_C) &&
-                RPU_ReadLampState(LAMP_TOP_E)){
-                    CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
-                    PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
-                    RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 500, false);
-                } else {
-                    CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
-                    PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
-                    RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 500, false);
+                SkillShotActive = false;
+                SkillShotGracePeroidEnd = 0;
+                SkillShotCelebrationBlinkEndTime = CurrentTime + kickoutWaitTime;
+                RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + kickoutWaitTime, true);
+
+            } else if (IsSuperSuperBlastOffActive(CurrentTime)) {
+                StopSuperBlastOff();
+                SuperBlastOffCollectedHoldTime = CurrentTime + 3200;
+                // Super Blast off was achieved, mark goal complete
+                RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
+                PlayerGoalProgress[CurrentPlayer].A_Complete = true;
+                if (CountGoalsCompleted(CurrentPlayer) >= 5){
+                        QueueNotification(SOUND_EFFECT_BLASTOFF_WIZARD, 9);
+                    } else if (CountGoalsCompleted(CurrentPlayer) == 3){
+                        QueueNotification(SOUND_EFFECT_BLASTOFF_EXTRABALL, 9);
+                    } else {
+                        QueueNotification(SOUND_EFFECT_BLASTOFF_GOAL, 9);
+                    }
+                RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
+
+            } else if (!WizardModeActive) {
+                // Regular hit during unstructured play
+                if (CurrentTime >= SuperBlastOffCollectedHoldTime && CurrentTime >= SkillShotCelebrationBlinkEndTime) {
+                    if (RPU_ReadLampState(LAMP_TOP_S) && RPU_ReadLampState(LAMP_TOP_P) && RPU_ReadLampState(LAMP_TOP_A) && RPU_ReadLampState(LAMP_TOP_C) &&
+                    RPU_ReadLampState(LAMP_TOP_E)){
+                        CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
+                        PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
+                        RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 500, false);
+                    } else {
+                        CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
+                        PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
+                        RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 500, false);
+                    }
                 }
+                AddToBonus(1);
             }
-            AddToBonus(1);
+            else {
+                //Wizard mode is active
+                WizardModeProgress.CenterSaucerHit = true;
+                CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
+                RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 2000, false);
+                PlaySoundEffect(SOUND_EFFECT_WIZARDTARGET1);
+            }
+            LastSwitchHitTime = CurrentTime;
+            if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
         }
-        else {
-            //Wizard mode is active
-            WizardModeProgress.CenterSaucerHit = true;
-            CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
-            RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 2000, false);
-            PlaySoundEffect(SOUND_EFFECT_WIZARDTARGET1);
-        }
-        LastSwitchHitTime = CurrentTime;
-        if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
         break;
 
     case SW_R_SAUCER:
-        if (!WizardModeActive && CurrentTime > RightSaucerDebounceTime){
-            if (RPU_ReadLampState(LAMP_DROP_TARGET)){
-                CurrentScores[CurrentPlayer] += 25000;
-            } else {
-                CurrentScores[CurrentPlayer] += 1000;
-            }
-            IncreasePlayfieldMultiplier();
-            RightSaucerDebounceTime = CurrentTime + 1000;
-            RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
-            RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 4000, true);
-            RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
-        } else if (WizardModeActive && CurrentTime > RightSaucerDebounceTime){
-            RightSaucerDebounceTime = CurrentTime + 1000;
-            RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 2000, true);
-            PlaySoundEffect(SOUND_EFFECT_WIZARDTARGET1); //TODO "More Targets Required to Save Station" sound needed
-
-            if (AreWizardModeGoalsCompleted()) {
-                // Wizard Mode fully Completed
-                CurrentScores[CurrentPlayer] += WIZARD_MODE_COMPLETED_AWARD;
-                RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
+        if (CurrentTime >= SaucerDebounceTimeEnd) {
+            SaucerDebounceTimeEnd = CurrentTime + SAUCER_DEBOUNCE_TIME_MS;
+            if (!WizardModeActive && CurrentTime > RightSaucerDebounceTime){
+                if (RPU_ReadLampState(LAMP_DROP_TARGET)){
+                    CurrentScores[CurrentPlayer] += 25000;
+                } else {
+                    CurrentScores[CurrentPlayer] += 1000;
+                }
+                IncreasePlayfieldMultiplier();
+                RightSaucerDebounceTime = CurrentTime + 1000;
+                RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
+                RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 4000, true);
                 RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
-                QueueNotification(SOUND_EFFECT_WIZARD_MODE_COMPLETE, 9);
+            } else if (WizardModeActive && CurrentTime > RightSaucerDebounceTime){
+                RightSaucerDebounceTime = CurrentTime + 1000;
+                RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 2000, true);
+                PlaySoundEffect(SOUND_EFFECT_WIZARDTARGET1); //TODO "More Targets Required to Save Station" sound needed
 
-                RPU_TurnOffAllLamps();
-                RPU_SetDisableFlippers(true);
-                RPU_SetDisableGate(true);
-                RPU_DisableSolenoidStack();
-                WizardModeActive = false;
-                WizardModeEnding = true;
-                WizardModeEndTime = CurrentTime;
+                if (AreWizardModeGoalsCompleted()) {
+                    // Wizard Mode fully Completed
+                    CurrentScores[CurrentPlayer] += WIZARD_MODE_COMPLETED_AWARD;
+                    RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 3000, true);
+                    RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
+                    QueueNotification(SOUND_EFFECT_WIZARD_MODE_COMPLETE, 9);
+
+                    RPU_TurnOffAllLamps();
+                    RPU_SetDisableFlippers(true);
+                    RPU_SetDisableGate(true);
+                    RPU_DisableSolenoidStack();
+                    WizardModeActive = false;
+                    WizardModeEnding = true;
+                    WizardModeEndTime = CurrentTime;
+                }
             }
+            LastSwitchHitTime = CurrentTime;
+            if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
         }
-        LastSwitchHitTime = CurrentTime;
-        if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
         break;
 
     case SW_R_TARGET:
