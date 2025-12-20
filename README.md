@@ -10,6 +10,7 @@ Software by Trevor Seyfried and Jim Martin
 -->
 
 #  Custom Ruleset — Geiger Space Rider
+Version: **1.0.0**
 
 ## Primary Objective
 Complete all five **S-P-A-C-E** goals to activate **Station Shutdown Wizard Mode**.  
