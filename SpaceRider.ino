@@ -34,7 +34,6 @@
 //  positive - game play
 char MachineState = 0;
 boolean MachineStateChanged = true;
-boolean FirstGame = true;
 #define MACHINE_STATE_ATTRACT 0
 #define MACHINE_STATE_INIT_GAMEPLAY 1
 #define MACHINE_STATE_INIT_NEW_BALL 2
@@ -1942,15 +1941,6 @@ int InitGamePlay(boolean curStateChanged) {
         GameStartNotificationTime = CurrentTime;
     }
 
-    /*
-      if (RPU_ReadSingleSwitchState(SW_LOCK_1)) {
-        if (CurrentTime > (UpperBallEjectTime+1000)) {
-          RPU_PushToSolenoidStack(SOL_UPPER_BALL_EJECT, 12, true);
-          UpperBallEjectTime = CurrentTime;
-        }
-        return MACHINE_STATE_INIT_GAMEPLAY;
-      }
-    */
     if (RPU_ReadSingleSwitchState(SW_C_SAUCER)) {
         if (CurrentTime > (SaucerEjectTime + 1500)) {
             RPU_PushToSolenoidStack(SOL_C_SAUCER, 12, true);
@@ -1970,9 +1960,6 @@ int InitGamePlay(boolean curStateChanged) {
         }
         return MACHINE_STATE_INIT_GAMEPLAY;
     }
-
-    //  MachineLocks = InitializeMachineLocksBasedOnSwitches();
-    //  NumberOfBallsLocked = CountBits(MachineLocks & LOCKS_ENGAGED_MASK);
 
     if (CountBallsInTrough() < (TotalBallsLoaded - NumberOfBallsLocked)) {
         return MACHINE_STATE_INIT_GAMEPLAY;
@@ -2009,10 +1996,8 @@ int InitGamePlay(boolean curStateChanged) {
     SamePlayerShootsAgain = false;
     CurrentBallInPlay = 1;
     CurrentNumPlayers = 1;
-    //  MachineLocks = 0;
     CurrentPlayer = 0;
     NumberOfBallsInPlay = 0;
-    //  NumberOfBallsLocked = CountBits(MachineLocks & LOCKS_ENGAGED_MASK);
     NumberOfBallsLocked = 0;
     ShowPlayerScores(0xFF, false, false);
 
@@ -2139,11 +2124,9 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
         SpaceStatus = SPACE_LIT;
 
         // Initialize game-specific start-of-ball lights & variables
-        //ExtraBallCollected = false;
         SpecialCollected = false;
         ScoreAdditionAnimation = 0;
         ScoreAdditionAnimationStartTime = 0;
-        //    Bonus[CurrentPlayer] = 0;
         BallSaveEndTime = 0;
         Bonus[CurrentPlayer] = Bonus[CurrentPlayer];
 
@@ -2191,14 +2174,6 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
 
         SkillShotGracePeroidEnd = 0;
 
-        // Reset Drop Targets
-        if (!FirstGame) {
-            // Only reset the drop targets if this is not the first game, since game start would have already reset them
-            //RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime, true);
-        } else {
-            FirstGame = false;
-        }
-
         // Always reset because we don't reset on game start (for now)
         RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime, true);
 
@@ -2216,37 +2191,6 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
 
         LastTimeThroughLoop = CurrentTime;
 }
-
-/*
-boolean AddABall(boolean ballLocked = false, boolean ballSave = true) {
-  if (NumberOfBallsInPlay>=TotalBallsLoaded) return false;
-
-  if (ballLocked) {
-    NumberOfBallsLocked += 1;
-  } else {
-    NumberOfBallsInPlay += 1;
-  }
-
-  if (CountBallsInTrough()) {
-    RPU_PushToTimedSolenoidStack(SOL_OUTHOLE, 16, CurrentTime + 100);
-  } else {
-    if (ballLocked) {
-      if (NumberOfBallsInPlay) NumberOfBallsInPlay -= 1;
-    } else {
-      return false;
-    }
-  }
-
-  if (ballSave) {
-    if (BallSaveEndTime) BallSaveEndTime += 10000;
-    else BallSaveEndTime = CurrentTime + 20000;
-  }
-
-  return true;
-}
-*/
-
-
 
 byte GameModeStage;
 boolean DisplaysNeedRefreshing = false;
@@ -2318,8 +2262,6 @@ int ManageGameMode() {
         OverrideScoreDisplay(displayToUse, SuperPopTimeLeft / 1000, DISPLAY_OVERRIDE_ANIMATION_BOUNCE);
 
         IsAnyModeActive = true;
-    } else if (!WizardModeActive) {
-        //ShowPopBumperLamps();
     }
     
     if (IsSuperSuperBlastOffActive(CurrentTime)){
@@ -2377,19 +2319,16 @@ int ManageGameMode() {
     }
 
     if (!specialAnimationRunning && NumTiltWarnings <= MaxTiltWarnings || !StallBallEnabled) {
-        //    ShowTopSpaceLamps();
         ShowBonusLamps();
 
         if (!WizardModeActive && !WizardModeEnding) {
             ShowShootAgainLamps();
         }
-            //ShowPopBumperLamps();
     }
 
     // If the player has completed three goals, Light Extra Ball at Right Target
     if (CountGoalsCompleted(CurrentPlayer) == 3 && !GoalExtraBallCollected && !RPU_ReadLampState(LAMP_EXTRABALL)) {
         RPU_SetLampState(LAMP_EXTRABALL, 1, 0, 0);
-        //QueueNotification(SOUND_EFFECT_EXTRABALL_LIT, 8);
     }
     else if (CountGoalsCompleted(CurrentPlayer) >= 5 && !PreparingWizardMode)
     {
@@ -2408,7 +2347,6 @@ int ManageGameMode() {
         }
         BonusBeforeWizardMode = Bonus[CurrentPlayer]; // Bonus will get cleared on the new ball, so save it off
 
-        //QueueNotification(SOUND_EFFECT_WIZARD_MODE_START, 9);
         PlayerGoalProgress[CurrentPlayer].S_Complete = false;
         PlayerGoalProgress[CurrentPlayer].P_Complete = false;
         PlayerGoalProgress[CurrentPlayer].A_Complete = false;
@@ -2666,11 +2604,6 @@ int CountdownBonus(boolean curStateChanged) {
         CountdownBonusHurryUp = false;
 
         BonusCountDownEndTime = 0xFFFFFFFF;
-        // Some sound cards have a special index
-        // for a "sound" that will turn off
-        // the current background drone or currently
-        // playing sound
-        //    PlaySoundEffect(SOUND_EFFECT_STOP_BACKGROUND);
     }
 
     unsigned long countdownDelayTime = (unsigned long)(CountDownDelayTimes[IncrementingBonusXCounter - 1]);
@@ -3884,23 +3817,8 @@ unsigned long CountGoalsCompleted(unsigned char player) {
 unsigned long LastLEDUpdateTime = 0;
 byte LEDPhase = 0;
 #endif
-// unsigned long NumLoops = 0;
-// unsigned long LastLoopReportTime = 0;
 
 void loop() {
-
-    /*
-      if (DEBUG_MESSAGES) {
-        NumLoops += 1;
-        if (CurrentTime>(LastLoopReportTime+1000)) {
-          LastLoopReportTime = CurrentTime;
-          char buf[128];
-          sprintf(buf, "Loop running at %lu Hz\n", NumLoops);
-          Serial.write(buf);
-          NumLoops = 0;
-        }
-      }
-    */
 
     CurrentTime = millis();
     int newMachineState = MachineState;
