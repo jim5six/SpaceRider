@@ -18,8 +18,6 @@
 #include "SpaceRider.h"
 #include <EEPROM.h>
 
-#define WIZARD_TEST_MODE (false)
-
 #define GAME_MAJOR_VERSION 2024
 #define GAME_MINOR_VERSION 1
 #define DEBUG_MESSAGES 1
@@ -3043,14 +3041,6 @@ void HandleGamePlaySwitches(byte switchHit) {
     case SW_L_POP_BUMPER:
     case SW_C_POP_BUMPER:
     case SW_R_POP_BUMPER:
-        if (WIZARD_TEST_MODE && !WizardModeActive) {
-            if (PlayerGoalProgress[CurrentPlayer].S_Complete == false) { PlayerGoalProgress[CurrentPlayer].S_Complete = true; }
-            else if (PlayerGoalProgress[CurrentPlayer].P_Complete == false) {  PlayerGoalProgress[CurrentPlayer].P_Complete = true; }
-            else if (PlayerGoalProgress[CurrentPlayer].A_Complete == false) {  PlayerGoalProgress[CurrentPlayer].A_Complete = true; }
-            else if (PlayerGoalProgress[CurrentPlayer].C_Complete == false) {  PlayerGoalProgress[CurrentPlayer].C_Complete = true; }
-            else if (PlayerGoalProgress[CurrentPlayer].E_Complete == false) {  PlayerGoalProgress[CurrentPlayer].E_Complete = true; }
-        }
-
         if (IsSuperPopsActive(CurrentTime)) {
             PlaySoundEffect(SOUND_EFFECT_POPBUMPER);
             CurrentScores[CurrentPlayer] += (SCORE_POPFRENZY)*PlayfieldMultiplier[CurrentPlayer];
