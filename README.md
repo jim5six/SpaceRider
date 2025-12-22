@@ -115,3 +115,23 @@ Once in wizard mode, hit playfield switched enough times to turn off all station
 - Complete **three S-P-A-C-E goals** to light **EXTRA BALL** at the right target.
 
 ---
+
+# Stall Ball
+This code comes with a built-in **Stall Ball** mode that can be enabled from the operator menu!
+
+## Enabling Stall Ball
+
+- Enable Stall Ball play by setting the #17 operator setting (Stall Ball Enabled) to **1**.
+- When Stall Ball Enaled is 1, starting a new game will enter Stall Ball mode.
+
+## Stall Ball Rules
+
+- Every time the ball lands in a saucer, the game will deliver a custom callout telling the current player to rotate out.
+- Only one player scoreboard is eabled because players are expected to rotate in from a single line.
+- If the ball drains, the current player is out and the ball will automatically reload.
+- After 200 switch hits, the inline drop targets will reset. Player 1 score shows how many switch hits remain.
+- Stall Ball mode will go on forever until the game is turned off, or Stall Ball Enabled is set to **0**.
+
+# Notes
+
+- The #16 operator setting (Wizard Easy Mode) is currently unused
