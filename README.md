@@ -38,7 +38,7 @@ Once in wizard mode, hit playfield switched enough times to turn off all station
 - Spin the **lit center spinner** **100 times** to fuel the rocket.
 - When fully fueled:
   - **Super Blast Off** is qualified.
-- Hit the **center saucer** to score the **Blast Off Bonus**.
+- Hit the **center saucer** to score the **Blast Off Jackpot**.
 - Successful Blast Off awards the **A** letter.
 
 ---
@@ -121,7 +121,7 @@ This code comes with a built-in **Stall Ball** mode that can be enabled from the
 
 ## Enabling Stall Ball
 
-- Enable Stall Ball play by setting the #17 operator setting (Stall Ball Enabled) to **1**.
+- Enable Stall Ball play by setting the #31 operator setting (Stall Ball Enabled) to **1**.
 - When Stall Ball Enaled is 1, starting a new game will enter Stall Ball mode.
 
 ## Stall Ball Rules
@@ -134,4 +134,4 @@ This code comes with a built-in **Stall Ball** mode that can be enabled from the
 
 # Notes
 
-- The #16 operator setting (Wizard Easy Mode) is currently unused
+- The #30 operator setting (Hard Mode) is currently unused.
