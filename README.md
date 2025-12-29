@@ -7,7 +7,11 @@ See the GNU General Public License for more details.
 RPU framework by Dick Hamill
 Space Rider design by Jim Martin
 Software by Trevor Seyfried and Jim Martin
+Sounds can be found here: https://drive.google.com/file/d/14YrbskdDLZMBf4jz1WutmT2DQ0Eio7wl/view?usp=sharing
+in a zip file. Unzip and load files on the SD card.
 -->
+
+
 
 #  Custom Ruleset — Geiger Space Rider
 Version: **1.0.0**
@@ -127,9 +131,11 @@ This code comes with a built-in **Stall Ball** mode that can be enabled from the
 ## Stall Ball Rules
 
 - Every time the ball lands in a saucer, the game will deliver a custom callout telling the current player to rotate out.
-- Only one player scoreboard is eabled because players are expected to rotate in from a single line.
+- Only one player scoreboard is eabled and will start at 200 and count down switch hits.
 - If the ball drains, the current player is out and the ball will automatically reload.
 - After 200 switch hits, the inline drop targets will reset. Player 1 score shows how many switch hits remain.
+- Hitting the Second Drop Target will open the right gate for a ball save.
+- Hitting the Fourth Drop Target will award an "Extra Ball". (we use this to bring back players that have been eliminated in team stall ball).  
 - Stall Ball mode will go on forever until the game is turned off, or Stall Ball Enabled is set to **0**.
 
 # Notes

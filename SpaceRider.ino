@@ -18,7 +18,7 @@
 #include "SpaceRider.h"
 #include <EEPROM.h>
 
-#define GAME_MAJOR_VERSION 2024
+#define GAME_MAJOR_VERSION 2025
 #define GAME_MINOR_VERSION 1
 #define DEBUG_MESSAGES 1
 
