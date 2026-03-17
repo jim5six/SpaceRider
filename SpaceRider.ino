@@ -123,6 +123,16 @@ boolean MachineStateChanged = true;
 #define SOUND_EFFECT_BONUS_COUNT_3k     49
 #define SOUND_EFFECT_RUBBER             50
 #define SOUND_EFFECT_BACKGROUND6        51 //165sec
+#define BG_SONG_COUNT                   6
+
+AudioSoundtrack BackgroundTrackList[BG_SONG_COUNT] = {
+    { SOUND_EFFECT_BACKGROUND1, 80  },
+    { SOUND_EFFECT_BACKGROUND2, 139 },
+    { SOUND_EFFECT_BACKGROUND3, 92  },
+    { SOUND_EFFECT_BACKGROUND4, 59  },
+    { SOUND_EFFECT_BACKGROUND5, 104 },
+    { SOUND_EFFECT_BACKGROUND6, 165 }
+};
 
 #if (RPU_MPU_ARCHITECTURE<10) && !defined(RPU_OS_DISABLE_CPC_FOR_SPACE)
 // This array maps the self-test modes to audio callouts
@@ -219,6 +229,15 @@ unsigned short SelfTestStateToCalloutMap[34] = {134, 135, 133, 136, 137, 138, 13
 #define SOUND_EFFECT_STALLBALL_BG3 372 //75sec
 #define SOUND_EFFECT_STALLBALL_BG4 373 //83sec
 #define SOUND_EFFECT_STALLBALL_BG5 374 //100sec
+#define SB_SONG_COUNT 5
+
+AudioSoundtrack StallballTrackList[SB_SONG_COUNT] = {
+    { SOUND_EFFECT_STALLBALL_BG1, 72  },
+    { SOUND_EFFECT_STALLBALL_BG2, 96  },
+    { SOUND_EFFECT_STALLBALL_BG3, 75  },
+    { SOUND_EFFECT_STALLBALL_BG4, 83  },
+    { SOUND_EFFECT_STALLBALL_BG5, 100 }
+};
 
 #define SOUND_EFFECT_DIAG_START 1900
 #define SOUND_EFFECT_DIAG_CREDIT_RESET_BUTTON 1900
@@ -283,6 +302,8 @@ unsigned long StallNotifyDebounceTime = 0;
 unsigned long RightSaucerDebounceTime = 0;
 
 AudioHandler Audio;
+int LastFailureSoundPlayed = -1;
+int LastSuccessSoundPlayed = -1;
 
 /*********************************************************************
 
@@ -334,7 +355,6 @@ bool SkillShotActive = false; // Means no switches have been hit yet
 const unsigned long SkillShotGracePeriodMs = 30000;
 unsigned long SkillShotGracePeroidEnd = 0;
 unsigned long SkillShotCelebrationBlinkEndTime = 0;
-bool RandomSeeded = false;
 bool IsAnyModeActive = false;
 bool HOLD_SPINNER_PROGRESS[4];  //"S"
 bool HOLD_POP_PROGRESS[4];      //"P"
@@ -1860,10 +1880,6 @@ unsigned long animationTime = (CurrentTime - AttractModeStartTime);
     byte switchHit;
     while ((switchHit = RPU_PullFirstFromSwitchStack()) != SWITCH_STACK_EMPTY) {
         if (switchHit == SW_CREDIT_RESET) {
-            if (RandomSeeded == false) {
-                RandomSeeded = true;
-                randomSeed(CurrentTime); // Time of first credit press is random enough, use that as the seed
-            }
             if (AddPlayer(true)) returnState = MACHINE_STATE_INIT_GAMEPLAY;
         }
         if (switchHit == SW_COIN_1 || switchHit == SW_COIN_2 || switchHit == SW_COIN_3) {
@@ -2007,45 +2023,42 @@ int InitGamePlay(boolean curStateChanged) {
 
 void PlayRandomBackgroundSong() {
     if (MusicVolume == 0) return;
-
-    long rand = random(6);
-    if (rand == 0) {
-        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND1);
-    } else if (rand == 1) {
-        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND2);
-    } else if (rand == 2) {
-        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND3);
-    } else if (rand == 3) {
-        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND4);
-    } else if (rand == 4) {
-        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND5);
-    } else {
-        PlayBackgroundSong(SOUND_EFFECT_BACKGROUND6);
-    }
+    Audio.PlayBackgroundSoundtrack(BackgroundTrackList, BG_SONG_COUNT, CurrentTime, true);
 }
 
 void PlayRandomStallBallBackgroundSong() {
     if (MusicVolume == 0) return;
-    long rand = random(5);
-    PlayBackgroundSong(SOUND_EFFECT_STALLBALL_BG1 + rand);
+    Audio.PlayBackgroundSoundtrack(StallballTrackList, SB_SONG_COUNT, CurrentTime, true);
 }
 
 void PlayRandomStallBallSuccessSound() {
     if (MusicVolume == 0) return;
-    long rand = random(9);
+
+    int soundToPlay = CurrentTime % 9;
+    if (soundToPlay == LastSuccessSoundPlayed) {
+        soundToPlay = (soundToPlay + 1) % 9;
+    }
+
     char buffer[64];
-    sprintf(buffer, "Playing success sound %d\r\n", SOUND_EFFECT_GOOD1 + rand);
+    sprintf(buffer, "Playing success sound %d\r\n", SOUND_EFFECT_GOOD1 + soundToPlay);
     Serial.write(buffer);
-    QueueNotification(SOUND_EFFECT_GOOD1 + rand, 9);
+    
+    QueueNotification(SOUND_EFFECT_GOOD1 + soundToPlay, 9);
 }
 
 void PlayRandomStallBallFailureSound() {
     if (MusicVolume == 0) return;
-    long rand = random(11);
+
+    int soundToPlay = CurrentTime % 11;
+    if (soundToPlay == LastFailureSoundPlayed) {
+        soundToPlay = (soundToPlay + 1) % 11;
+    }
+
     char buffer[64];
-    sprintf(buffer, "Playing failure sound %d\r\n", SOUND_EFFECT_OUT1 + rand);
+    sprintf(buffer, "Playing failure sound %d\r\n", SOUND_EFFECT_OUT1 + soundToPlay);
     Serial.write(buffer);
-    QueueNotification(SOUND_EFFECT_OUT1 + rand, 9);
+
+    QueueNotification(SOUND_EFFECT_OUT1 + soundToPlay, 9);
 }
 
 /* 
