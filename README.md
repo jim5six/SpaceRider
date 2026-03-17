@@ -14,11 +14,11 @@ in a zip file. Unzip and load files on the SD card.
 
 
 #  Custom Ruleset — Geiger Space Rider
-Version: **1.0.0**
+Version: **1.0.1**
 
 ## Primary Objective
 Complete all five **S-P-A-C-E** goals to activate **Station Shutdown Wizard Mode**.  
-Once in wizard mode, hit playfield switched enough times to turn off all station lights and fully shut down the station.
+Once in wizard mode, hit lit shots to shut down the station and score the Wizard Mode jackpot.
 
 ---
 
