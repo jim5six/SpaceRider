@@ -2038,10 +2038,6 @@ void PlayRandomStallBallSuccessSound() {
     if (soundToPlay == LastSuccessSoundPlayed) {
         soundToPlay = (soundToPlay + 1) % 9;
     }
-
-    char buffer[64];
-    sprintf(buffer, "Playing success sound %d\r\n", SOUND_EFFECT_GOOD1 + soundToPlay);
-    Serial.write(buffer);
     
     QueueNotification(SOUND_EFFECT_GOOD1 + soundToPlay, 9);
 }
@@ -2053,11 +2049,7 @@ void PlayRandomStallBallFailureSound() {
     if (soundToPlay == LastFailureSoundPlayed) {
         soundToPlay = (soundToPlay + 1) % 11;
     }
-
-    char buffer[64];
-    sprintf(buffer, "Playing failure sound %d\r\n", SOUND_EFFECT_OUT1 + soundToPlay);
-    Serial.write(buffer);
-
+    
     QueueNotification(SOUND_EFFECT_OUT1 + soundToPlay, 9);
 }
 
