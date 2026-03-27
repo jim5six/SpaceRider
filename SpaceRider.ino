@@ -3426,7 +3426,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 RightSaucerDebounceTime = CurrentTime + 1000;
                 RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
                 RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 4000, true);
-                RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
+                //RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true); Jim Rules change so targets don't reset til end of ball 3/27/26
             } else if (WizardModeActive && CurrentTime > RightSaucerDebounceTime){
                 RightSaucerDebounceTime = CurrentTime + 1000;
                 RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 2000, true);
