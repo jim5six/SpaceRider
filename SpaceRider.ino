@@ -3373,6 +3373,7 @@ void HandleGamePlaySwitches(byte switchHit) {
             } else if (IsSuperSuperBlastOffActive(CurrentTime)) {
                 StopSuperBlastOff();
                 SuperBlastOffCollectedHoldTime = CurrentTime + 3200;
+                CurrentScores[CurrentPlayer] += 50000 * PlayfieldMultiplier[CurrentPlayer];
                 // Super Blast off was achieved, mark goal complete
                 RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
                 PlayerGoalProgress[CurrentPlayer].A_Complete = true;
