@@ -258,7 +258,7 @@ AudioSoundtrack StallballTrackList[SB_SONG_COUNT] = {
 
 #define MAX_DISPLAY_BONUS 40
 #define TILT_WARNING_DEBOUNCE_TIME 1000
-#define SAUCER_DEBOUNCE_TIME_MS 750 // How long saucers should ignore additional switch hits after the first hit
+#define SAUCER_DEBOUNCE_TIME_MS 1000 // How long saucers should ignore additional switch hits after the first hit
 
 /*********************************************************************
 
