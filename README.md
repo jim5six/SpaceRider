@@ -14,11 +14,11 @@ in a zip file. Unzip and load files on the SD card.
 
 
 #  Custom Ruleset — Geiger Space Rider
-Version: **1.0.1**
+Version: **1.0.2**
 
 ## Primary Objective
 Complete all five **S-P-A-C-E** goals to activate **Station Shutdown Wizard Mode**.  
-Once in wizard mode, hit lit shots to shut down the station and score the Wizard Mode jackpot.
+Once in wizard mode, hit flashing shots to shut down the station and score the Wizard Mode jackpot.
 
 ---
 
@@ -62,8 +62,8 @@ Once in wizard mode, hit lit shots to shut down the station and score the Wizard
 ## Wizard Mode — Station Shutdown
 
 - Station Shutdown Wizard Mode begins immediately after all five **S-P-A-C-E** goals are completed.
-- All station lights are on at the start of the mode.
-- Each **S-P-A-C-E** objective must be completed **again**.
+- All station lights are on (flasing) at the start of the mode.
+- A shorter version of each **S-P-A-C-E** objective must be completed **again**.
 - Completing an objective during wizard mode turns off its corresponding station light.
 - Wizard mode ends when all station lights are turned off.
 
@@ -135,7 +135,7 @@ This code comes with a built-in **Stall Ball** mode that can be enabled from the
 - If the ball drains, the current player is out and the ball will automatically reload.
 - After 200 switch hits, the inline drop targets will reset. Player 1 score shows how many switch hits remain.
 - Hitting the Second Drop Target will open the right gate for a ball save.
-- Hitting the Fourth Drop Target will award an "Extra Ball". (we use this to bring back players that have been eliminated in team stall ball).  
+- Hitting the Fourth Drop Target will award an "Extra Ball". (We use this to bring back players that have been eliminated in team stall ball.)  
 - Stall Ball mode will go on forever until the game is turned off, or Stall Ball Enabled is set to **0**.
 
 # Notes
