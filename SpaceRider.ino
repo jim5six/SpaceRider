@@ -3153,6 +3153,9 @@ void HandleGamePlaySwitches(byte switchHit) {
         } else {
             if (CenterSpinnerStatus == CENTER_LEFT_SPINNER_LIT && !WizardModeActive) { 
                 NumberOfCenterSpins[CurrentPlayer] += 1;
+                if (NumberOfCenterSpins[CurrentPlayer][ %10 == 0) {
+                    AddToBonus(1)
+                }
                 if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 21) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
                     PlaySoundEffect(SOUND_EFFECT_SPINNER100);
@@ -3232,6 +3235,9 @@ void HandleGamePlaySwitches(byte switchHit) {
         } else {
             if (RPU_ReadLampState(LAMP_CR_WHENLIT) && !WizardModeActive) {
                 NumberOfCenterSpins[CurrentPlayer] += 1;
+                if (NumberOfCenterSpins[CurrentPlayer][ %10 == 0) {
+                    AddToBonus(1)
+                }
                 if (NumberOfCenterSpins[CurrentPlayer] > 0 && NumberOfCenterSpins[CurrentPlayer] < 21) {
                     CurrentScores[CurrentPlayer] += (SCORE_C_SPINNER1)*PlayfieldMultiplier[CurrentPlayer];
                     PlaySoundEffect(SOUND_EFFECT_SPINNER100);
@@ -3376,7 +3382,6 @@ void HandleGamePlaySwitches(byte switchHit) {
                 CurrentScores[CurrentPlayer] += SCORE_BLASTOFF_COLLECT * PlayfieldMultiplier[CurrentPlayer];
                 // Super Blast off was achieved, mark goal complete
                 RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
-                CurrentScores[CurrentPlayer] += SCORE_BLASTOFF_COLLECT * PlayfieldMultiplier[CurrentPlayer];
                 PlayerGoalProgress[CurrentPlayer].A_Complete = true;
                 if (CountGoalsCompleted(CurrentPlayer) >= 5){
                         QueueNotification(SOUND_EFFECT_BLASTOFF_WIZARD, 9);
