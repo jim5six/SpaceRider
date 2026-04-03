@@ -3376,6 +3376,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 CurrentScores[CurrentPlayer] += SCORE_BLASTOFF_COLLECT * PlayfieldMultiplier[CurrentPlayer];
                 // Super Blast off was achieved, mark goal complete
                 RPU_SetLampState(LAMP_LOWER_A, 1, 0, 0);
+                CurrentScores[CurrentPlayer] += SCORE_BLASTOFF_COLLECT * PlayfieldMultiplier[CurrentPlayer];
                 PlayerGoalProgress[CurrentPlayer].A_Complete = true;
                 if (CountGoalsCompleted(CurrentPlayer) >= 5){
                         QueueNotification(SOUND_EFFECT_BLASTOFF_WIZARD, 9);
@@ -3427,7 +3428,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 RightSaucerDebounceTime = CurrentTime + 1000;
                 RPU_SetLampState(LAMP_DROP_TARGET, 0, 0, 0);
                 RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 4000, true);
-                RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true);
+                //RPU_PushToTimedSolenoidStack(SOL_DROP_TARGET_RESET, 10, CurrentTime + 1500, true); //Jim - 4-3 Make the game easier by not reseting the drop targets every time
             } else if (WizardModeActive && CurrentTime > RightSaucerDebounceTime){
                 RightSaucerDebounceTime = CurrentTime + 1000;
                 RPU_PushToTimedSolenoidStack(SOL_R_SAUCER, 10, CurrentTime + 2000, true);
