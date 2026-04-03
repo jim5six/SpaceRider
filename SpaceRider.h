@@ -135,7 +135,7 @@
 #define SCORE_C_SPINNER5            1000
 #define SCORE_SPINNERFRENZY         10000
 #define SCORE_POPFRENZY             5000
-#define SCORE_BLASTOFF_COLLECT      250000
+#define SCORE_BLASTOFF_COLLECT      100000
 #define SCORE_SKILL_SHOT            25000
 #define EXTRA_BALL_TOURN            50000
 #define EXTRA_BALL_AGAIN            25000
