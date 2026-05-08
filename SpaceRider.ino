@@ -17,6 +17,7 @@
 #include "SelfTestAndAudit.h"
 #include "SpaceRider.h"
 #include <EEPROM.h>
+#include <stdarg.h>
 
 #define GAME_MAJOR_VERSION 2025
 #define GAME_MINOR_VERSION 1
@@ -487,6 +488,22 @@ void ReadStoredParameters() {
     AwardScores[2] = RPU_ReadULFromEEProm(RPU_AWARD_SCORE_3_EEPROM_START_BYTE);
 }
 
+void DebugPrint(const char* func, const char* fmt, ...) {
+    if (!DEBUG_MESSAGES) return;
+    char buf[256];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+    Serial.print("[");
+    Serial.print(CurrentTime);
+    Serial.print("] ");
+    Serial.print(func);
+    Serial.print(":");
+    Serial.print(buf);
+    Serial.write("\r\n");
+}
+
 void QueueDIAGNotification(unsigned short notificationNum) {
     // This is optional, but the machine can play an audio message at boot
     // time to indicate any errors and whether it's going to boot to original
@@ -497,10 +514,9 @@ void QueueDIAGNotification(unsigned short notificationNum) {
 void setup() {
 
     if (DEBUG_MESSAGES) {
-        // If debug is on, set up the Serial port for communication
         Serial.begin(57600);
-        Serial.println("Starting");
     }
+    DebugPrint("setup", "Starting");
 
     // Set up the Audio handler in order to play boot messages
     CurrentTime = millis();
@@ -519,7 +535,7 @@ void setup() {
 
     // Set up the chips and interrupts
     unsigned long initResult = 0;
-    if (DEBUG_MESSAGES) Serial.write("Initializing MPU\n");
+    DebugPrint("setup", "Initializing MPU");
 
     // If the hardware has the ability to switch on the Credit/Reset button (requires Rev 4 or greater)
     // then that can be used to choose Original or New code. Otherwise, the hardware switch
@@ -528,16 +544,12 @@ void setup() {
                                        RPU_CMD_INIT_AND_RETURN_EVEN_IF_ORIGINAL_CHOSEN | RPU_CMD_PERFORM_MPU_TEST,
                                    SW_CREDIT_RESET);
 
-    if (DEBUG_MESSAGES) {
-        char buf[128];
-        sprintf(buf, "Return from init = 0x%04lX\n", initResult);
-        Serial.write(buf);
-        if (initResult & RPU_RET_6800_DETECTED)
-            Serial.write("Detected 6800 clock\n");
-        else if (initResult & RPU_RET_6802_OR_8_DETECTED)
-            Serial.write("Detected 6802/8 clock\n");
-        Serial.write("Back from init\n");
-    }
+    DebugPrint("setup", "Return from init = 0x%04lX", initResult);
+    if (initResult & RPU_RET_6800_DETECTED)
+        DebugPrint("setup", "Detected 6800 clock");
+    else if (initResult & RPU_RET_6802_OR_8_DETECTED)
+        DebugPrint("setup", "Detected 6802/8 clock");
+    DebugPrint("setup", "Back from init");
 
     // if (initResult & RPU_RET_SELECTOR_SWITCH_ON) QueueDIAGNotification(SOUND_EFFECT_DIAG_SELECTOR_SWITCH_ON);
     // else QueueDIAGNotification(SOUND_EFFECT_DIAG_SELECTOR_SWITCH_OFF);
@@ -550,7 +562,7 @@ void setup() {
     }
 
     if (initResult & RPU_RET_ORIGINAL_CODE_REQUESTED) {
-        if (DEBUG_MESSAGES) Serial.write("Asked to run original code\n");
+        DebugPrint("setup", "Asked to run original code");
         delay(100);
         QueueDIAGNotification(SOUND_EFFECT_DIAG_STARTING_ORIGINAL_CODE);
         delay(100);
@@ -1806,9 +1818,7 @@ int RunAttractMode(int curState, boolean curStateChanged) {
         RPU_DisableSolenoidStack();
         RPU_TurnOffAllLamps();
         RPU_SetDisableFlippers(true);
-        if (DEBUG_MESSAGES) {
-            Serial.write("Entering Attract Mode\n\r");
-        }
+        DebugPrint("RunAttractMode", "Entering Attract Mode");
         AttractLastHeadMode = 0;
         AttractLastPlayfieldMode = 0;
         RPU_SetDisplayCredits(Credits, !FreePlayMode);
@@ -1818,6 +1828,7 @@ int RunAttractMode(int curState, boolean curStateChanged) {
         // If this machine has a saucer, clear it in attract mode
 
         if (RPU_ReadSingleSwitchState(SW_C_SAUCER)) {
+            DebugPrint("RunAttractMode", "attract-clear SW_C_SAUCER raw read + push");
             RPU_PushToSolenoidStack(SOL_C_SAUCER, 16, true);
         }
         if (RPU_ReadSingleSwitchState(SW_R_SAUCER)) {
@@ -1880,19 +1891,23 @@ unsigned long animationTime = (CurrentTime - AttractModeStartTime);
     byte switchHit;
     while ((switchHit = RPU_PullFirstFromSwitchStack()) != SWITCH_STACK_EMPTY) {
         if (switchHit == SW_CREDIT_RESET) {
+            DebugPrint("RunAttractMode", "SW_CREDIT_RESET from switch stack");
             if (AddPlayer(true)) returnState = MACHINE_STATE_INIT_GAMEPLAY;
         }
-        if (switchHit == SW_COIN_1 || switchHit == SW_COIN_2 || switchHit == SW_COIN_3) {
+        else if (switchHit == SW_COIN_1 || switchHit == SW_COIN_2 || switchHit == SW_COIN_3) {
             AddCoinToAudit(SwitchToChuteNum(switchHit));
             AddCoin(SwitchToChuteNum(switchHit));
         }
-        if (switchHit == SW_SELF_TEST_SWITCH && (CurrentTime - GetLastSelfTestChangedTime()) > 250) {
+        else if (switchHit == SW_SELF_TEST_SWITCH && (CurrentTime - GetLastSelfTestChangedTime()) > 250) {
 #if (RPU_MPU_ARCHITECTURE < 10)
             returnState = MACHINE_STATE_TEST_LAMPS;
 #else
             returnState = MACHINE_STATE_TEST_BOOT;
 #endif
             SetLastSelfTestChangedTime(CurrentTime);
+        }
+        else {
+            DebugPrint("RunAttractMode", "Non-credit reset hit: %d", switchHit);
         }
     }
 
@@ -1955,11 +1970,13 @@ int InitGamePlay(boolean curStateChanged) {
     SetGeneralIlluminationOn(true);
 
     if (curStateChanged) {
+        DebugPrint("InitGamePlay", "Starting new game");
         GameStartNotificationTime = CurrentTime;
     }
 
     if (RPU_ReadSingleSwitchState(SW_C_SAUCER)) {
         if (CurrentTime > (SaucerEjectTime + 1500)) {
+            DebugPrint("InitGamePlay", "1500ms-kick SW_C_SAUCER raw=1 trough=%d", CountBallsInTrough());
             RPU_PushToSolenoidStack(SOL_C_SAUCER, 12, true);
             SaucerEjectTime = CurrentTime;
         }
@@ -2102,6 +2119,7 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
     // If we're coming into this mode for the first time
     // then we have to do everything to set up the new ball
     if (curStateChanged) {
+        DebugPrint("InitNewBall", "Starting PLAYER %d | BALL %d", playerNum, ballNum);
         RPU_TurnOffAllLamps();
         BallFirstSwitchHitTime = 0;
         RPU_SetDisableGate(false);
@@ -2362,6 +2380,7 @@ int ManageGameMode() {
         // Handle the edge case where the saucer hit was the last thing needed to enter wizard - 
         // We just cleared the solenoid stack so need to re-trigger the kickout
         if (RPU_ReadSingleSwitchState(SW_C_SAUCER)) {
+            DebugPrint("WizardEntry", "saucer-re-trigger +3000ms SW_C_SAUCER raw=1");
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
         }
     }
@@ -2473,6 +2492,8 @@ int ManageGameMode() {
                         if (NumberOfBallsInPlay == 0) {
                             ShowPlayerScores(0xFF, false, false);
                             Audio.StopAllAudio();
+
+                            DebugPrint("ManageGameMode", "Ball over - detected in trough");
 
                             if (!PreparingWizardMode && !WizardModeActive && !WizardModeEnding) {
                                 returnState = MACHINE_STATE_COUNTDOWN_BONUS;
@@ -2784,6 +2805,7 @@ int HandleSystemSwitches(int curState, byte switchHit) {
         AddCoin(SwitchToChuteNum(switchHit));
         break;
     case SW_CREDIT_RESET:
+        DebugPrint("HandleSystemSwitches", "SW_CREDIT_RESET state=%d ball=%d", MachineState, CurrentBallInPlay);
         if (MachineState == MACHINE_STATE_MATCH_MODE) {
             // If the first ball is over, pressing start again resets the game
             if (Credits >= 1 || FreePlayMode) {
@@ -2792,9 +2814,11 @@ int HandleSystemSwitches(int curState, byte switchHit) {
                     RPU_WriteByteToEEProm(RPU_CREDITS_EEPROM_BYTE, Credits);
                     RPU_SetDisplayCredits(Credits, !FreePlayMode);
                 }
+                DebugPrint("HandleSystemSwitches", "INIT_GAMEPLAY via MATCH_MODE");
                 returnState = MACHINE_STATE_INIT_GAMEPLAY;
             }
         } else {
+            DebugPrint("HandleSystemSwitches", "CreditResetPressStarted set");
             CreditResetPressStarted = CurrentTime;
         }
         break;
@@ -2833,6 +2857,7 @@ void HandleSwitchesMinimal(byte switchHit) {
     case SW_C_SAUCER:
         if (CurrentTime >= SaucerDebounceTimeEnd) {
             SaucerDebounceTimeEnd = CurrentTime + SAUCER_DEBOUNCE_TIME_MS;
+            DebugPrint("HandleSwitchesMinimal", "wizard-drain-kick");
             RPU_PushToSolenoidStack(SOL_C_SAUCER, 16, true);
         }
         break;
@@ -2888,6 +2913,7 @@ void HandleSwitchesStallBall(byte switchHit) {
         if (CurrentTime >= StallNotifyDebounceTime && CurrentTime >= SaucerDebounceTimeEnd) {
             SaucerDebounceTimeEnd = CurrentTime + SAUCER_DEBOUNCE_TIME_MS;
             StallNotifyDebounceTime = CurrentTime + 1000;
+            DebugPrint("HandleSwitchesStallBall", "stall-kick +1000ms");
             RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 1000, true);
             PlayRandomStallBallSuccessSound();
         }
@@ -3374,6 +3400,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 SkillShotActive = false;
                 SkillShotGracePeroidEnd = 0;
                 SkillShotCelebrationBlinkEndTime = CurrentTime + kickoutWaitTime;
+                DebugPrint("HandleGamePlaySwitches", "SW_C_SAUCER:skill-shot +%lums", (unsigned long)kickoutWaitTime);
                 RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + kickoutWaitTime, true);
 
             } else if (IsSuperSuperBlastOffActive(CurrentTime)) {
@@ -3390,6 +3417,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                     } else {
                         QueueNotification(SOUND_EFFECT_BLASTOFF_GOAL, 9);
                     }
+                DebugPrint("HandleGamePlaySwitches", "SW_C_SAUCER:super-blastoff +3000ms");
                 RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 3000, true);
 
             } else if (!WizardModeActive) {
@@ -3399,10 +3427,12 @@ void HandleGamePlaySwitches(byte switchHit) {
                     RPU_ReadLampState(LAMP_TOP_E)){
                         CurrentScores[CurrentPlayer] += 5000 * PlayfieldMultiplier[CurrentPlayer];
                         PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
+                        DebugPrint("HandleGamePlaySwitches", "SW_C_SAUCER:regular-all-lit +500ms");
                         RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 500, false);
                     } else {
                         CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
                         PlaySoundEffect(SOUND_EFFECT_ROLL_OVER);
+                        DebugPrint("HandleGamePlaySwitches", "SW_C_SAUCER:regular +500ms");
                         RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 500, false);
                     }
                 }
@@ -3412,6 +3442,7 @@ void HandleGamePlaySwitches(byte switchHit) {
                 //Wizard mode is active
                 WizardModeProgress.CenterSaucerHit = true;
                 CurrentScores[CurrentPlayer] += 1000 * PlayfieldMultiplier[CurrentPlayer];
+                DebugPrint("HandleGamePlaySwitches", "SW_C_SAUCER:wizard +2000ms");
                 RPU_PushToTimedSolenoidStack(SOL_C_SAUCER, 16, CurrentTime + 2000, false);
                 PlaySoundEffect(SOUND_EFFECT_WIZARDTARGET1);
             }
@@ -3759,12 +3790,11 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
         if (CurrentBallInPlay < 2 && !StallBallEnabled) {
             // If we haven't finished the first ball, we can add players
             AddPlayer();
-            if (DEBUG_MESSAGES) {
-                Serial.write("Start game button pressed\n\r");
-            }
+            DebugPrint("RunGamePlayMode", "ball1-add-player ball=%d", CurrentBallInPlay);
             CreditResetPressStarted = 0;
         } else {
             if (RPU_ReadSingleSwitchState(SW_CREDIT_RESET)) {
+                DebugPrint("RunGamePlayMode", "hold-check held=%lums required=%ds", CurrentTime - CreditResetPressStarted, TimeRequiredToResetGame);
                 if (TimeRequiredToResetGame != 99 && (CurrentTime - CreditResetPressStarted) >= ((unsigned long)TimeRequiredToResetGame * 1000)) {
                     // If the first ball is over, pressing start again resets the game
                     if (Credits >= 1 || FreePlayMode) {
@@ -3773,6 +3803,7 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
                             RPU_WriteByteToEEProm(RPU_CREDITS_EEPROM_BYTE, Credits);
                             RPU_SetDisplayCredits(Credits, !FreePlayMode);
                         }
+                        DebugPrint("RunGamePlayMode", "GAME-RESET state=%d ball=%d", MachineState, CurrentBallInPlay);
                         returnState = MACHINE_STATE_INIT_GAMEPLAY;
                         CreditResetPressStarted = 0;
                     }
